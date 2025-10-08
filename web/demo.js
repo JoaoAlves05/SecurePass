@@ -2,15 +2,36 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // Toggle password visibility
-  document.getElementById('togglePw').addEventListener('click', function() {
-    const pwInput = document.getElementById('pw');
-    if (pwInput.type === "password") {
-      pwInput.type = "text";
-      this.innerHTML = "&#128064;"; // olho aberto
+  const toggleBtn = document.getElementById('togglePw');
+  const pwInput = document.getElementById('pw');
+  const inputWrap = pwInput.closest('.input-wrap');
+
+  // Helper to set SVG icon
+  function setIcon(open) {
+    // Eye open / closed SVGs
+    if (open) {
+      toggleBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c-7 0-11 6.5-11 7s4 7 11 7 11-6.5 11-7-4-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>`;
     } else {
-      pwInput.type = "password";
-      this.innerHTML = "&#128065;"; // olho fechado
+      toggleBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2l20 20-1.4 1.4L16 17.8A11.8 11.8 0 0 1 12 19c-7 0-11-6.5-11-7 1.2-1.9 3.4-4 6.3-5.6L3.4 3.4 2 2zM9.5 9.5A3 3 0 0 0 14.5 14.5L9.5 9.5z"/></svg>`;
     }
+  }
+
+  // Init icon state
+  setIcon(false);
+
+  toggleBtn.addEventListener('click', function(e) {
+    const wasPassword = pwInput.type === 'password';
+    pwInput.type = wasPassword ? 'text' : 'password';
+    setIcon(wasPassword);
+    // toggle a class for nicer visual feedback
+    if (wasPassword) inputWrap.classList.add('revealed'); else inputWrap.classList.remove('revealed');
+    // keep focus on input for easy typing
+    pwInput.focus({ preventScroll: true });
+    // move cursor to end
+    const val = pwInput.value;
+    pwInput.setSelectionRange(val.length, val.length);
   });
 
   // Atualiza a barra de força da password

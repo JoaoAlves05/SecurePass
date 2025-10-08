@@ -107,6 +107,51 @@ input[type="password"] {
 .toggle-visibility:hover {
   color: var(--primary);
 }
+/* Integrated visibility toggle styling */
+.input-wrap {
+  position: relative;
+}
+input[type="password"], input[type="text"] {
+  width: 100%;
+  padding: 0.8rem 0.6rem 0.8rem 0.2rem; /* leave space for the icon */
+  transition: color var(--transition), background var(--transition);
+}
+.toggle-visibility {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fff;
+  border-radius: 10px;
+  width: 40px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+  border: 1px solid rgba(16,24,40,0.04);
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+.toggle-visibility svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.toggle-visibility:focus {
+  outline: none;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.12);
+}
+.input-wrap.revealed {
+  box-shadow: 0 6px 20px rgba(37,99,235,0.06);
+}
+.input-wrap.revealed input {
+  /* subtle smoothing when revealed */
+  letter-spacing: 0.6px;
+}
 .strength-bar {
   display: flex;
   height: 15px;
