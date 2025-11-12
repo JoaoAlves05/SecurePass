@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SecurePass Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>SecurePass Assistant Settings</h1>
+      <form id="settingsForm">
+        <section>
+          <h2>Appearance</h2>
+          <label>
+            Theme
+            <select name="theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </label>
+        </section>
+
+        <section>
+          <h2>Password generator</h2>
+          <label>
+            Minimum length
+            <input type="number" name="minLength" min="8" max="128" />
+          </label>
+          <label><input type="checkbox" name="includeUppercase" /> Include uppercase letters</label>
+          <label><input type="checkbox" name="includeLowercase" /> Include lowercase letters</label>
+          <label><input type="checkbox" name="includeNumbers" /> Include numbers</label>
+          <label><input type="checkbox" name="includeSymbols" /> Include symbols</label>
+          <label><input type="checkbox" name="avoidSimilar" /> Avoid similar characters (Il1O0)</label>
+        </section>
+
+        <section>
+          <h2>Security</h2>
+          <label>
+            Vault auto-lock (minutes)
+            <input type="number" name="vaultTimeout" min="1" max="120" />
+          </label>
+          <label>
+            HIBP cache TTL (hours)
+            <input type="number" name="hibpCacheTtlHours" min="1" max="168" />
+          </label>
+        </section>
+
+        <section>
+          <h2>Sync</h2>
+          <label><input type="checkbox" name="useSync" /> Sync preferences via browser profile</label>
+        </section>
+
+        <div class="actions">
+          <button type="submit">Save settings</button>
+          <span id="status" role="status"></span>
+        </div>
+      </form>
+
+      <section class="roadmap">
+        <h2>Roadmap</h2>
+        <ol>
+          <li><strong>v0.1:</strong> Popup analysis + HIBP integration.</li>
+          <li><strong>v0.3:</strong> Form detection + floating panel.</li>
+          <li><strong>v0.5:</strong> Policy-aware password generator.</li>
+          <li><strong>v0.7:</strong> Encrypted local vault UI.</li>
+          <li><strong>v1.0:</strong> Settings page, dark mode, publishing polish.</li>
+        </ol>
+      </section>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

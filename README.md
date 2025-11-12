@@ -2,6 +2,8 @@
 
 Serviço web para testar força de passwords e verificar exposição (pwned) via Have I Been Pwned (HIBP) usando k-anonymity.
 
+> ✅ Agora também disponível como extensão de browser (Chrome/Firefox) em [`extension/`](extension/), com análise em tempo real, geração de passwords e cofre local encriptado.
+
 ## Funcionalidades
 
 - Validação de força de password (zxcvbn)

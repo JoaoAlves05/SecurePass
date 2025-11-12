@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "SecurePass Assistant",
+  "description": "Analyze, generate, and protect passwords directly in your browser.",
+  "version": "0.1.0",
+  "action": {
+    "default_title": "SecurePass Assistant",
+    "default_popup": "popup/popup.html"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage"
+  ],
+  "optional_permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://api.pwnedpasswords.com/*"
+  ],
+  "background": {
+    "service_worker": "background/serviceWorker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options/options.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/*.js",
+        "popup/popup.css",
+        "options/options.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+  }
+}

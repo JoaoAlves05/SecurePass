@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SecurePass Assistant</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>SecurePass Assistant</h1>
+      <button id="themeToggle" aria-label="Toggle theme">🌓</button>
+    </header>
+
+    <section class="input-section">
+      <label for="passwordInput">Test a password</label>
+      <div class="input-wrapper">
+        <input type="password" id="passwordInput" autocomplete="off" />
+        <button id="visibilityToggle" aria-label="Toggle visibility">👁️</button>
+      </div>
+    </section>
+
+    <section class="strength-section">
+      <div class="meter">
+        <div id="strengthBar"></div>
+      </div>
+      <div class="meta">
+        <span id="verdict">Weak</span>
+        <span id="entropy">0 bits</span>
+        <span id="crackTime">Instant</span>
+      </div>
+      <ul id="suggestions"></ul>
+    </section>
+
+    <section class="actions">
+      <button id="checkHibp">Check HIBP</button>
+      <button id="generateCopy">Generate &amp; Copy</button>
+      <span id="hibpResult" role="status"></span>
+    </section>
+
+    <section class="vault">
+      <h2>Secure vault</h2>
+      <div class="vault-control">
+        <input type="password" id="vaultPassphrase" placeholder="Vault passphrase" />
+        <button id="unlockVault">Unlock</button>
+        <button id="lockVault">Lock</button>
+      </div>
+      <div class="vault-actions">
+        <input type="text" id="credentialLabel" placeholder="Label / username" />
+        <button id="saveCredential">Save current password</button>
+      </div>
+      <ul id="vaultList"></ul>
+    </section>
+
+    <footer>
+      <a href="../options/options.html" target="_blank">Settings</a>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
