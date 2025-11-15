@@ -3,58 +3,238 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SecurePass Assistant</title>
+    <title>SecurePass Suite</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <header>
-      <h1>SecurePass Assistant</h1>
-      <button id="themeToggle" aria-label="Toggle theme">🌓</button>
-    </header>
+    <div class="app">
+      <header class="app-header">
+        <div class="brand">
+          <span aria-hidden="true" class="brand-icon">🔐</span>
+          <div>
+            <h1>SecurePass Suite</h1>
+            <p class="subtitle">Test, generate and safeguard your passwords</p>
+          </div>
+        </div>
+        <button id="themeToggle" class="icon-button" aria-label="Toggle theme" title="Toggle theme">
+          🌓
+        </button>
+      </header>
 
-    <section class="input-section">
-      <label for="passwordInput">Test a password</label>
-      <div class="input-wrapper">
-        <input type="password" id="passwordInput" autocomplete="off" />
-        <button id="visibilityToggle" aria-label="Toggle visibility">👁️</button>
-      </div>
-    </section>
+      <nav class="view-switcher" role="tablist">
+        <button class="tab active" role="tab" aria-selected="true" data-view="tester">
+          Tester &amp; Generator
+        </button>
+        <button class="tab" role="tab" aria-selected="false" data-view="vault">
+          Secure Vault
+        </button>
+      </nav>
 
-    <section class="strength-section">
-      <div class="meter">
-        <div id="strengthBar"></div>
-      </div>
-      <div class="meta">
-        <span id="verdict">Weak</span>
-        <span id="entropy">0 bits</span>
-        <span id="crackTime">Instant</span>
-      </div>
-      <ul id="suggestions"></ul>
-    </section>
+      <main>
+        <section id="view-tester" class="view active" role="tabpanel" aria-labelledby="Tester &amp; Generator">
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Password tester</h2>
+              <p>Understand how resilient your password is with live insights.</p>
+            </div>
+            <div class="field-group">
+              <label for="passwordInput">Password to analyse</label>
+              <div class="input-with-actions">
+                <input type="password" id="passwordInput" autocomplete="off" />
+                <button id="togglePassword" class="icon-button" type="button" aria-label="Show password">👁️</button>
+                <button id="copyTestPassword" class="icon-button" type="button" aria-label="Copy password">📋</button>
+              </div>
+            </div>
+            <div class="strength-meter" aria-live="polite">
+              <div class="meter-track">
+                <div id="strengthBar" class="meter-bar"></div>
+              </div>
+              <div class="meter-labels">
+                <span id="strengthVerdict" class="badge badge-weak">Weak</span>
+                <span id="entropy">Entropy: 0 bits</span>
+                <span id="crackTime">Crack time: Instant</span>
+              </div>
+            </div>
+            <div class="tips">
+              <h3>How to improve it</h3>
+              <ul id="suggestionsList"></ul>
+              <p id="suggestionsEmpty" class="empty-state">Start typing to see personalised tips.</p>
+            </div>
+            <div class="hibp-card">
+              <div>
+                <h3>Breached password check</h3>
+                <p>We use Have I Been Pwned with k-anonymity. Only a secure prefix is shared.</p>
+              </div>
+              <div class="hibp-actions">
+                <button id="checkHibp" type="button" class="primary">Check now</button>
+                <span id="hibpStatus" role="status" aria-live="polite">Not checked yet.</span>
+              </div>
+            </div>
+          </div>
 
-    <section class="actions">
-      <button id="checkHibp">Check HIBP</button>
-      <button id="generateCopy">Generate &amp; Copy</button>
-      <span id="hibpResult" role="status"></span>
-    </section>
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Password generator</h2>
+              <p>Create unique passwords tailored to your needs.</p>
+            </div>
+            <div class="generator-controls">
+              <div class="field-group">
+                <label for="lengthRange">Length: <span id="lengthValue">16</span> characters</label>
+                <input type="range" id="lengthRange" min="8" max="64" value="16" />
+              </div>
+              <div class="field-group check-grid">
+                <label class="checkbox">
+                  <input type="checkbox" id="includeLower" checked />
+                  <span>Lowercase</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" id="includeUpper" checked />
+                  <span>Uppercase</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" id="includeNumbers" checked />
+                  <span>Numbers</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" id="includeSymbols" checked />
+                  <span>Symbols</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" id="avoidSimilar" checked />
+                  <span>Avoid look-alikes</span>
+                </label>
+              </div>
+            </div>
+            <div class="generator-actions">
+              <button id="generatePassword" type="button" class="primary">Generate password</button>
+              <span id="generatorStatus" role="status" aria-live="polite"></span>
+            </div>
+            <div class="generated-output">
+              <label for="generatedResult">Generated password</label>
+              <div class="input-with-actions">
+                <input type="text" id="generatedResult" readonly />
+                <button id="copyGenerated" class="icon-button" type="button" aria-label="Copy generated password">📋</button>
+                <button id="useForTest" class="icon-button" type="button" aria-label="Use in tester">➡️</button>
+              </div>
+              <div class="generated-actions">
+                <button id="saveGenerated" type="button" class="secondary">Save to vault</button>
+              </div>
+            </div>
+          </div>
+        </section>
 
-    <section class="vault">
-      <h2>Secure vault</h2>
-      <div class="vault-control">
-        <input type="password" id="vaultPassphrase" placeholder="Vault passphrase" />
-        <button id="unlockVault">Unlock</button>
-        <button id="lockVault">Lock</button>
-      </div>
-      <div class="vault-actions">
-        <input type="text" id="credentialLabel" placeholder="Label / username" />
-        <button id="saveCredential">Save current password</button>
-      </div>
-      <ul id="vaultList"></ul>
-    </section>
+        <section id="view-vault" class="view" role="tabpanel" aria-labelledby="Secure Vault">
+          <div id="vaultLocked" class="panel">
+            <div class="panel-header">
+              <h2>Secure vault</h2>
+              <p>Unlock with your master password to view and manage saved credentials.</p>
+            </div>
+            <div id="createMaster" class="vault-state hidden">
+              <h3>Create a master password</h3>
+              <p>This password encrypts your vault before it is synced. Choose something memorable and strong.</p>
+              <form id="createMasterForm" class="stack">
+                <label>
+                  Master password
+                  <input type="password" id="newMaster" autocomplete="new-password" required />
+                </label>
+                <label>
+                  Confirm master password
+                  <input type="password" id="confirmMaster" autocomplete="new-password" required />
+                </label>
+                <button type="submit" class="primary">Create vault</button>
+              </form>
+            </div>
+            <div id="unlockMaster" class="vault-state">
+              <h3>Unlock your vault</h3>
+              <form id="unlockForm" class="stack">
+                <label>
+                  Master password
+                  <input type="password" id="vaultPassphrase" autocomplete="current-password" required />
+                </label>
+                <button type="submit" class="primary">Unlock</button>
+              </form>
+            </div>
+          </div>
 
-    <footer>
-      <a href="../options/options.html" target="_blank">Settings</a>
-    </footer>
+          <div id="vaultUnlocked" class="panel hidden">
+            <div class="panel-header">
+              <h2>Your stored credentials</h2>
+              <p>Passwords stay encrypted locally and in sync across your devices.</p>
+            </div>
+            <div class="vault-toolbar">
+              <div class="search">
+                <label for="vaultSearch">Search</label>
+                <input type="search" id="vaultSearch" placeholder="Site or username" />
+              </div>
+              <div class="toolbar-actions">
+                <button id="addEntry" type="button" class="primary">Add credential</button>
+                <button id="changeMaster" type="button" class="secondary">Change master password</button>
+                <button id="lockVault" type="button" class="icon-button" title="Lock vault" aria-label="Lock vault">🔒</button>
+              </div>
+            </div>
+            <ul id="vaultList" class="vault-list"></ul>
+            <p id="vaultEmpty" class="empty-state hidden">No credentials saved yet.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true"></div>
+
+    <div id="entryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="entryModalTitle">
+      <form id="entryForm" class="modal-content">
+        <header>
+          <h3 id="entryModalTitle">Save credential</h3>
+          <p>Only encrypted data leaves this device. Fill in the details below.</p>
+        </header>
+        <label>
+          Website or app
+          <input type="text" id="entrySite" placeholder="https://example.com" required />
+        </label>
+        <label>
+          Username or email
+          <input type="text" id="entryUsername" placeholder="user@example.com" />
+        </label>
+        <label>
+          Password
+          <input type="text" id="entryPassword" required />
+        </label>
+        <label>
+          Notes (optional)
+          <textarea id="entryNotes" rows="2" placeholder="Additional context" ></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="submit" class="primary">Save</button>
+          <button type="button" data-close="entryModal" class="secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="masterModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="masterModalTitle">
+      <form id="masterForm" class="modal-content">
+        <header>
+          <h3 id="masterModalTitle">Change master password</h3>
+          <p>We will re-encrypt the vault with your new master password immediately.</p>
+        </header>
+        <label>
+          Current master password
+          <input type="password" id="currentMaster" autocomplete="current-password" required />
+        </label>
+        <label>
+          New master password
+          <input type="password" id="nextMaster" autocomplete="new-password" required />
+        </label>
+        <label>
+          Confirm new master password
+          <input type="password" id="confirmNextMaster" autocomplete="new-password" required />
+        </label>
+        <div class="modal-actions">
+          <button type="submit" class="primary">Update master password</button>
+          <button type="button" data-close="masterModal" class="secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
 
     <script type="module" src="popup.js"></script>
   </body>

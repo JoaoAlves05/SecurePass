@@ -2,7 +2,7 @@ import { loadSettings } from './settings.js';
 
 const SIMILAR_CHARS = /[Il1O0]/g;
 
-function buildCharset(settings, constraints) {
+function buildCharset(options, constraints) {
   const requirements = {
     requiresUppercase: false,
     requiresLowercase: false,
@@ -10,35 +10,40 @@ function buildCharset(settings, constraints) {
     requiresSymbol: false,
     ...(constraints.customRequirements || {})
   };
+
   let charset = '';
-  if (settings.includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
-  if (settings.includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  if (settings.includeNumbers) charset += '0123456789';
-  if (settings.includeSymbols) charset += '!@#$%^&*()-_=+[]{}|;:,.<>?';
-  if (!charset) charset = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  if (options.includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
+  if (options.includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (options.includeNumbers) charset += '0123456789';
+  if (options.includeSymbols) charset += '!@#$%^&*()-_=+[]{}|;:,.<>?';
 
   if (constraints.pattern) {
-    // Try to infer from regex character classes
-    if (/\\d/.test(constraints.pattern) && !settings.includeNumbers) {
+    if (/\\d/.test(constraints.pattern) && !options.includeNumbers) {
       charset += '0123456789';
     }
-    if (/\[A-Z\]/.test(constraints.pattern) && !settings.includeUppercase) {
+    if (/\[A-Z\]/.test(constraints.pattern) && !options.includeUppercase) {
       charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     }
-    if (/\[a-z\]/.test(constraints.pattern) && !settings.includeLowercase) {
+    if (/\[a-z\]/.test(constraints.pattern) && !options.includeLowercase) {
       charset += 'abcdefghijklmnopqrstuvwxyz';
     }
   }
 
-  if (requirements.requiresSymbol) {
+  if (requirements.requiresSymbol && !options.includeSymbols) {
     charset += '!@#$%^&*()-_=+[]{}|;:,.<>?';
   }
 
-  if (settings.avoidSimilar) {
+  charset = Array.from(new Set(charset.split(''))).join('');
+
+  if (options.avoidSimilar) {
     charset = charset.replace(SIMILAR_CHARS, '');
   }
 
-  return Array.from(new Set(charset.split(''))).join('');
+  if (!charset) {
+    throw new Error('Select at least one character set for password generation.');
+  }
+
+  return charset;
 }
 
 function ensureRequirements(password, charset, constraints) {
@@ -77,11 +82,15 @@ function ensureRequirements(password, charset, constraints) {
 
 export async function generatePassword(constraints = {}) {
   const settings = await loadSettings();
-  const length = Math.min(
-    Math.max(constraints.minLength || settings.minLength, settings.minLength),
-    constraints.maxLength || 64
-  );
-  const charset = buildCharset(settings, {
+  const overrides = constraints.overrides || {};
+  const options = {
+    ...settings,
+    ...overrides
+  };
+
+  const requestedLength = constraints.length || overrides.minLength || settings.minLength;
+  const length = Math.max(4, Math.min(requestedLength, constraints.maxLength || 64));
+  const charset = buildCharset(options, {
     customRequirements: constraints.customRequirements || {},
     pattern: constraints.pattern || null
   });

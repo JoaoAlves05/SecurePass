@@ -1,7 +1,17 @@
 import { checkPassword } from '../src/hibp.js';
 import { generatePassword } from '../src/passwordGenerator.js';
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from '../src/settings.js';
-import { initializeVault, unlockVault, storeCredential, listCredentials, lockVault, vaultStatus } from '../src/cryptoVault.js';
+import {
+  initializeVault,
+  unlockVault,
+  storeCredential,
+  updateCredential,
+  deleteCredential,
+  listCredentials,
+  lockVault,
+  vaultStatus,
+  changeMasterPassword
+} from '../src/cryptoVault.js';
 
 chrome.runtime.onInstalled.addListener(async () => {
   const settings = await loadSettings();
@@ -21,8 +31,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       }
       case 'GENERATE_PASSWORD': {
-        const generated = await generatePassword(message.constraints || {});
-        sendResponse({ ok: true, password: generated });
+        try {
+          const generated = await generatePassword(message.constraints || {});
+          sendResponse({ ok: true, password: generated });
+        } catch (error) {
+          sendResponse({ ok: false, error: error.message });
+        }
         break;
       }
       case 'LOAD_SETTINGS': {
@@ -47,7 +61,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       case 'STORE_CREDENTIAL': {
         try {
-          await storeCredential(message.entry, message.passphrase);
+          const entry = await storeCredential(message.entry, message.passphrase);
+          sendResponse({ ok: true, entry });
+        } catch (error) {
+          sendResponse({ ok: false, error: error.message });
+        }
+        break;
+      }
+      case 'UPDATE_CREDENTIAL': {
+        try {
+          const entry = await updateCredential(message.id, message.updates, message.passphrase);
+          sendResponse({ ok: true, entry });
+        } catch (error) {
+          sendResponse({ ok: false, error: error.message });
+        }
+        break;
+      }
+      case 'DELETE_CREDENTIAL': {
+        try {
+          await deleteCredential(message.id, message.passphrase);
           sendResponse({ ok: true });
         } catch (error) {
           sendResponse({ ok: false, error: error.message });
@@ -68,6 +100,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case 'VAULT_STATUS': {
         const status = await vaultStatus();
         sendResponse({ ok: true, status });
+        break;
+      }
+      case 'INITIALIZE_VAULT': {
+        try {
+          const created = await initializeVault(message.passphrase);
+          sendResponse({ ok: true, created });
+        } catch (error) {
+          sendResponse({ ok: false, error: error.message });
+        }
+        break;
+      }
+      case 'CHANGE_MASTER_PASSWORD': {
+        try {
+          await changeMasterPassword(message.oldPassphrase, message.newPassphrase);
+          sendResponse({ ok: true });
+        } catch (error) {
+          sendResponse({ ok: false, error: error.message });
+        }
         break;
       }
       default:
