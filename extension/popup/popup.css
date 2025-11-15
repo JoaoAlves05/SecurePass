@@ -12,8 +12,8 @@
   --success: #16a34a;
   --warning: #f59e0b;
   --danger: #dc2626;
-  --shadow: 0 12px 24px rgba(26, 31, 54, 0.08);
-  --radius: 16px;
+  --shadow: 0 12px 28px rgba(26, 31, 54, 0.08);
+  --radius: 20px;
   --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -35,27 +35,34 @@ body[data-theme='dark'] {
 body {
   margin: 0;
   font-family: var(--font);
-  background: radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 55%), var(--bg);
+  background: var(--bg);
   color: var(--text);
-  min-width: 360px;
+  min-width: 320px;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
 }
 
 .app {
-  padding: 16px 18px 24px;
+  width: 100%;
+  max-width: 360px;
+  padding: 12px 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-width: 420px;
+  gap: 12px;
+  background: radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 55%), var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  box-shadow: var(--shadow);
+  background: var(--surface-muted);
+  border-radius: calc(var(--radius) - 6px);
+  padding: 10px 12px;
   border: 1px solid var(--border);
 }
 
@@ -65,17 +72,24 @@ body {
   gap: 12px;
 }
 
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
 .brand-icon {
-  font-size: 28px;
+  font-size: 26px;
 }
 
 h1 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin: 0;
 }
 
 .subtitle {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: 0.8rem;
   color: var(--text-muted);
 }
@@ -125,24 +139,67 @@ main {
 
 .panel {
   background: var(--surface);
-  border-radius: var(--radius);
-  padding: 20px;
+  border-radius: calc(var(--radius) - 4px);
+  padding: 16px;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .panel-header h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 
-.panel-header p {
-  margin: 4px 0 0;
+.panel-description {
+  margin: 6px 0 0;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.panel-title h1,
+.panel-title h2,
+.panel-title h3 {
+  flex: 1;
+}
+
+.panel-toggle {
+  border: none;
+  background: var(--surface-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.panel-toggle::before {
+  content: '▾';
+  font-size: 0.7rem;
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+
+.panel-toggle[aria-expanded='true']::before {
+  transform: rotate(0deg);
+}
+
+.panel-toggle:hover,
+.panel-toggle:focus-visible {
+  background: rgba(59, 130, 246, 0.18);
+  color: var(--primary);
 }
 
 .field-group {
@@ -192,6 +249,11 @@ textarea {
 
 .input-with-actions input {
   flex: 1;
+}
+
+.field-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .icon-button {
@@ -329,7 +391,13 @@ button:disabled,
 
 .tips h3 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+}
+
+.tips-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .tips ul {
@@ -352,22 +420,22 @@ button:disabled,
 .hibp-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
-  border-radius: 14px;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
   background: var(--surface-muted);
   border: 1px dashed rgba(59, 130, 246, 0.35);
 }
 
 .hibp-card h3 {
-  margin: 0 0 2px;
-  font-size: 0.95rem;
+  margin: 0;
+  font-size: 0.9rem;
 }
 
-.hibp-card p {
+.hibp-copy {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 .hibp-actions {
@@ -380,13 +448,13 @@ button:disabled,
 .generator-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .generator-actions span {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 .generated-output {

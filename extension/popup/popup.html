@@ -11,9 +11,21 @@
       <header class="app-header">
         <div class="brand">
           <span aria-hidden="true" class="brand-icon">🔐</span>
-          <div>
-            <h1>SecurePass Suite</h1>
-            <p class="subtitle">Test, generate and safeguard your passwords</p>
+          <div class="brand-copy">
+            <div class="panel-title">
+              <h1>SecurePass Suite</h1>
+              <button
+                type="button"
+                class="panel-toggle"
+                aria-label="Toggle tagline"
+                aria-controls="brandSubtitle"
+                aria-expanded="false"
+                data-toggle-target="brandSubtitle"
+              ></button>
+            </div>
+            <p id="brandSubtitle" class="subtitle collapsible" hidden>
+              Test, generate and safeguard your passwords
+            </p>
           </div>
         </div>
         <button id="themeToggle" class="icon-button" aria-label="Toggle theme" title="Toggle theme">
@@ -37,8 +49,20 @@
         <section id="view-generator" class="view" role="tabpanel" aria-labelledby="tab-generator">
           <div class="panel">
             <div class="panel-header">
-              <h2>Password generator</h2>
-              <p>Create unique passwords tailored to your needs.</p>
+              <div class="panel-title">
+                <h2>Password generator</h2>
+                <button
+                  type="button"
+                  class="panel-toggle"
+                  aria-label="Toggle generator details"
+                  aria-controls="generatorDescription"
+                  aria-expanded="false"
+                  data-toggle-target="generatorDescription"
+                ></button>
+              </div>
+              <p id="generatorDescription" class="panel-description collapsible" hidden>
+                Create unique passwords tailored to your needs.
+              </p>
             </div>
             <div class="generator-controls">
               <div class="field-group">
@@ -89,8 +113,20 @@
         <section id="view-tester" class="view active" role="tabpanel" aria-labelledby="tab-tester">
           <div class="panel">
             <div class="panel-header">
-              <h2>Password tester</h2>
-              <p>Understand how resilient your password is with live insights.</p>
+              <div class="panel-title">
+                <h2>Password tester</h2>
+                <button
+                  type="button"
+                  class="panel-toggle"
+                  aria-label="Toggle tester details"
+                  aria-controls="testerDescription"
+                  aria-expanded="false"
+                  data-toggle-target="testerDescription"
+                ></button>
+              </div>
+              <p id="testerDescription" class="panel-description collapsible" hidden>
+                Understand how resilient your password is with live insights.
+              </p>
             </div>
             <div class="field-group">
               <label for="passwordInput">Password to analyse</label>
@@ -99,6 +135,9 @@
                 <button id="togglePassword" class="icon-button" type="button" aria-label="Show password">👁️</button>
                 <button id="copyTestPassword" class="icon-button" type="button" aria-label="Copy password">📋</button>
               </div>
+            </div>
+            <div class="field-actions">
+              <button id="saveTested" type="button" class="secondary">Save to vault</button>
             </div>
             <div class="strength-meter" aria-live="polite">
               <div class="meter-track">
@@ -111,15 +150,37 @@
               </div>
             </div>
             <div class="tips">
-              <h3>How to improve it</h3>
-              <ul id="suggestionsList"></ul>
-              <p id="suggestionsEmpty" class="empty-state">Start typing to see personalised tips.</p>
+              <div class="panel-title tips-header">
+                <h3>How to improve it</h3>
+                <button
+                  type="button"
+                  class="panel-toggle"
+                  aria-label="Toggle improvement tips"
+                  aria-controls="tipsContent"
+                  aria-expanded="false"
+                  data-toggle-target="tipsContent"
+                ></button>
+              </div>
+              <div id="tipsContent" class="tips-content" hidden>
+                <ul id="suggestionsList"></ul>
+                <p id="suggestionsEmpty" class="empty-state">Start typing to see personalised tips.</p>
+              </div>
             </div>
             <div class="hibp-card">
-              <div>
+              <div class="panel-title hibp-header">
                 <h3>Breached password check</h3>
-                <p>We use Have I Been Pwned with k-anonymity. Only a secure prefix is shared.</p>
+                <button
+                  type="button"
+                  class="panel-toggle"
+                  aria-label="Toggle breach check details"
+                  aria-controls="hibpDescription"
+                  aria-expanded="false"
+                  data-toggle-target="hibpDescription"
+                ></button>
               </div>
+              <p id="hibpDescription" class="hibp-copy collapsible" hidden>
+                We use Have I Been Pwned with k-anonymity. Only a secure prefix is shared.
+              </p>
               <div class="hibp-actions">
                 <button id="checkHibp" type="button" class="primary">Check now</button>
                 <span id="hibpStatus" role="status" aria-live="polite">Not checked yet.</span>
@@ -131,8 +192,20 @@
         <section id="view-vault" class="view" role="tabpanel" aria-labelledby="tab-vault">
           <div id="vaultLocked" class="panel">
             <div class="panel-header">
-              <h2>Secure vault</h2>
-              <p>Unlock with your master password to view and manage saved credentials.</p>
+              <div class="panel-title">
+                <h2>Secure vault</h2>
+                <button
+                  type="button"
+                  class="panel-toggle"
+                  aria-label="Toggle vault details"
+                  aria-controls="vaultLockedDescription"
+                  aria-expanded="false"
+                  data-toggle-target="vaultLockedDescription"
+                ></button>
+              </div>
+              <p id="vaultLockedDescription" class="panel-description collapsible" hidden>
+                Unlock with your master password to view and manage saved credentials.
+              </p>
             </div>
             <div id="createMaster" class="vault-state hidden">
               <h3>Create a master password</h3>
@@ -163,8 +236,20 @@
 
           <div id="vaultUnlocked" class="panel hidden">
             <div class="panel-header">
-              <h2>Your stored credentials</h2>
-              <p>Passwords stay encrypted locally and in sync across your devices.</p>
+              <div class="panel-title">
+                <h2>Your stored credentials</h2>
+                <button
+                  type="button"
+                  class="panel-toggle"
+                  aria-label="Toggle stored credentials details"
+                  aria-controls="vaultUnlockedDescription"
+                  aria-expanded="false"
+                  data-toggle-target="vaultUnlockedDescription"
+                ></button>
+              </div>
+              <p id="vaultUnlockedDescription" class="panel-description collapsible" hidden>
+                Passwords stay encrypted locally and in sync across your devices.
+              </p>
             </div>
             <div class="vault-toolbar">
               <div class="search">

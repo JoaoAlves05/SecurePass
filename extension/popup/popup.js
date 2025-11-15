@@ -34,6 +34,7 @@ const generatedResult = document.getElementById('generatedResult');
 const copyGeneratedBtn = document.getElementById('copyGenerated');
 const useForTestBtn = document.getElementById('useForTest');
 const saveGeneratedBtn = document.getElementById('saveGenerated');
+const saveTestedBtn = document.getElementById('saveTested');
 
 const vaultLockedPanel = document.getElementById('vaultLocked');
 const vaultUnlockedPanel = document.getElementById('vaultUnlocked');
@@ -160,6 +161,35 @@ function updateStrength(password) {
     suggestionsList.classList.remove('visible');
     suggestionsEmpty.classList.remove('hidden');
   }
+
+  const tipsToggle = document.querySelector('[data-toggle-target="tipsContent"]');
+  const tipsContent = document.getElementById('tipsContent');
+  if (tipsToggle && tipsContent) {
+    const wasExpanded = tipsToggle.getAttribute('aria-expanded') === 'true';
+    if (suggestions.length) {
+      if (!wasExpanded) {
+        toggleCollapsible(tipsToggle);
+        tipsToggle.dataset.autoOpened = 'true';
+      }
+    } else {
+      if (tipsToggle.dataset.autoOpened === 'true' && wasExpanded) {
+        toggleCollapsible(tipsToggle);
+      }
+      delete tipsToggle.dataset.autoOpened;
+    }
+  }
+}
+
+function toggleCollapsible(button) {
+  if (!button) return;
+  const targetId = button.getAttribute('data-toggle-target');
+  if (!targetId) return;
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const isExpanded = button.getAttribute('aria-expanded') === 'true';
+  const nextState = !isExpanded;
+  button.setAttribute('aria-expanded', String(nextState));
+  target.hidden = !nextState;
 }
 
 function setLoading(button, loading) {
@@ -662,6 +692,20 @@ async function saveGeneratedToVault() {
   });
 }
 
+async function saveTestedToVault() {
+  if (!passwordInput.value) {
+    showToast('Enter a password first.', 'warning');
+    return;
+  }
+  await openEntryModal({
+    id: null,
+    site: await detectActiveOrigin(),
+    username: '',
+    password: passwordInput.value,
+    notes: ''
+  });
+}
+
 async function changeMasterPassword(event) {
   event.preventDefault();
   if (!requireUnlockedVault()) return;
@@ -784,6 +828,9 @@ function attachEventListeners() {
   });
 
   saveGeneratedBtn.addEventListener('click', saveGeneratedToVault);
+  if (saveTestedBtn) {
+    saveTestedBtn.addEventListener('click', saveTestedToVault);
+  }
 
   createMasterForm.addEventListener('submit', handleCreateMaster);
   unlockForm.addEventListener('submit', handleUnlock);
@@ -799,6 +846,13 @@ function attachEventListeners() {
     button.addEventListener('click', event => {
       const target = event.currentTarget.getAttribute('data-close');
       closeModal(target);
+    });
+  });
+
+  document.querySelectorAll('[data-toggle-target]')?.forEach(button => {
+    button.addEventListener('click', event => {
+      delete event.currentTarget.dataset.autoOpened;
+      toggleCollapsible(event.currentTarget);
     });
   });
 
