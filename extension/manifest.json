@@ -18,9 +18,6 @@
     "tabs",
     "storage"
   ],
-  "optional_permissions": [
-    "storage"
-  ],
   "host_permissions": [
     "https://api.pwnedpasswords.com/*"
   ],
