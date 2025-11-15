@@ -22,56 +22,19 @@
       </header>
 
       <nav class="view-switcher" role="tablist">
-        <button class="tab active" role="tab" aria-selected="true" data-view="tester">
-          Tester &amp; Generator
+        <button id="tab-generator" class="tab" role="tab" aria-selected="false" data-view="generator">
+          Generator
         </button>
-        <button class="tab" role="tab" aria-selected="false" data-view="vault">
+        <button id="tab-tester" class="tab active" role="tab" aria-selected="true" data-view="tester">
+          Tester
+        </button>
+        <button id="tab-vault" class="tab" role="tab" aria-selected="false" data-view="vault">
           Secure Vault
         </button>
       </nav>
 
       <main>
-        <section id="view-tester" class="view active" role="tabpanel" aria-labelledby="Tester &amp; Generator">
-          <div class="panel">
-            <div class="panel-header">
-              <h2>Password tester</h2>
-              <p>Understand how resilient your password is with live insights.</p>
-            </div>
-            <div class="field-group">
-              <label for="passwordInput">Password to analyse</label>
-              <div class="input-with-actions">
-                <input type="password" id="passwordInput" autocomplete="off" />
-                <button id="togglePassword" class="icon-button" type="button" aria-label="Show password">👁️</button>
-                <button id="copyTestPassword" class="icon-button" type="button" aria-label="Copy password">📋</button>
-              </div>
-            </div>
-            <div class="strength-meter" aria-live="polite">
-              <div class="meter-track">
-                <div id="strengthBar" class="meter-bar"></div>
-              </div>
-              <div class="meter-labels">
-                <span id="strengthVerdict" class="badge badge-weak">Weak</span>
-                <span id="entropy">Entropy: 0 bits</span>
-                <span id="crackTime">Crack time: Instant</span>
-              </div>
-            </div>
-            <div class="tips">
-              <h3>How to improve it</h3>
-              <ul id="suggestionsList"></ul>
-              <p id="suggestionsEmpty" class="empty-state">Start typing to see personalised tips.</p>
-            </div>
-            <div class="hibp-card">
-              <div>
-                <h3>Breached password check</h3>
-                <p>We use Have I Been Pwned with k-anonymity. Only a secure prefix is shared.</p>
-              </div>
-              <div class="hibp-actions">
-                <button id="checkHibp" type="button" class="primary">Check now</button>
-                <span id="hibpStatus" role="status" aria-live="polite">Not checked yet.</span>
-              </div>
-            </div>
-          </div>
-
+        <section id="view-generator" class="view" role="tabpanel" aria-labelledby="tab-generator">
           <div class="panel">
             <div class="panel-header">
               <h2>Password generator</h2>
@@ -123,7 +86,49 @@
           </div>
         </section>
 
-        <section id="view-vault" class="view" role="tabpanel" aria-labelledby="Secure Vault">
+        <section id="view-tester" class="view active" role="tabpanel" aria-labelledby="tab-tester">
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Password tester</h2>
+              <p>Understand how resilient your password is with live insights.</p>
+            </div>
+            <div class="field-group">
+              <label for="passwordInput">Password to analyse</label>
+              <div class="input-with-actions">
+                <input type="password" id="passwordInput" autocomplete="off" />
+                <button id="togglePassword" class="icon-button" type="button" aria-label="Show password">👁️</button>
+                <button id="copyTestPassword" class="icon-button" type="button" aria-label="Copy password">📋</button>
+              </div>
+            </div>
+            <div class="strength-meter" aria-live="polite">
+              <div class="meter-track">
+                <div id="strengthBar" class="meter-bar"></div>
+              </div>
+              <div class="meter-labels">
+                <span id="strengthVerdict" class="badge badge-weak">Weak</span>
+                <span id="entropy">Entropy: 0 bits</span>
+                <span id="crackTime">Crack time: Instant</span>
+              </div>
+            </div>
+            <div class="tips">
+              <h3>How to improve it</h3>
+              <ul id="suggestionsList"></ul>
+              <p id="suggestionsEmpty" class="empty-state">Start typing to see personalised tips.</p>
+            </div>
+            <div class="hibp-card">
+              <div>
+                <h3>Breached password check</h3>
+                <p>We use Have I Been Pwned with k-anonymity. Only a secure prefix is shared.</p>
+              </div>
+              <div class="hibp-actions">
+                <button id="checkHibp" type="button" class="primary">Check now</button>
+                <span id="hibpStatus" role="status" aria-live="polite">Not checked yet.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-vault" class="view" role="tabpanel" aria-labelledby="tab-vault">
           <div id="vaultLocked" class="panel">
             <div class="panel-header">
               <h2>Secure vault</h2>

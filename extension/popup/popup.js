@@ -16,6 +16,7 @@ const themeToggle = document.getElementById('themeToggle');
 const toastEl = document.getElementById('toast');
 const viewTabs = document.querySelectorAll('.tab');
 const views = {
+  generator: document.getElementById('view-generator'),
   tester: document.getElementById('view-tester'),
   vault: document.getElementById('view-vault')
 };
@@ -185,6 +186,7 @@ async function copyToClipboard(value) {
 }
 
 function setView(view) {
+  if (!views[view]) return;
   state.currentView = view;
   viewTabs.forEach(tab => {
     const isActive = tab.dataset.view === view;
@@ -192,6 +194,7 @@ function setView(view) {
     tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
   Object.entries(views).forEach(([key, section]) => {
+    if (!section) return;
     section.classList.toggle('active', key === view);
   });
 }
@@ -777,6 +780,7 @@ function attachEventListeners() {
     passwordInput.value = generatedResult.value;
     updateStrength(generatedResult.value);
     setView('tester');
+    passwordInput.focus();
   });
 
   saveGeneratedBtn.addEventListener('click', saveGeneratedToVault);
