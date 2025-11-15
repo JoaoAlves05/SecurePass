@@ -52,12 +52,23 @@ export async function checkPassword(password) {
   if (entry && now - entry.timestamp < cacheTtl) {
     responseText = entry.payload;
   } else {
-    const res = await fetch(API_URL + prefix, {
-      method: 'GET',
-      headers: {
-        'Add-Padding': 'true'
+    let res;
+    try {
+      res = await fetch(API_URL + prefix, {
+        method: 'GET',
+        headers: {
+          'Add-Padding': 'true'
+        }
+      });
+    } catch (error) {
+      if (error instanceof TypeError) {
+        // Some environments block custom headers (triggering a CORS failure).
+        // Retry without the padding header so the lookup can still succeed.
+        res = await fetch(API_URL + prefix, { method: 'GET' });
+      } else {
+        throw error;
       }
-    });
+    }
     if (!res.ok) {
       throw new Error(`HIBP request failed with status ${res.status}`);
     }
