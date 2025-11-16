@@ -1,6 +1,27 @@
 import { evaluatePassword } from '../src/passwordStrength.js';
 import { loadSettings, saveSettings } from '../src/settings.js';
 
+const ICONS = {
+  sun:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line></svg>',
+  moon:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 14.5A8.38 8.38 0 0 1 12.5 3 6.5 6.5 0 1 0 21 14.5z"></path></svg>',
+  eye:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+  eyeOff:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.88"></path><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-3.16 4.19"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>',
+  copy:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+  arrowRight:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>',
+  lock:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="11" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>',
+  edit:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>',
+  trash:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>'
+};
+
 const passwordInput = document.getElementById('passwordInput');
 const strengthBar = document.getElementById('strengthBar');
 const strengthVerdict = document.getElementById('strengthVerdict');
@@ -13,6 +34,13 @@ const hibpButton = document.getElementById('checkHibp');
 const togglePasswordBtn = document.getElementById('togglePassword');
 const copyTestPasswordBtn = document.getElementById('copyTestPassword');
 const themeToggle = document.getElementById('themeToggle');
+const openSettingsBtn = document.getElementById('openSettings');
+const closeSettingsBtn = document.getElementById('closeSettings');
+const settingsPanel = document.getElementById('settingsPanel');
+const themeRadios = document.querySelectorAll('input[name="appearanceTheme"]');
+const autoLockRange = document.getElementById('autoLockRange');
+const autoLockLabel = document.getElementById('autoLockLabel');
+const syncToggle = document.getElementById('syncToggle');
 const toastEl = document.getElementById('toast');
 const viewTabs = document.querySelectorAll('.tab');
 const views = {
@@ -98,6 +126,7 @@ function resolveTheme(theme) {
 function applyTheme(theme) {
   const resolved = resolveTheme(theme);
   document.body.dataset.theme = resolved;
+  updateThemeToggleIcon();
 }
 
 function scheduleSettingsSave() {
@@ -190,12 +219,60 @@ function toggleCollapsible(button) {
   const nextState = !isExpanded;
   button.setAttribute('aria-expanded', String(nextState));
   target.hidden = !nextState;
+  updateToggleLabel(button, nextState);
+}
+
+function updateToggleLabel(button, expanded = false) {
+  if (!button) return;
+  const labels = button.dataset.labels ? button.dataset.labels.split('|').map(label => label.trim()) : null;
+  if (labels && labels.length === 2) {
+    button.textContent = expanded ? labels[1] : labels[0];
+  }
 }
 
 function setLoading(button, loading) {
   if (!button) return;
   button.disabled = loading;
   button.dataset.loading = loading;
+}
+
+function updateThemeToggleIcon() {
+  if (!themeToggle) return;
+  const resolved = resolveTheme(state.settings?.theme || 'system');
+  const icon = resolved === 'dark' ? ICONS.sun : ICONS.moon;
+  themeToggle.innerHTML = icon;
+  const label = resolved === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  themeToggle.setAttribute('aria-label', label);
+  themeToggle.title = label;
+}
+
+function updatePasswordToggleIcon() {
+  if (!togglePasswordBtn) return;
+  const isHidden = passwordInput.type === 'password';
+  togglePasswordBtn.innerHTML = isHidden ? ICONS.eye : ICONS.eyeOff;
+  togglePasswordBtn.setAttribute('aria-label', isHidden ? 'Show password' : 'Hide password');
+}
+
+function syncSettingsView() {
+  if (!state.settings) return;
+  themeRadios.forEach(radio => {
+    radio.checked = radio.value === state.settings.theme;
+  });
+  const timeout = state.settings.vaultTimeout || 15;
+  autoLockRange.value = timeout;
+  autoLockLabel.textContent = `${timeout} min`;
+  syncToggle.checked = Boolean(state.settings.useSync);
+  updateThemeToggleIcon();
+}
+
+function openSettingsPanel() {
+  if (!settingsPanel) return;
+  settingsPanel.setAttribute('aria-hidden', 'false');
+}
+
+function closeSettingsPanel() {
+  if (!settingsPanel) return;
+  settingsPanel.setAttribute('aria-hidden', 'true');
 }
 
 async function sendMessage(type, payload = {}) {
@@ -263,8 +340,20 @@ function hidePasswordReveal(container, button, id) {
   if (!container) return;
   container.classList.add('hidden');
   container.textContent = '';
-  if (button) button.textContent = 'Reveal';
+  if (button) {
+    button.innerHTML = ICONS.eye;
+    button.setAttribute('aria-label', 'Reveal password');
+  }
   if (id) clearRevealTimer(id);
+}
+
+function createVaultIconButton(icon, label, extraClass = '') {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `vault-icon-btn${extraClass ? ` ${extraClass}` : ''}`;
+  button.setAttribute('aria-label', label);
+  button.innerHTML = icon;
+  return button;
 }
 
 function renderVaultEntries() {
@@ -335,17 +424,15 @@ function renderVaultEntries() {
     const actions = document.createElement('div');
     actions.className = 'vault-actions';
 
-    const revealBtn = document.createElement('button');
-    revealBtn.type = 'button';
-    revealBtn.className = 'action-btn';
-    revealBtn.textContent = 'Reveal';
+    const revealBtn = createVaultIconButton(ICONS.eye, 'Reveal password');
     revealBtn.addEventListener('click', () => {
       resetInactivityTimer();
       const isHidden = passwordReveal.classList.contains('hidden');
       if (isHidden) {
         passwordReveal.textContent = entry.password;
         passwordReveal.classList.remove('hidden');
-        revealBtn.textContent = 'Hide';
+        revealBtn.innerHTML = ICONS.eyeOff;
+        revealBtn.setAttribute('aria-label', 'Hide password');
         clearRevealTimer(entry.id);
         const timer = setTimeout(() => {
           hidePasswordReveal(passwordReveal, revealBtn, entry.id);
@@ -356,28 +443,19 @@ function renderVaultEntries() {
       }
     });
 
-    const copyBtn = document.createElement('button');
-    copyBtn.type = 'button';
-    copyBtn.className = 'action-btn';
-    copyBtn.textContent = 'Copy';
+    const copyBtn = createVaultIconButton(ICONS.copy, 'Copy password');
     copyBtn.addEventListener('click', async () => {
       resetInactivityTimer();
       const ok = await copyToClipboard(entry.password);
       showToast(ok ? 'Password copied to clipboard.' : 'Unable to copy password.', ok ? 'success' : 'warning');
     });
 
-    const editBtn = document.createElement('button');
-    editBtn.type = 'button';
-    editBtn.className = 'action-btn';
-    editBtn.textContent = 'Edit';
+    const editBtn = createVaultIconButton(ICONS.edit, 'Edit credential');
     editBtn.addEventListener('click', () => {
       openEntryModal(entry);
     });
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button';
-    deleteBtn.className = 'action-btn danger';
-    deleteBtn.textContent = 'Delete';
+    const deleteBtn = createVaultIconButton(ICONS.trash, 'Delete credential', 'danger');
     deleteBtn.addEventListener('click', async () => {
       const confirmed = window.confirm('Delete this credential from the vault?');
       if (!confirmed) return;
@@ -648,6 +726,7 @@ function syncGeneratorControls() {
   includeNumbers.checked = state.settings.includeNumbers;
   includeSymbols.checked = state.settings.includeSymbols;
   avoidSimilar.checked = state.settings.avoidSimilar;
+  syncSettingsView();
 }
 
 async function handleGenerate() {
@@ -744,7 +823,7 @@ function attachEventListeners() {
   togglePasswordBtn.addEventListener('click', () => {
     const isHidden = passwordInput.type === 'password';
     passwordInput.type = isHidden ? 'text' : 'password';
-    togglePasswordBtn.textContent = isHidden ? '🙈' : '👁️';
+    updatePasswordToggleIcon();
   });
 
   copyTestPasswordBtn.addEventListener('click', async () => {
@@ -850,6 +929,8 @@ function attachEventListeners() {
   });
 
   document.querySelectorAll('[data-toggle-target]')?.forEach(button => {
+    const expanded = button.getAttribute('aria-expanded') === 'true';
+    updateToggleLabel(button, expanded);
     button.addEventListener('click', event => {
       delete event.currentTarget.dataset.autoOpened;
       toggleCollapsible(event.currentTarget);
@@ -880,6 +961,46 @@ function attachEventListeners() {
     applyTheme(nextTheme);
     await saveSettings(state.settings);
   });
+
+  openSettingsBtn.addEventListener('click', () => openSettingsPanel());
+  closeSettingsBtn.addEventListener('click', () => closeSettingsPanel());
+  settingsPanel.addEventListener('click', event => {
+    if (event.target === settingsPanel) {
+      closeSettingsPanel();
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && settingsPanel.getAttribute('aria-hidden') === 'false') {
+      closeSettingsPanel();
+    }
+  });
+
+  themeRadios.forEach(radio => {
+    radio.addEventListener('change', async event => {
+      if (!event.target.checked || !state.settings) return;
+      state.settings.theme = event.target.value;
+      applyTheme(event.target.value);
+      await saveSettings(state.settings);
+      syncSettingsView();
+    });
+  });
+
+  autoLockRange.addEventListener('input', event => {
+    autoLockLabel.textContent = `${event.target.value} min`;
+  });
+
+  autoLockRange.addEventListener('change', () => {
+    if (!state.settings) return;
+    state.settings.vaultTimeout = Number(autoLockRange.value);
+    scheduleSettingsSave();
+  });
+
+  syncToggle.addEventListener('change', async () => {
+    if (!state.settings) return;
+    state.settings.useSync = syncToggle.checked;
+    await saveSettings(state.settings);
+  });
 }
 
 async function initialise() {
@@ -895,6 +1016,15 @@ async function initialise() {
   }
   syncGeneratorControls();
   updateStrength('');
+  updatePasswordToggleIcon();
+  copyTestPasswordBtn.innerHTML = ICONS.copy;
+  copyTestPasswordBtn.setAttribute('aria-label', 'Copy password');
+  copyGeneratedBtn.innerHTML = ICONS.copy;
+  copyGeneratedBtn.setAttribute('aria-label', 'Copy generated password');
+  useForTestBtn.innerHTML = ICONS.arrowRight;
+  useForTestBtn.setAttribute('aria-label', 'Send to tester');
+  lockVaultBtn.innerHTML = ICONS.lock;
+  lockVaultBtn.setAttribute('aria-label', 'Lock vault');
   attachEventListeners();
   await loadVaultStatus();
   setView('tester');

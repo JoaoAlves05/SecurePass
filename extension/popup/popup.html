@@ -7,269 +7,337 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <div class="app">
-      <header class="app-header">
-        <div class="brand">
-          <span aria-hidden="true" class="brand-icon">🔐</span>
-          <div class="brand-copy">
-            <div class="panel-title">
-              <h1>SecurePass Suite</h1>
-              <button
-                type="button"
-                class="panel-toggle"
-                aria-label="Toggle tagline"
-                aria-controls="brandSubtitle"
-                aria-expanded="false"
-                data-toggle-target="brandSubtitle"
-              ></button>
+    <div class="app-shell">
+      <div class="app">
+        <header class="shell-header">
+          <div class="brand">
+            <p class="eyebrow">SecurePass</p>
+            <h1>SecurePass Suite</h1>
+          </div>
+          <div class="header-actions">
+            <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle theme"></button>
+            <button id="openSettings" class="icon-button" type="button" aria-label="Open settings">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82A2 2 0 1 1 9.17 23a1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 3a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33l-.06.06A2 2 0 1 1 2.95-.11l.06.06A1.65 1.65 0 0 0 4.6 1a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82A2 2 0 1 1 8.83-1.95a1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82z"
+                  ></path>
+                </svg>
+              </span>
+            </button>
+          </div>
+        </header>
+
+        <nav class="view-tabs" role="tablist">
+          <button id="tab-tester" class="tab active" role="tab" aria-selected="true" data-view="tester">
+            Tester
+          </button>
+          <button id="tab-generator" class="tab" role="tab" aria-selected="false" data-view="generator">
+            Generator
+          </button>
+          <button id="tab-vault" class="tab" role="tab" aria-selected="false" data-view="vault">
+            Secure Vault
+          </button>
+        </nav>
+
+        <main class="views">
+          <section id="view-tester" class="view active" role="tabpanel" aria-labelledby="tab-tester">
+            <div class="panel">
+              <div class="panel-headline">
+                <div>
+                  <p class="eyebrow">Live tester</p>
+                  <h2>Check password health</h2>
+                </div>
+                <button
+                  type="button"
+                  class="pill-toggle"
+                  data-toggle-target="testerDescription"
+                  data-labels="Details|Hide"
+                  aria-expanded="false"
+                ></button>
+              </div>
+              <p id="testerDescription" class="panel-description" hidden>
+                Inspect password entropy, live guidance and breach exposure.
+              </p>
+              <div class="field-group">
+                <label for="passwordInput">Password</label>
+                <div class="input-with-actions">
+                  <input type="password" id="passwordInput" autocomplete="off" />
+                  <button id="togglePassword" class="icon-button" type="button" aria-label="Show password"></button>
+                  <button id="copyTestPassword" class="icon-button" type="button" aria-label="Copy password"></button>
+                </div>
+              </div>
+              <div class="pill-row">
+                <button id="saveTested" type="button" class="ghost">Save to vault</button>
+                <button id="checkHibp" type="button" class="ghost" aria-live="polite">Breach check</button>
+              </div>
+              <div class="strength-scale" aria-live="polite">
+                <div class="scale-track">
+                  <div id="strengthBar" class="scale-fill"></div>
+                </div>
+                <div class="scale-labels" aria-hidden="true">
+                  <span>Weak</span>
+                  <span>Medium</span>
+                  <span>Strong</span>
+                </div>
+                <div class="scale-metrics">
+                  <span id="strengthVerdict" class="badge badge-weak">Weak</span>
+                  <span id="entropy">Entropy: 0 bits</span>
+                  <span id="crackTime">Crack time: Instant</span>
+                </div>
+              </div>
+              <div class="tips">
+                <div class="panel-headline">
+                  <div>
+                    <p class="eyebrow">Hints</p>
+                    <h3>Quick improvements</h3>
+                  </div>
+                  <button
+                    type="button"
+                    class="pill-toggle"
+                    data-toggle-target="tipsContent"
+                    data-labels="Show tips|Hide tips"
+                    aria-expanded="false"
+                  ></button>
+                </div>
+                <div id="tipsContent" class="tips-content" hidden>
+                  <ul id="suggestionsList"></ul>
+                  <p id="suggestionsEmpty" class="empty-state">Start typing to see tailored guidance.</p>
+                </div>
+              </div>
+              <div class="hibp-card">
+                <div class="panel-headline">
+                  <div>
+                    <p class="eyebrow">Breach insight</p>
+                    <h3>Have I Been Pwned</h3>
+                  </div>
+                  <button
+                    type="button"
+                    class="pill-toggle"
+                    data-toggle-target="hibpDescription"
+                    data-labels="More info|Hide"
+                    aria-expanded="false"
+                  ></button>
+                </div>
+                <p id="hibpDescription" class="panel-description" hidden>
+                  We use k-anonymity so only a short hash prefix leaves your device.
+                </p>
+                <div class="hibp-actions">
+                  <span id="hibpStatus" role="status" aria-live="polite">Not checked yet.</span>
+                </div>
+              </div>
             </div>
-            <p id="brandSubtitle" class="subtitle collapsible" hidden>
-              Test, generate and safeguard your passwords
-            </p>
+          </section>
+
+          <section id="view-generator" class="view" role="tabpanel" aria-labelledby="tab-generator">
+            <div class="panel">
+              <div class="panel-headline">
+                <div>
+                  <p class="eyebrow">Generator</p>
+                  <h2>Create unique passwords</h2>
+                </div>
+                <button
+                  type="button"
+                  class="pill-toggle"
+                  data-toggle-target="generatorDescription"
+                  data-labels="Details|Hide"
+                  aria-expanded="false"
+                ></button>
+              </div>
+              <p id="generatorDescription" class="panel-description" hidden>
+                Pick constraints and copy or send directly to the tester.
+              </p>
+              <div class="generator-grid">
+                <div class="field-group">
+                  <label for="lengthRange">Length <span id="lengthValue">16</span></label>
+                  <input type="range" id="lengthRange" min="8" max="64" value="16" />
+                </div>
+                <div class="chip-grid">
+                  <label class="chip-toggle">
+                    <input type="checkbox" id="includeLower" checked />
+                    <span>Lowercase</span>
+                  </label>
+                  <label class="chip-toggle">
+                    <input type="checkbox" id="includeUpper" checked />
+                    <span>Uppercase</span>
+                  </label>
+                  <label class="chip-toggle">
+                    <input type="checkbox" id="includeNumbers" checked />
+                    <span>Numbers</span>
+                  </label>
+                  <label class="chip-toggle">
+                    <input type="checkbox" id="includeSymbols" checked />
+                    <span>Symbols</span>
+                  </label>
+                  <label class="chip-toggle">
+                    <input type="checkbox" id="avoidSimilar" checked />
+                    <span>Avoid look-alikes</span>
+                  </label>
+                </div>
+              </div>
+              <div class="generator-actions">
+                <button id="generatePassword" type="button" class="primary">Generate</button>
+                <span id="generatorStatus" role="status" aria-live="polite"></span>
+              </div>
+              <div class="generated-output">
+                <label for="generatedResult">Generated password</label>
+                <div class="input-with-actions">
+                  <input type="text" id="generatedResult" readonly />
+                  <button id="copyGenerated" class="icon-button" type="button" aria-label="Copy generated password"></button>
+                  <button id="useForTest" class="icon-button" type="button" aria-label="Use in tester"></button>
+                </div>
+                <div class="generated-actions">
+                  <button id="saveGenerated" type="button" class="ghost">Save to vault</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-vault" class="view" role="tabpanel" aria-labelledby="tab-vault">
+            <div id="vaultLocked" class="panel">
+              <div class="panel-headline">
+                <div>
+                  <p class="eyebrow">Secure vault</p>
+                  <h2>Encrypted locally</h2>
+                </div>
+                <button
+                  type="button"
+                  class="pill-toggle"
+                  data-toggle-target="vaultLockedDescription"
+                  data-labels="Details|Hide"
+                  aria-expanded="false"
+                ></button>
+              </div>
+              <p id="vaultLockedDescription" class="panel-description" hidden>
+                Unlock with your master password to manage stored credentials.
+              </p>
+              <div id="createMaster" class="vault-state hidden">
+                <h3>Create a master password</h3>
+                <p>Encrypt the vault before syncing.</p>
+                <form id="createMasterForm" class="stack">
+                  <label>
+                    Master password
+                    <input type="password" id="newMaster" autocomplete="new-password" required />
+                  </label>
+                  <label>
+                    Confirm master password
+                    <input type="password" id="confirmMaster" autocomplete="new-password" required />
+                  </label>
+                  <button type="submit" class="primary">Create vault</button>
+                </form>
+              </div>
+              <div id="unlockMaster" class="vault-state">
+                <h3>Unlock your vault</h3>
+                <form id="unlockForm" class="stack">
+                  <label>
+                    Master password
+                    <input type="password" id="vaultPassphrase" autocomplete="current-password" required />
+                  </label>
+                  <button type="submit" class="primary">Unlock</button>
+                </form>
+              </div>
+            </div>
+
+            <div id="vaultUnlocked" class="panel hidden">
+              <div class="panel-headline">
+                <div>
+                  <p class="eyebrow">Saved entries</p>
+                  <h2>Your stored credentials</h2>
+                </div>
+                <button
+                  type="button"
+                  class="pill-toggle"
+                  data-toggle-target="vaultUnlockedDescription"
+                  data-labels="Details|Hide"
+                  aria-expanded="false"
+                ></button>
+              </div>
+              <p id="vaultUnlockedDescription" class="panel-description" hidden>
+                Passwords stay encrypted locally and in sync when enabled.
+              </p>
+              <div class="vault-toolbar">
+                <div class="search">
+                  <label for="vaultSearch">Search</label>
+                  <input type="search" id="vaultSearch" placeholder="Site or username" />
+                </div>
+                <div class="toolbar-actions">
+                  <button id="addEntry" type="button" class="ghost">Add</button>
+                  <button id="changeMaster" type="button" class="ghost">Change master</button>
+                  <button id="lockVault" type="button" class="icon-button" title="Lock vault" aria-label="Lock vault"></button>
+                </div>
+              </div>
+              <ul id="vaultList" class="vault-list"></ul>
+              <p id="vaultEmpty" class="empty-state hidden">No credentials saved yet.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="settingsPanel" class="settings-panel" aria-hidden="true">
+      <div class="settings-surface">
+        <div class="settings-header">
+          <button id="closeSettings" class="icon-button" type="button" aria-label="Back to main view">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </span>
+          </button>
+          <div>
+            <p class="eyebrow">Control center</p>
+            <h2>Settings</h2>
           </div>
         </div>
-        <button id="themeToggle" class="icon-button" aria-label="Toggle theme" title="Toggle theme">
-          🌓
-        </button>
-      </header>
+        <div class="settings-content">
+          <section class="settings-group">
+            <div>
+              <h3>Appearance</h3>
+              <p>Choose how the extension follows system or manual themes.</p>
+            </div>
+            <div class="options-row">
+              <label class="chip-option">
+                <input type="radio" name="appearanceTheme" value="system" />
+                <span>System</span>
+              </label>
+              <label class="chip-option">
+                <input type="radio" name="appearanceTheme" value="dark" />
+                <span>Dark</span>
+              </label>
+              <label class="chip-option">
+                <input type="radio" name="appearanceTheme" value="light" />
+                <span>Light</span>
+              </label>
+            </div>
+          </section>
 
-      <nav class="view-switcher" role="tablist">
-        <button id="tab-generator" class="tab" role="tab" aria-selected="false" data-view="generator">
-          <span class="tab-icon" aria-hidden="true">✨</span>
-          <span class="tab-label">Generator</span>
-        </button>
-        <button id="tab-tester" class="tab active" role="tab" aria-selected="true" data-view="tester">
-          <span class="tab-icon" aria-hidden="true">🛡️</span>
-          <span class="tab-label">Tester</span>
-        </button>
-        <button id="tab-vault" class="tab" role="tab" aria-selected="false" data-view="vault">
-          <span class="tab-icon" aria-hidden="true">🔒</span>
-          <span class="tab-label">Secure Vault</span>
-        </button>
-      </nav>
+          <section class="settings-group">
+            <div>
+              <h3>Security</h3>
+              <p>Auto-lock the vault after inactivity.</p>
+            </div>
+            <div class="options-row stack">
+              <label for="autoLockRange" class="range-label">
+                Auto-lock timer <span id="autoLockLabel">15 min</span>
+              </label>
+              <input type="range" id="autoLockRange" min="1" max="60" step="1" value="15" />
+            </div>
+          </section>
 
-      <main>
-        <section id="view-generator" class="view" role="tabpanel" aria-labelledby="tab-generator">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title">
-                <h2>Password generator</h2>
-                <button
-                  type="button"
-                  class="panel-toggle"
-                  aria-label="Toggle generator details"
-                  aria-controls="generatorDescription"
-                  aria-expanded="false"
-                  data-toggle-target="generatorDescription"
-                ></button>
-              </div>
-              <p id="generatorDescription" class="panel-description collapsible" hidden>
-                Create unique passwords tailored to your needs.
-              </p>
+          <section class="settings-group">
+            <div>
+              <h3>Sync</h3>
+              <p>Use Chrome Sync to keep encrypted vault data aligned.</p>
             </div>
-            <div class="generator-controls">
-              <div class="field-group">
-                <label for="lengthRange">Length: <span id="lengthValue">16</span> characters</label>
-                <input type="range" id="lengthRange" min="8" max="64" value="16" />
-              </div>
-              <div class="field-group check-grid">
-                <label class="checkbox">
-                  <input type="checkbox" id="includeLower" checked />
-                  <span>Lowercase</span>
-                </label>
-                <label class="checkbox">
-                  <input type="checkbox" id="includeUpper" checked />
-                  <span>Uppercase</span>
-                </label>
-                <label class="checkbox">
-                  <input type="checkbox" id="includeNumbers" checked />
-                  <span>Numbers</span>
-                </label>
-                <label class="checkbox">
-                  <input type="checkbox" id="includeSymbols" checked />
-                  <span>Symbols</span>
-                </label>
-                <label class="checkbox">
-                  <input type="checkbox" id="avoidSimilar" checked />
-                  <span>Avoid look-alikes</span>
-                </label>
-              </div>
-            </div>
-            <div class="generator-actions">
-              <button id="generatePassword" type="button" class="primary">Generate password</button>
-              <span id="generatorStatus" role="status" aria-live="polite"></span>
-            </div>
-            <div class="generated-output">
-              <label for="generatedResult">Generated password</label>
-              <div class="input-with-actions">
-                <input type="text" id="generatedResult" readonly />
-                <button id="copyGenerated" class="icon-button" type="button" aria-label="Copy generated password">📋</button>
-                <button id="useForTest" class="icon-button" type="button" aria-label="Use in tester">➡️</button>
-              </div>
-              <div class="generated-actions">
-                <button id="saveGenerated" type="button" class="secondary">Save to vault</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="view-tester" class="view active" role="tabpanel" aria-labelledby="tab-tester">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title">
-                <h2>Password tester</h2>
-                <button
-                  type="button"
-                  class="panel-toggle"
-                  aria-label="Toggle tester details"
-                  aria-controls="testerDescription"
-                  aria-expanded="false"
-                  data-toggle-target="testerDescription"
-                ></button>
-              </div>
-              <p id="testerDescription" class="panel-description collapsible" hidden>
-                Understand how resilient your password is with live insights.
-              </p>
-            </div>
-            <div class="field-group">
-              <label for="passwordInput">Password to analyse</label>
-              <div class="input-with-actions">
-                <input type="password" id="passwordInput" autocomplete="off" />
-                <button id="togglePassword" class="icon-button" type="button" aria-label="Show password">👁️</button>
-                <button id="copyTestPassword" class="icon-button" type="button" aria-label="Copy password">📋</button>
-              </div>
-            </div>
-            <div class="field-actions">
-              <button id="saveTested" type="button" class="secondary">Save to vault</button>
-            </div>
-            <div class="strength-meter" aria-live="polite">
-              <div class="meter-track">
-                <div id="strengthBar" class="meter-bar"></div>
-              </div>
-              <div class="meter-labels">
-                <span id="strengthVerdict" class="badge badge-weak">Weak</span>
-                <span id="entropy">Entropy: 0 bits</span>
-                <span id="crackTime">Crack time: Instant</span>
-              </div>
-            </div>
-            <div class="tips">
-              <div class="panel-title tips-header">
-                <h3>How to improve it</h3>
-                <button
-                  type="button"
-                  class="panel-toggle"
-                  aria-label="Toggle improvement tips"
-                  aria-controls="tipsContent"
-                  aria-expanded="false"
-                  data-toggle-target="tipsContent"
-                ></button>
-              </div>
-              <div id="tipsContent" class="tips-content" hidden>
-                <ul id="suggestionsList"></ul>
-                <p id="suggestionsEmpty" class="empty-state">Start typing to see personalised tips.</p>
-              </div>
-            </div>
-            <div class="hibp-card">
-              <div class="panel-title hibp-header">
-                <h3>Breached password check</h3>
-                <button
-                  type="button"
-                  class="panel-toggle"
-                  aria-label="Toggle breach check details"
-                  aria-controls="hibpDescription"
-                  aria-expanded="false"
-                  data-toggle-target="hibpDescription"
-                ></button>
-              </div>
-              <p id="hibpDescription" class="hibp-copy collapsible" hidden>
-                We use Have I Been Pwned with k-anonymity. Only a secure prefix is shared.
-              </p>
-              <div class="hibp-actions">
-                <button id="checkHibp" type="button" class="primary">Check now</button>
-                <span id="hibpStatus" role="status" aria-live="polite">Not checked yet.</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="view-vault" class="view" role="tabpanel" aria-labelledby="tab-vault">
-          <div id="vaultLocked" class="panel">
-            <div class="panel-header">
-              <div class="panel-title">
-                <h2>Secure vault</h2>
-                <button
-                  type="button"
-                  class="panel-toggle"
-                  aria-label="Toggle vault details"
-                  aria-controls="vaultLockedDescription"
-                  aria-expanded="false"
-                  data-toggle-target="vaultLockedDescription"
-                ></button>
-              </div>
-              <p id="vaultLockedDescription" class="panel-description collapsible" hidden>
-                Unlock with your master password to view and manage saved credentials.
-              </p>
-            </div>
-            <div id="createMaster" class="vault-state hidden">
-              <h3>Create a master password</h3>
-              <p>This password encrypts your vault before it is synced. Choose something memorable and strong.</p>
-              <form id="createMasterForm" class="stack">
-                <label>
-                  Master password
-                  <input type="password" id="newMaster" autocomplete="new-password" required />
-                </label>
-                <label>
-                  Confirm master password
-                  <input type="password" id="confirmMaster" autocomplete="new-password" required />
-                </label>
-                <button type="submit" class="primary">Create vault</button>
-              </form>
-            </div>
-            <div id="unlockMaster" class="vault-state">
-              <h3>Unlock your vault</h3>
-              <form id="unlockForm" class="stack">
-                <label>
-                  Master password
-                  <input type="password" id="vaultPassphrase" autocomplete="current-password" required />
-                </label>
-                <button type="submit" class="primary">Unlock</button>
-              </form>
-            </div>
-          </div>
-
-          <div id="vaultUnlocked" class="panel hidden">
-            <div class="panel-header">
-              <div class="panel-title">
-                <h2>Your stored credentials</h2>
-                <button
-                  type="button"
-                  class="panel-toggle"
-                  aria-label="Toggle stored credentials details"
-                  aria-controls="vaultUnlockedDescription"
-                  aria-expanded="false"
-                  data-toggle-target="vaultUnlockedDescription"
-                ></button>
-              </div>
-              <p id="vaultUnlockedDescription" class="panel-description collapsible" hidden>
-                Passwords stay encrypted locally and in sync across your devices.
-              </p>
-            </div>
-            <div class="vault-toolbar">
-              <div class="search">
-                <label for="vaultSearch">Search</label>
-                <input type="search" id="vaultSearch" placeholder="Site or username" />
-              </div>
-              <div class="toolbar-actions">
-                <button id="addEntry" type="button" class="primary">Add credential</button>
-                <button id="changeMaster" type="button" class="secondary">Change master password</button>
-                <button id="lockVault" type="button" class="icon-button" title="Lock vault" aria-label="Lock vault">🔒</button>
-              </div>
-            </div>
-            <ul id="vaultList" class="vault-list"></ul>
-            <p id="vaultEmpty" class="empty-state hidden">No credentials saved yet.</p>
-          </div>
-        </section>
-      </main>
+            <label class="switch">
+              <input type="checkbox" id="syncToggle" />
+              <span class="slider"></span>
+              <span class="switch-label">Enable Chrome Sync</span>
+            </label>
+          </section>
+        </div>
+      </div>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -295,7 +363,7 @@
         </label>
         <label>
           Notes (optional)
-          <textarea id="entryNotes" rows="2" placeholder="Additional context" ></textarea>
+          <textarea id="entryNotes" rows="2" placeholder="Additional context"></textarea>
         </label>
         <div class="modal-actions">
           <button type="submit" class="primary">Save</button>

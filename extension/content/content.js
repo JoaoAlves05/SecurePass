@@ -1,76 +1,93 @@
 (async () => {
   const style = document.createElement('style');
   style.textContent = `
-    .securepass-button {
-      margin-left: 0.25rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 999px;
-      background: #38bdf8;
-      color: #0f172a;
-      font-weight: 600;
+    .securepass-floating {
+      position: absolute;
+      z-index: 2147483646;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
       border: none;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+      backdrop-filter: blur(12px);
       cursor: pointer;
-      font-size: 0.75rem;
+      display: grid;
+      place-items: center;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+    .securepass-floating svg {
+      width: 16px;
+      height: 16px;
+      color: #0f172a;
+    }
+    .securepass-floating--active {
+      background: rgba(37, 99, 235, 0.15);
     }
     .securepass-panel {
       position: absolute;
       z-index: 2147483647;
-      background: rgba(15, 23, 42, 0.95);
-      color: #e2e8f0;
-      border-radius: 10px;
-      padding: 0.75rem;
-      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.45);
-      width: 280px;
+      width: 320px;
+      border-radius: 18px;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.86);
+      color: #f8fafc;
+      box-shadow: 0 25px 60px rgba(2, 6, 23, 0.55);
+      backdrop-filter: blur(18px);
       font-family: 'Inter', system-ui, sans-serif;
     }
     .securepass-panel h3 {
-      margin: 0 0 0.5rem;
-      font-size: 0.95rem;
+      margin: 0 0 4px;
+      font-size: 0.9rem;
+      font-weight: 600;
     }
-    .securepass-panel .meter {
+    .securepass-panel .securepass-meter {
       height: 8px;
-      background: rgba(148, 163, 184, 0.3);
-      border-radius: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.25);
       overflow: hidden;
-      margin-bottom: 0.5rem;
+      margin-bottom: 6px;
     }
-    .securepass-panel .meter div {
+    .securepass-panel .securepass-meter div {
       height: 100%;
-      width: 0%;
-      background: #f87171;
-      transition: width 0.3s ease;
+      width: 6%;
+      border-radius: inherit;
+      background: #ef4444;
+      transition: width 0.3s ease, background 0.3s ease;
     }
-    .securepass-panel .meta {
+    .securepass-panel .securepass-meta {
       font-size: 0.75rem;
       display: flex;
       justify-content: space-between;
-      margin-bottom: 0.5rem;
+      color: rgba(226, 232, 240, 0.85);
+      margin-bottom: 6px;
     }
     .securepass-panel ul {
       margin: 0;
       padding-left: 1rem;
-      font-size: 0.7rem;
-      max-height: 80px;
+      max-height: 90px;
       overflow-y: auto;
+      font-size: 0.75rem;
     }
-    .securepass-panel .actions {
+    .securepass-panel .securepass-actions {
       display: flex;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
+      gap: 8px;
+      margin-top: 10px;
     }
-    .securepass-panel button {
+    .securepass-panel .securepass-actions button {
       flex: 1;
-      padding: 0.35rem 0.5rem;
-      border-radius: 6px;
       border: none;
-      cursor: pointer;
+      border-radius: 10px;
+      background: rgba(148, 163, 184, 0.25);
+      color: #f8fafc;
+      padding: 6px 8px;
       font-weight: 600;
-      background: #38bdf8;
-      color: #0f172a;
+      cursor: pointer;
     }
-    .securepass-panel .status {
+    .securepass-panel .securepass-status {
       font-size: 0.7rem;
-      margin-top: 0.35rem;
+      margin-top: 6px;
+      color: rgba(248, 250, 252, 0.75);
     }
   `;
   document.documentElement.appendChild(style);
@@ -80,71 +97,101 @@
     import(chrome.runtime.getURL('src/passwordStrength.js'))
   ]);
 
-  const activePanels = new Map();
+  const tracked = new Map();
 
   function mapScoreToColor(score) {
-    if (score >= 0.8) return '#34d399';
-    if (score >= 0.6) return '#4ade80';
-    if (score >= 0.4) return '#facc15';
-    return '#f87171';
+    if (score >= 0.8) return 'linear-gradient(90deg,#22c55e,#16a34a)';
+    if (score >= 0.6) return 'linear-gradient(90deg,#84cc16,#22c55e)';
+    if (score >= 0.4) return 'linear-gradient(90deg,#facc15,#f97316)';
+    return 'linear-gradient(90deg,#ef4444,#dc2626)';
+  }
+
+  function positionFloating(button, field) {
+    const rect = field.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      button.style.opacity = '0';
+      return;
+    }
+    const top = rect.top + window.scrollY + rect.height / 2 - button.offsetHeight / 2;
+    const left = rect.right + window.scrollX + 8;
+    button.style.opacity = '1';
+    button.style.top = `${Math.max(0, top)}px`;
+    button.style.left = `${left}px`;
   }
 
   function positionPanel(panel, field) {
     const rect = field.getBoundingClientRect();
-    panel.style.top = `${rect.bottom + window.scrollY + 8}px`;
-    panel.style.left = `${rect.left + window.scrollX}px`;
+    const top = rect.bottom + window.scrollY + 10;
+    const left = rect.left + window.scrollX;
+    panel.style.top = `${top}px`;
+    panel.style.left = `${left}px`;
   }
 
   function updatePanel(panel, password) {
-    const strength = passwordModule.evaluatePassword(password);
-    panel.querySelector('.meter div').style.width = `${Math.max(strength.score * 100, 6)}%`;
-    panel.querySelector('.meter div').style.background = mapScoreToColor(strength.score);
-    panel.querySelector('.verdict').textContent = strength.verdict;
-    panel.querySelector('.entropy').textContent = `${strength.entropy} bits`;
+    const { score, verdict, entropy, suggestions } = passwordModule.evaluatePassword(password);
+    panel.querySelector('.securepass-meter div').style.width = `${Math.max(score * 100, 6)}%`;
+    panel.querySelector('.securepass-meter div').style.background = mapScoreToColor(score);
+    panel.querySelector('.securepass-verdict').textContent = verdict;
+    panel.querySelector('.securepass-entropy').textContent = `${entropy} bits`;
     const list = panel.querySelector('ul');
     list.innerHTML = '';
-    strength.suggestions.forEach(tip => {
+    suggestions.forEach(tip => {
       const li = document.createElement('li');
       li.textContent = tip;
       list.appendChild(li);
     });
+    if (!suggestions.length) {
+      const li = document.createElement('li');
+      li.textContent = 'Looking strong. Keep it memorable.';
+      list.appendChild(li);
+    }
   }
 
-  function createPanel(field, constraints) {
+  function createPanel(field, constraints, button) {
     const panel = document.createElement('div');
     panel.className = 'securepass-panel';
     panel.innerHTML = `
-      <h3>SecurePass Insights</h3>
-      <div class="meter"><div></div></div>
-      <div class="meta">
-        <span class="verdict">Weak</span>
-        <span class="entropy">0 bits</span>
+      <h3>SecurePass insight</h3>
+      <div class="securepass-meter"><div></div></div>
+      <div class="securepass-meta">
+        <span class="securepass-verdict">Weak</span>
+        <span class="securepass-entropy">0 bits</span>
       </div>
       <ul></ul>
-      <div class="actions">
-        <button class="generate">Generate</button>
-        <button class="hibp">Check HIBP</button>
+      <div class="securepass-actions">
+        <button type="button" class="securepass-generate">Generate</button>
+        <button type="button" class="securepass-hibp">HIBP</button>
       </div>
-      <div class="status"></div>
+      <div class="securepass-status"></div>
     `;
     document.body.appendChild(panel);
     updatePanel(panel, field.value);
     positionPanel(panel, field);
 
-    const statusEl = panel.querySelector('.status');
-    const generateBtn = panel.querySelector('.generate');
-    const hibpBtn = panel.querySelector('.hibp');
+    const statusEl = panel.querySelector('.securepass-status');
+    const generateBtn = panel.querySelector('.securepass-generate');
+    const hibpBtn = panel.querySelector('.securepass-hibp');
+
+    const ro = new ResizeObserver(() => {
+      positionPanel(panel, field);
+    });
+    ro.observe(field);
+
+    const scrollHandler = () => positionPanel(panel, field);
+    window.addEventListener('scroll', scrollHandler, true);
+    window.addEventListener('resize', scrollHandler);
 
     const inputHandler = () => {
       updatePanel(panel, field.value);
       statusEl.textContent = '';
     };
+    field.addEventListener('input', inputHandler);
 
-    const observer = new ResizeObserver(() => positionPanel(panel, field));
-    observer.observe(field);
-
-    const scrollHandler = () => positionPanel(panel, field);
-    window.addEventListener('scroll', scrollHandler, true);
+    const outsideHandler = event => {
+      if (panel.contains(event.target) || event.target === button) return;
+      cleanup();
+    };
+    document.addEventListener('click', outsideHandler, true);
 
     generateBtn.addEventListener('click', async () => {
       generateBtn.disabled = true;
@@ -173,53 +220,83 @@
         statusEl.textContent = response?.error || 'HIBP check failed.';
         return;
       }
-      statusEl.textContent = response.result.compromised
-        ? `⚠️ Breached ${response.result.count.toLocaleString()} times`
-        : '✅ Not found in breaches';
+      statusEl.textContent = response.result?.compromised
+        ? `Breached ${response.result.count.toLocaleString()} times`
+        : 'Not found in breaches';
     });
 
-    const outsideHandler = event => {
-      if (
-        panel.contains(event.target) ||
-        event.target === field ||
-        event.target.closest('.securepass-button')
-      ) {
-        return;
-      }
-      cleanup();
-    };
-    document.addEventListener('click', outsideHandler, true);
-
     const cleanup = () => {
-      field.removeEventListener('input', inputHandler);
-      window.removeEventListener('scroll', scrollHandler, true);
       document.removeEventListener('click', outsideHandler, true);
-      observer.disconnect();
+      window.removeEventListener('scroll', scrollHandler, true);
+      window.removeEventListener('resize', scrollHandler);
+      field.removeEventListener('input', inputHandler);
+      ro.disconnect();
       panel.remove();
-      activePanels.delete(field);
+      button.classList.remove('securepass-floating--active');
+      const entry = tracked.get(field);
+      if (entry) {
+        entry.panelCleanup = null;
+      }
     };
 
-    field.addEventListener('input', inputHandler);
     return cleanup;
   }
 
   function attachButton(field, constraints) {
+    if (tracked.has(field)) return;
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = '🔒 SecurePass';
-    button.className = 'securepass-button';
+    button.className = 'securepass-floating';
+    button.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l7 4v8c0 4-3 7-7 8-4-1-7-4-7-8V6l7-4z"></path>
+        <path d="M9 12l2 2 4-4"></path>
+      </svg>
+    `;
+    button.setAttribute('aria-label', 'Open SecurePass tools');
+    document.body.appendChild(button);
+
+    const reposition = () => positionFloating(button, field);
+    const ro = new ResizeObserver(reposition);
+    ro.observe(field);
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    reposition();
+
+    const entry = { button, constraints, panelCleanup: null };
+    tracked.set(field, entry);
+
+    const removalObserver = new MutationObserver(() => {
+      if (!document.body.contains(field)) {
+        cleanup();
+        removalObserver.disconnect();
+      }
+    });
+    removalObserver.observe(document.body, { childList: true, subtree: true });
+
+    function cleanup() {
+      if (entry.panelCleanup) {
+        entry.panelCleanup();
+      }
+      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
+      ro.disconnect();
+      removalObserver.disconnect();
+      button.remove();
+      tracked.delete(field);
+    }
+
     button.addEventListener('click', event => {
       event.preventDefault();
       event.stopPropagation();
-      const existing = activePanels.get(field);
-      if (existing) {
-        existing();
+      if (entry.panelCleanup) {
+        entry.panelCleanup();
+        entry.panelCleanup = null;
         return;
       }
-      const cleanup = createPanel(field, constraints);
-      activePanels.set(field, cleanup);
+      button.classList.add('securepass-floating--active');
+      entry.panelCleanup = createPanel(field, constraints, button);
     });
-    field.insertAdjacentElement('afterend', button);
   }
 
   observePasswordFields((field, constraints) => {
