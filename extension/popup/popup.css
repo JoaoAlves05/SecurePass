@@ -55,7 +55,7 @@ body {
     radial-gradient(circle at 80% 0%, rgba(147, 51, 234, 0.12), transparent 45%),
     var(--bg);
   color: var(--text);
-  padding: 18px;
+  padding: 14px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -65,31 +65,31 @@ body {
 
 .app-shell {
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
 }
 
 .app {
   background: linear-gradient(135deg, var(--surface) 0%, var(--glass-strong) 60%, transparent);
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 18px;
   border: none;
   backdrop-filter: blur(34px) saturate(150%);
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
 }
 
 .shell-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 4px;
+  padding: 0 2px 4px;
 }
 
 .brand h1 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   letter-spacing: -0.01em;
 }
 
@@ -103,12 +103,12 @@ body {
 
 .header-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .icon-button {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   border: none;
   background: var(--primary-soft);
@@ -127,31 +127,33 @@ body {
 }
 
 .icon-button .icon svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
+
 
 .view-tabs {
   display: flex;
   gap: 10px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  padding: 6px;
+  padding: 4px;
   backdrop-filter: blur(18px);
   box-shadow: 0 15px 30px rgba(15, 23, 42, 0.12);
 }
 
 .tab {
-  flex: 1;
+  flex: 1 1 0;
   border: none;
   background: transparent;
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 7px 10px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-soft);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
 }
 
 .tab.active {
@@ -168,6 +170,7 @@ body {
 
 .view {
   display: none;
+  width: 100%;
 }
 
 .view.active {
@@ -177,12 +180,12 @@ body {
 .panel {
   background: var(--glass-soft);
   border-radius: calc(var(--radius) - 6px);
-  padding: 20px;
+  padding: 18px;
   backdrop-filter: blur(26px);
   box-shadow: var(--soft-shadow);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 body[data-theme='dark'] .panel {
@@ -221,8 +224,8 @@ body[data-theme='dark'] .panel {
 }
 
 .input-with-actions .icon-button {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background: rgba(255, 255, 255, 0.4);
 }
 
@@ -507,6 +510,10 @@ body[data-theme='dark'] .scale-track {
   border-radius: calc(var(--radius) - 10px);
   padding: 16px;
   box-shadow: var(--soft-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
 }
 
 body[data-theme='dark'] .tips,
@@ -521,6 +528,12 @@ body[data-theme='dark'] .hibp-card {
   flex-direction: column;
   gap: 4px;
   color: var(--text);
+}
+
+.insights-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .empty-state {

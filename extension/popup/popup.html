@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SecurePass Suite</title>
+    <title>SecurePass</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
@@ -11,8 +11,7 @@
       <div class="app">
         <header class="shell-header">
           <div class="brand">
-            <p class="eyebrow">SecurePass</p>
-            <h1>SecurePass Suite</h1>
+            <h1>SecurePass</h1>
           </div>
           <div class="header-actions">
             <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle theme"></button>
@@ -37,7 +36,7 @@
             Generator
           </button>
           <button id="tab-vault" class="tab" role="tab" aria-selected="false" data-view="vault">
-            Secure Vault
+            Vault
           </button>
         </nav>
 
@@ -87,44 +86,46 @@
                   <span id="crackTime">Crack time: Instant</span>
                 </div>
               </div>
-              <div class="tips">
-                <div class="panel-headline">
-                  <div>
-                    <p class="eyebrow">Hints</p>
-                    <h3>Quick improvements</h3>
+              <div class="insights-grid">
+                <div class="tips">
+                  <div class="panel-headline">
+                    <div>
+                      <p class="eyebrow">Hints</p>
+                      <h3>Quick improvements</h3>
+                    </div>
+                    <button
+                      type="button"
+                      class="pill-toggle"
+                      data-toggle-target="tipsContent"
+                      data-labels="Show tips|Hide tips"
+                      aria-expanded="false"
+                    ></button>
                   </div>
-                  <button
-                    type="button"
-                    class="pill-toggle"
-                    data-toggle-target="tipsContent"
-                    data-labels="Show tips|Hide tips"
-                    aria-expanded="false"
-                  ></button>
-                </div>
-                <div id="tipsContent" class="tips-content" hidden>
-                  <ul id="suggestionsList"></ul>
-                  <p id="suggestionsEmpty" class="empty-state">Start typing to see tailored guidance.</p>
-                </div>
-              </div>
-              <div class="hibp-card">
-                <div class="panel-headline">
-                  <div>
-                    <p class="eyebrow">Breach insight</p>
-                    <h3>Have I Been Pwned</h3>
+                  <div id="tipsContent" class="tips-content" hidden>
+                    <ul id="suggestionsList"></ul>
+                    <p id="suggestionsEmpty" class="empty-state">Start typing to see tailored guidance.</p>
                   </div>
-                  <button
-                    type="button"
-                    class="pill-toggle"
-                    data-toggle-target="hibpDescription"
-                    data-labels="More info|Hide"
-                    aria-expanded="false"
-                  ></button>
                 </div>
-                <p id="hibpDescription" class="panel-description" hidden>
-                  We use k-anonymity so only a short hash prefix leaves your device.
-                </p>
-                <div class="hibp-actions">
-                  <span id="hibpStatus" role="status" aria-live="polite">Not checked yet.</span>
+                <div class="hibp-card">
+                  <div class="panel-headline">
+                    <div>
+                      <p class="eyebrow">Breach insight</p>
+                      <h3>Have I Been Pwned</h3>
+                    </div>
+                    <button
+                      type="button"
+                      class="pill-toggle"
+                      data-toggle-target="hibpDescription"
+                      data-labels="More info|Hide"
+                      aria-expanded="false"
+                    ></button>
+                  </div>
+                  <p id="hibpDescription" class="panel-description" hidden>
+                    We use k-anonymity so only a short hash prefix leaves your device.
+                  </p>
+                  <div class="hibp-actions">
+                    <span id="hibpStatus" role="status" aria-live="polite">Not checked yet.</span>
+                  </div>
                 </div>
               </div>
             </div>
