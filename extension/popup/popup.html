@@ -18,9 +18,9 @@
             <button id="openSettings" class="icon-button" type="button" aria-label="Open settings">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3"></circle>
+                  <circle cx="12" cy="12" r="3.5"></circle>
                   <path
-                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82A2 2 0 1 1 9.17 23a1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 3a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33l-.06.06A2 2 0 1 1 2.95-.11l.06.06A1.65 1.65 0 0 0 4.6 1a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82A2 2 0 1 1 8.83-1.95a1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82z"
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.08.08a2 2 0 0 1-2.83 2.83l-.08-.08A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .33 1.65 1.65 0 0 0-.83 1.49V22a2 2 0 0 1-4 0v-.78a1.65 1.65 0 0 0-.83-1.49 1.65 1.65 0 0 0-1-.33 1.65 1.65 0 0 0-1.82.33l-.08.08a2 2 0 1 1-2.83-2.83l.08-.08A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.33-1 1.65 1.65 0 0 0-1.49-.83H2a2 2 0 0 1 0-4h.78a1.65 1.65 0 0 0 1.49-.83 1.65 1.65 0 0 0 .33-1 1.65 1.65 0 0 0-.33-1.82l-.08-.08a2 2 0 0 1 2.83-2.83l.08.08A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.33 1.65 1.65 0 0 0 .83-1.49V2a2 2 0 0 1 4 0v.78a1.65 1.65 0 0 0 .83 1.49 1.65 1.65 0 0 0 1 .33 1.65 1.65 0 0 0 1.82-.33l.08-.08a2 2 0 1 1 2.83 2.83l-.08.08A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .33 1 1.65 1.65 0 0 0 1.49.83H22a2 2 0 0 1 0 4h-.78a1.65 1.65 0 0 0-1.49.83 1.65 1.65 0 0 0-.33 1Z"
                   ></path>
                 </svg>
               </span>
@@ -286,18 +286,40 @@
               </svg>
             </span>
           </button>
-          <div>
+          <div class="settings-title">
             <p class="eyebrow">Control center</p>
             <h2>Settings</h2>
+            <p class="settings-subtitle">Configure how SecurePass adapts to your browsing and vault habits.</p>
+          </div>
+          <div class="settings-chip">Live preview</div>
+        </div>
+
+        <div class="settings-overview">
+          <div class="pill-stat">
+            <p class="label">Theme</p>
+            <p class="value">Follows system</p>
+          </div>
+          <div class="pill-stat">
+            <p class="label">Vault</p>
+            <p class="value">Local first</p>
+          </div>
+          <div class="pill-stat">
+            <p class="label">Sync</p>
+            <p class="value">Chrome profile</p>
           </div>
         </div>
+
         <div class="settings-content">
           <section class="settings-group">
-            <div>
-              <h3>Appearance</h3>
-              <p>Choose how the extension follows system or manual themes.</p>
+            <div class="settings-group-header">
+              <div>
+                <p class="eyebrow">Appearance</p>
+                <h3>Theme & accessibility</h3>
+                <p class="settings-description">Keep the popup in sync with your OS or force a curated light or dark look.</p>
+              </div>
+              <span class="pill-indicator neutral">Personal</span>
             </div>
-            <div class="options-row">
+            <div class="options-row chip-row">
               <label class="chip-option">
                 <input type="radio" name="appearanceTheme" value="system" />
                 <span>System</span>
@@ -311,31 +333,52 @@
                 <span>Light</span>
               </label>
             </div>
+            <div class="settings-footnote">
+              <p>Theme changes apply instantly to the popup, modals and vault screens.</p>
+            </div>
           </section>
 
           <section class="settings-group">
-            <div>
-              <h3>Security</h3>
-              <p>Auto-lock the vault after inactivity.</p>
+            <div class="settings-group-header">
+              <div>
+                <p class="eyebrow">Security</p>
+                <h3>Auto-lock discipline</h3>
+                <p class="settings-description">Control how quickly the vault re-locks when you step away.</p>
+              </div>
+              <span class="pill-indicator">Recommended</span>
             </div>
-            <div class="options-row stack">
-              <label for="autoLockRange" class="range-label">
-                Auto-lock timer <span id="autoLockLabel">15 min</span>
+            <div class="settings-grid">
+              <div class="stack">
+                <label for="autoLockRange" class="range-label">Auto-lock timer <span id="autoLockLabel">15 min</span></label>
+                <input type="range" id="autoLockRange" min="1" max="60" step="1" value="15" />
+              </div>
+              <div class="callout">
+                <h4>Smart lock</h4>
+                <p>We only keep the vault unlocked locally. A new session requires your master password again.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-group">
+            <div class="settings-group-header">
+              <div>
+                <p class="eyebrow">Sync</p>
+                <h3>Cloud coordination</h3>
+                <p class="settings-description">Use Chrome Sync to keep encrypted vault data aligned across devices.</p>
+              </div>
+              <span class="pill-indicator neutral">Optional</span>
+            </div>
+            <div class="settings-grid">
+              <label class="switch">
+                <input type="checkbox" id="syncToggle" />
+                <span class="slider"></span>
+                <span class="switch-label">Enable Chrome Sync</span>
               </label>
-              <input type="range" id="autoLockRange" min="1" max="60" step="1" value="15" />
+              <div class="callout muted">
+                <h4>Privacy first</h4>
+                <p>Only encrypted blobs leave your machine. Sync toggles do not change your master password or local vault.</p>
+              </div>
             </div>
-          </section>
-
-          <section class="settings-group">
-            <div>
-              <h3>Sync</h3>
-              <p>Use Chrome Sync to keep encrypted vault data aligned.</p>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="syncToggle" />
-              <span class="slider"></span>
-              <span class="switch-label">Enable Chrome Sync</span>
-            </label>
           </section>
         </div>
       </div>
@@ -346,26 +389,51 @@
 
     <div id="entryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="entryModalTitle">
       <form id="entryForm" class="modal-content">
-        <header>
-          <h3 id="entryModalTitle">Save credential</h3>
-          <p>Only encrypted data leaves this device. Fill in the details below.</p>
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Vault entry</p>
+            <h3 id="entryModalTitle">Save credential</h3>
+            <p class="modal-lead">Only encrypted data leaves this device. Capture the essentials with clarity.</p>
+          </div>
+          <div class="modal-chips">
+            <span class="pill-indicator neutral">AES-256</span>
+            <span class="pill-indicator">Zero-knowledge</span>
+          </div>
         </header>
-        <label>
-          Website or app
-          <input type="text" id="entrySite" placeholder="https://example.com" required />
-        </label>
-        <label>
-          Username or email
-          <input type="text" id="entryUsername" placeholder="user@example.com" />
-        </label>
-        <label>
-          Password
-          <input type="text" id="entryPassword" required />
-        </label>
-        <label>
-          Notes (optional)
-          <textarea id="entryNotes" rows="2" placeholder="Additional context"></textarea>
-        </label>
+        <div class="modal-grid">
+          <label class="field-stack">
+            Website or app
+            <input type="text" id="entrySite" placeholder="https://example.com" required />
+            <span class="hint">Use the full URL or the product name to identify the credential.</span>
+          </label>
+          <label class="field-stack">
+            Username or email
+            <input type="text" id="entryUsername" placeholder="user@example.com" />
+            <span class="hint">Optional – leave blank for account-less secrets.</span>
+          </label>
+        </div>
+        <div class="modal-grid">
+          <label class="field-stack">
+            Password
+            <input type="text" id="entryPassword" required />
+            <span class="hint">Paste from the generator or type manually. We never log it.</span>
+          </label>
+          <label class="field-stack">
+            Notes (optional)
+            <textarea id="entryNotes" rows="2" placeholder="MFA, security questions, recovery codes"></textarea>
+            <span class="hint">Everything here stays encrypted and offline.</span>
+          </label>
+        </div>
+        <div class="note-box">
+          <div>
+            <p class="note-title">Design-focused layout</p>
+            <p class="hint">Grouped fields, inline helpers and badges make it obvious what you are saving.</p>
+          </div>
+          <div class="note-actions">
+            <span class="pill-indicator neutral">Consistent spacing</span>
+            <span class="pill-indicator">Accessible labels</span>
+          </div>
+        </div>
         <div class="modal-actions">
           <button type="submit" class="primary">Save</button>
           <button type="button" data-close="entryModal" class="secondary">Cancel</button>
