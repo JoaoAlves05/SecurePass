@@ -862,7 +862,7 @@ function attachEventListeners() {
       return;
     }
     if (response.result?.compromised) {
-      hibpStatus.textContent = `Compromised ${response.result.count.toLocaleString()} times.`;
+      hibpStatus.innerHTML = `Compromised <strong>${response.result.count.toLocaleString()}</strong> times.`;
       hibpStatus.style.color = 'var(--danger)';
       showToast('This password has appeared in breaches.', 'error');
     } else {

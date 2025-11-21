@@ -451,7 +451,11 @@ body[data-theme='dark'] .ghost {
 }
 
 /* Generator Output */
-.generator-output-container {
+.generated-actions {
+  margin-top: 16px;
+}
+
+.generated-output-container {
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -1089,14 +1093,15 @@ body[data-theme='dark'] .vault-icon-btn {
 }
 
 .settings-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 10px;
-  margin-bottom: 6px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .pill-stat {
-  padding: 12px;
+  flex: 1;
+  padding: 10px;
+  text-align: center;
   border-radius: calc(var(--inner-radius) + 2px);
   background: rgba(255, 255, 255, 0.35);
   box-shadow: inset 0 1px 8px rgba(15, 23, 42, 0.08);
