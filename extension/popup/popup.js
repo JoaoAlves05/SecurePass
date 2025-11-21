@@ -76,6 +76,8 @@ const confirmMasterInput = document.getElementById('confirmMaster');
 const vaultList = document.getElementById('vaultList');
 const vaultEmpty = document.getElementById('vaultEmpty');
 const vaultSearch = document.getElementById('vaultSearch');
+const searchToggle = document.getElementById('searchToggle');
+const searchContainer = document.querySelector('.search-container');
 const addEntryBtn = document.getElementById('addEntry');
 const changeMasterBtn = document.getElementById('changeMaster');
 const lockVaultBtn = document.getElementById('lockVault');
@@ -487,6 +489,7 @@ function renderVaultState() {
   if (unlockMasterSection) unlockMasterSection.classList.toggle('hidden', !state.vaultInitialized);
   if (!state.vaultUnlocked) {
     if (vaultSearch) vaultSearch.value = '';
+    if (searchContainer) searchContainer.classList.remove('active');
     state.filter = '';
     state.entries = [];
   }
@@ -862,9 +865,9 @@ function attachEventListeners() {
       return;
     }
     if (response.result?.compromised) {
-      hibpStatus.innerHTML = `Compromised <strong>${response.result.count.toLocaleString()}</strong> times.`;
-      hibpStatus.style.color = 'var(--danger)';
-      showToast('This password has appeared in breaches.', 'error');
+      hibpStatus.innerHTML = `<strong style="color: var(--danger); font-size: 1.1em;">${response.result.count.toLocaleString()}</strong> breaches found`;
+      hibpStatus.style.color = 'var(--text)';
+      showToast(`Password found in ${response.result.count.toLocaleString()} breaches!`, 'error');
     } else {
       hibpStatus.textContent = 'No known breaches found.';
       hibpStatus.style.color = 'var(--success)';
@@ -965,6 +968,19 @@ function attachEventListeners() {
     state.filter = event.target.value;
     renderVaultEntries();
     resetInactivityTimer();
+  });
+
+  searchToggle.addEventListener('click', () => {
+    const isActive = searchContainer.classList.contains('active');
+    if (isActive) {
+      searchContainer.classList.remove('active');
+      vaultSearch.value = '';
+      state.filter = '';
+      renderVaultEntries();
+    } else {
+      searchContainer.classList.add('active');
+      setTimeout(() => vaultSearch.focus(), 300);
+    }
   });
 
   viewTabs.forEach(tab => {

@@ -233,13 +233,18 @@
           </div>
 
           <div class="vault-toolbar">
-            <div class="search">
-              <label for="vaultSearch" class="sr-only">Search</label>
-              <div class="input-with-actions">
+            <div class="toolbar-actions">
+              <button id="searchToggle" type="button" class="icon-btn" title="Search" aria-label="Toggle search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+              </button>
+              <div class="search-container">
+                <label for="vaultSearch" class="sr-only">Search</label>
                 <input type="search" id="vaultSearch" placeholder="Search site or username..." />
               </div>
-            </div>
-            <div class="toolbar-actions">
               <button id="addEntry" type="button" class="icon-btn" title="Add Entry">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                   stroke-linejoin="round">
@@ -395,11 +400,13 @@
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
         </button>
+        <div class="modal-header-title">
+          <h3 id="entryModalTitle">Save credential</h3>
+        </div>
       </header>
       <div class="form-stack">
-        <div class="header-content">
+        <div class="form-intro">
           <p class="eyebrow">Vault entry</p>
-          <h3 id="entryModalTitle">Save credential</h3>
           <p class="modal-lead">Only encrypted data leaves this device. Capture the essentials with clarity.</p>
           <div class="modal-chips">
             <span class="pill-indicator neutral">AES-256</span>
@@ -453,26 +460,40 @@
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
         </button>
-        <div class="header-content">
+        <div class="modal-header-title">
           <h3 id="masterModalTitle">Change master password</h3>
-          <p class="modal-lead">We will re-encrypt the vault with your new master password immediately.</p>
         </div>
       </header>
-      <label>
-        Current master password
-        <input type="password" id="currentMaster" autocomplete="current-password" required />
-      </label>
-      <label>
-        New master password
-        <input type="password" id="nextMaster" autocomplete="new-password" required />
-      </label>
-      <label>
-        Confirm new master password
-        <input type="password" id="confirmNextMaster" autocomplete="new-password" required />
-      </label>
-      <div class="modal-actions">
-        <button type="submit" class="primary">Update master password</button>
-        <button type="button" data-close="masterModal" class="secondary">Cancel</button>
+      <div class="form-stack">
+        <div class="form-intro">
+          <p class="eyebrow">Security</p>
+          <p class="modal-lead">We will re-encrypt the vault with your new master password immediately.</p>
+        </div>
+        <div class="field-group">
+          <label for="currentMaster">Current master password</label>
+          <div class="input-wrapper">
+            <input type="password" id="currentMaster" autocomplete="current-password" required />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="nextMaster">New master password</label>
+          <div class="input-wrapper">
+            <input type="password" id="nextMaster" autocomplete="new-password" required />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="confirmNextMaster">Confirm new master password</label>
+          <div class="input-wrapper">
+            <input type="password" id="confirmNextMaster" autocomplete="new-password" required />
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" data-close="masterModal" class="secondary">Cancel</button>
+          <button type="submit" class="primary">Update master password</button>
+        </div>
       </div>
     </form>
   </div>
