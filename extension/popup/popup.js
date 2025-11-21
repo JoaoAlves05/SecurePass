@@ -928,6 +928,15 @@ function attachEventListeners() {
     });
   });
 
+  document.querySelectorAll('.modal-header .icon-button').forEach(button => {
+    button.addEventListener('click', event => {
+      const modal = event.target.closest('.modal');
+      if (modal) {
+        closeModal(modal.id === 'entryModal' ? 'entryModal' : 'masterModal');
+      }
+    });
+  });
+
   document.querySelectorAll('[data-toggle-target]')?.forEach(button => {
     const expanded = button.getAttribute('aria-expanded') === 'true';
     updateToggleLabel(button, expanded);

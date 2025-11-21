@@ -264,9 +264,9 @@ textarea {
 }
 
 input[type='range'] {
-    appearance: none;
-    -webkit-appearance: none;
-    height: 6px;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 6px;
   background: rgba(15, 23, 42, 0.1);
   border-radius: 999px;
   outline: none;
@@ -358,6 +358,7 @@ body[data-theme='dark'] .input-with-actions {
   background: rgba(255, 255, 255, 0.35);
   color: var(--text);
 }
+
 body[data-theme='dark'] .ghost {
   background: rgba(255, 255, 255, 0.12);
 }
@@ -406,8 +407,8 @@ body[data-theme='dark'] .chip-option {
   color: var(--text-muted);
 }
 
-.chip-toggle input:checked + span,
-.chip-option input:checked + span {
+.chip-toggle input:checked+span,
+.chip-option input:checked+span {
   background: rgba(37, 99, 235, 0.2);
   color: var(--text);
 }
@@ -692,6 +693,8 @@ body[data-theme='dark'] .vault-icon-btn {
   transition: transform 0.3s ease;
   padding: 24px;
   backdrop-filter: blur(32px);
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .settings-panel[aria-hidden='false'] .settings-surface {
@@ -883,11 +886,11 @@ body[data-theme='dark'] .settings-group {
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.2);
 }
 
-.switch input:checked + .slider {
+.switch input:checked+.slider {
   background: rgba(37, 99, 235, 0.45);
 }
 
-.switch input:checked + .slider::after {
+.switch input:checked+.slider::after {
   transform: translateX(20px);
 }
 
@@ -962,18 +965,25 @@ body[data-theme='dark'] .settings-group {
   max-width: 380px;
   background: var(--glass-strong);
   border-radius: var(--radius);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
   gap: 12px;
   box-shadow: var(--shadow);
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
+}
+
+.modal-header .icon-button {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.header-content {
+  flex: 1;
 }
 
 .modal-lead {
@@ -1044,6 +1054,7 @@ body[data-theme='dark'] .settings-group {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
