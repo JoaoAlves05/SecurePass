@@ -681,7 +681,7 @@ body[data-theme='dark'] .ghost {
   font-family: var(--font-mono);
   font-size: 1.1rem;
   color: var(--text);
-  padding: 8px 0;
+  padding: 8px 8px;
   outline: none;
   width: 100%;
 }
