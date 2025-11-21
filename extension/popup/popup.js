@@ -42,7 +42,7 @@ const autoLockRange = document.getElementById('autoLockRange');
 const autoLockLabel = document.getElementById('autoLockLabel');
 const syncToggle = document.getElementById('syncToggle');
 const toastEl = document.getElementById('toast');
-const viewTabs = document.querySelectorAll('.tab');
+const viewTabs = document.querySelectorAll('.nav-item');
 const views = {
   generator: document.getElementById('view-generator'),
   tester: document.getElementById('view-tester'),
