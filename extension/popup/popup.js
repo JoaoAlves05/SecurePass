@@ -429,7 +429,7 @@ function renderVaultEntries() {
       const username = document.createElement('div');
       username.className = 'vault-username';
       // Add a small user icon if desired, or just text
-      username.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> ${entry.username}`;
+      username.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="user-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> ${entry.username}`;
       item.appendChild(username);
     }
 
@@ -841,7 +841,7 @@ function attachEventListeners() {
   passwordInput.addEventListener('input', event => {
     updateStrength(event.target.value);
     hibpStatus.textContent = 'Not checked yet.';
-    hibpStatus.style.color = 'var(--text-muted)';
+    hibpStatus.className = 'text-muted';
   });
 
   togglePasswordBtn.addEventListener('click', () => {
@@ -866,21 +866,21 @@ function attachEventListeners() {
     }
     setLoading(hibpButton, true);
     hibpStatus.textContent = 'Checking…';
-    hibpStatus.style.color = 'var(--text-muted)';
+    hibpStatus.className = 'text-muted';
     const response = await sendMessage('HIBP_CHECK', { password: passwordInput.value });
     setLoading(hibpButton, false);
     if (!response?.ok) {
       hibpStatus.textContent = response?.error || 'Could not check breaches.';
-      hibpStatus.style.color = 'var(--warning)';
+      hibpStatus.className = 'text-warning';
       return;
     }
     if (response.result?.compromised) {
       hibpStatus.innerHTML = `<strong class="breach-count">${response.result.count.toLocaleString()}</strong> breaches found`;
-      hibpStatus.style.color = 'var(--text)';
+      hibpStatus.className = 'text-default';
       showToast(`Password found in ${response.result.count.toLocaleString()} breaches!`, 'error');
     } else {
       hibpStatus.textContent = 'No known breaches found.';
-      hibpStatus.style.color = 'var(--success)';
+      hibpStatus.className = 'text-success';
       showToast('Password not found in breaches.', 'success');
     }
   });

@@ -1655,3 +1655,28 @@ body[data-theme='dark'] .modal-actions {
     transition: none !important;
   }
 }
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-default {
+  color: var(--text);
+}
+
+.user-icon {
+  opacity: 0.7;
+  vertical-align: text-bottom;
+}
