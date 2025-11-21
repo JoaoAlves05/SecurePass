@@ -169,26 +169,32 @@ function scoreToBadge(score) {
 
 function updateStrength(password) {
   const { score, verdict, entropy, crackTime, suggestions } = evaluatePassword(password);
-  strengthBar.style.width = `${Math.max(score * 100, 6)}%`;
-  strengthBar.style.background = mapScoreToColor(score);
-  strengthVerdict.textContent = verdict;
-  strengthVerdict.classList.remove('badge-weak', 'badge-medium', 'badge-strong');
-  strengthVerdict.classList.add(scoreToBadge(score));
-  entropyEl.textContent = `Entropy: ${entropy} bits`;
-  crackTimeEl.textContent = `Crack time: ${crackTime}`;
+  if (strengthBar) {
+    strengthBar.style.width = `${Math.max(score * 100, 6)}%`;
+    strengthBar.style.background = mapScoreToColor(score);
+  }
+  if (strengthVerdict) {
+    strengthVerdict.textContent = verdict;
+    strengthVerdict.classList.remove('badge-weak', 'badge-medium', 'badge-strong');
+    strengthVerdict.classList.add(scoreToBadge(score));
+  }
+  if (entropyEl) entropyEl.textContent = `Entropy: ${entropy} bits`;
+  if (crackTimeEl) crackTimeEl.textContent = `Crack time: ${crackTime}`;
 
-  suggestionsList.innerHTML = '';
-  if (suggestions.length) {
-    suggestionsEmpty.classList.add('hidden');
-    suggestionsList.classList.add('visible');
-    suggestions.forEach(tip => {
-      const li = document.createElement('li');
-      li.textContent = tip;
-      suggestionsList.appendChild(li);
-    });
-  } else {
-    suggestionsList.classList.remove('visible');
-    suggestionsEmpty.classList.remove('hidden');
+  if (suggestionsList) {
+    suggestionsList.innerHTML = '';
+    if (suggestions.length) {
+      if (suggestionsEmpty) suggestionsEmpty.classList.add('hidden');
+      suggestionsList.classList.add('visible');
+      suggestions.forEach(tip => {
+        const li = document.createElement('li');
+        li.textContent = tip;
+        suggestionsList.appendChild(li);
+      });
+    } else {
+      suggestionsList.classList.remove('visible');
+      if (suggestionsEmpty) suggestionsEmpty.classList.remove('hidden');
+    }
   }
 
   const tipsToggle = document.querySelector('[data-toggle-target="tipsContent"]');
@@ -247,7 +253,7 @@ function updateThemeToggleIcon() {
 }
 
 function updatePasswordToggleIcon() {
-  if (!togglePasswordBtn) return;
+  if (!togglePasswordBtn || !passwordInput) return;
   const isHidden = passwordInput.type === 'password';
   togglePasswordBtn.innerHTML = isHidden ? ICONS.eye : ICONS.eyeOff;
   togglePasswordBtn.setAttribute('aria-label', isHidden ? 'Show password' : 'Hide password');
@@ -724,13 +730,13 @@ async function loadVaultStatus() {
 
 function syncGeneratorControls() {
   if (!state.settings) return;
-  lengthRange.value = state.settings.minLength;
-  lengthValue.textContent = state.settings.minLength;
-  includeLower.checked = state.settings.includeLowercase;
-  includeUpper.checked = state.settings.includeUppercase;
-  includeNumbers.checked = state.settings.includeNumbers;
-  includeSymbols.checked = state.settings.includeSymbols;
-  avoidSimilar.checked = state.settings.avoidSimilar;
+  if (lengthRange) lengthRange.value = state.settings.minLength;
+  if (lengthValue) lengthValue.textContent = state.settings.minLength;
+  if (includeLower) includeLower.checked = state.settings.includeLowercase;
+  if (includeUpper) includeUpper.checked = state.settings.includeUppercase;
+  if (includeNumbers) includeNumbers.checked = state.settings.includeNumbers;
+  if (includeSymbols) includeSymbols.checked = state.settings.includeSymbols;
+  if (avoidSimilar) avoidSimilar.checked = state.settings.avoidSimilar;
   syncSettingsView();
 }
 
