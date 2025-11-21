@@ -119,79 +119,80 @@
             <button id="saveGenerated" type="button" class="ghost">Save to vault</button>
           </div>
         </div>
-  </div>
-  </section>
 
-  <section id="view-vault" class="view" role="tabpanel" aria-labelledby="tab-vault">
-    <div id="vaultLocked" class="panel">
-      <div class="panel-headline">
-        <div>
-          <p class="eyebrow">Secure vault</p>
-          <h2>Encrypted locally</h2>
-        </div>
-        <button type="button" class="pill-toggle" data-toggle-target="vaultLockedDescription" data-labels="Details|Hide"
-          aria-expanded="false"></button>
-      </div>
-      <p id="vaultLockedDescription" class="panel-description" hidden>
-        Unlock with your master password to manage stored credentials.
-      </p>
-      <div id="createMaster" class="vault-state hidden">
-        <h3>Create a master password</h3>
-        <p>Encrypt the vault before syncing.</p>
-        <form id="createMasterForm" class="stack">
-          <label>
-            Master password
-            <input type="password" id="newMaster" autocomplete="new-password" required />
-          </label>
-          <label>
-            Confirm master password
-            <input type="password" id="confirmMaster" autocomplete="new-password" required />
-          </label>
-          <button type="submit" class="primary">Create vault</button>
-        </form>
-      </div>
-      <div id="unlockMaster" class="vault-state">
-        <h3>Unlock your vault</h3>
-        <form id="unlockForm" class="stack">
-          <label>
-            Master password
-            <input type="password" id="vaultPassphrase" autocomplete="current-password" required />
-          </label>
-          <button type="submit" class="primary">Unlock</button>
-        </form>
-      </div>
-    </div>
+      </section>
 
-    <div id="vaultUnlocked" class="panel hidden">
-      <div class="panel-headline">
-        <div>
-          <p class="eyebrow">Saved entries</p>
-          <h2>Your stored credentials</h2>
+      <section id="view-vault" class="view" role="tabpanel" aria-labelledby="tab-vault">
+        <div id="vaultLocked" class="panel">
+          <div class="panel-headline">
+            <div>
+              <p class="eyebrow">Secure vault</p>
+              <h2>Encrypted locally</h2>
+            </div>
+            <button type="button" class="pill-toggle" data-toggle-target="vaultLockedDescription"
+              data-labels="Details|Hide" aria-expanded="false"></button>
+          </div>
+          <p id="vaultLockedDescription" class="panel-description" hidden>
+            Unlock with your master password to manage stored credentials.
+          </p>
+          <div id="createMaster" class="vault-state hidden">
+            <h3>Create a master password</h3>
+            <p>Encrypt the vault before syncing.</p>
+            <form id="createMasterForm" class="stack">
+              <label>
+                Master password
+                <input type="password" id="newMaster" autocomplete="new-password" required />
+              </label>
+              <label>
+                Confirm master password
+                <input type="password" id="confirmMaster" autocomplete="new-password" required />
+              </label>
+              <button type="submit" class="primary">Create vault</button>
+            </form>
+          </div>
+          <div id="unlockMaster" class="vault-state">
+            <h3>Unlock your vault</h3>
+            <form id="unlockForm" class="stack">
+              <label>
+                Master password
+                <input type="password" id="vaultPassphrase" autocomplete="current-password" required />
+              </label>
+              <button type="submit" class="primary">Unlock</button>
+            </form>
+          </div>
         </div>
-        <button type="button" class="pill-toggle" data-toggle-target="vaultUnlockedDescription"
-          data-labels="Details|Hide" aria-expanded="false"></button>
-      </div>
-      <p id="vaultUnlockedDescription" class="panel-description" hidden>
-        Passwords stay encrypted locally and in sync when enabled.
-      </p>
-      <div class="vault-toolbar">
-        <div class="search">
-          <label for="vaultSearch">Search</label>
-          <input type="search" id="vaultSearch" placeholder="Site or username" />
+
+        <div id="vaultUnlocked" class="panel hidden">
+          <div class="panel-headline">
+            <div>
+              <p class="eyebrow">Saved entries</p>
+              <h2>Your stored credentials</h2>
+            </div>
+            <button type="button" class="pill-toggle" data-toggle-target="vaultUnlockedDescription"
+              data-labels="Details|Hide" aria-expanded="false"></button>
+          </div>
+          <p id="vaultUnlockedDescription" class="panel-description" hidden>
+            Passwords stay encrypted locally and in sync when enabled.
+          </p>
+          <div class="vault-toolbar">
+            <div class="search">
+              <label for="vaultSearch">Search</label>
+              <input type="search" id="vaultSearch" placeholder="Site or username" />
+            </div>
+            <div class="toolbar-actions">
+              <button id="addEntry" type="button" class="ghost">Add</button>
+              <button id="changeMaster" type="button" class="ghost">Change master</button>
+              <button id="lockVault" type="button" class="icon-button" title="Lock vault"
+                aria-label="Lock vault"></button>
+            </div>
+          </div>
+          <ul id="vaultList" class="vault-list"></ul>
+          <p id="vaultEmpty" class="empty-state hidden">No credentials saved yet.</p>
         </div>
-        <div class="toolbar-actions">
-          <button id="addEntry" type="button" class="ghost">Add</button>
-          <button id="changeMaster" type="button" class="ghost">Change master</button>
-          <button id="lockVault" type="button" class="icon-button" title="Lock vault" aria-label="Lock vault"></button>
-        </div>
-      </div>
-      <ul id="vaultList" class="vault-list"></ul>
-      <p id="vaultEmpty" class="empty-state hidden">No credentials saved yet.</p>
-    </div>
-  </section>
-  </main>
+      </section>
+    </main>
   </div>
-  </div>
+
 
   <div id="settingsPanel" class="settings-panel" aria-hidden="true">
     <div class="settings-surface">
