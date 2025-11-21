@@ -369,8 +369,8 @@ function createVaultIconButton(icon, label, extraClass = '') {
 
 function renderVaultEntries() {
   if (!state.vaultUnlocked) {
-    vaultList.innerHTML = '';
-    vaultEmpty.classList.add('hidden');
+    if (vaultList) vaultList.innerHTML = '';
+    if (vaultEmpty) vaultEmpty.classList.add('hidden');
     return;
   }
   const query = state.filter.toLowerCase();
@@ -389,12 +389,12 @@ function renderVaultEntries() {
       return a.username.localeCompare(b.username, undefined, { sensitivity: 'base' });
     });
 
-  vaultList.innerHTML = '';
+  if (vaultList) vaultList.innerHTML = '';
   if (!filtered.length) {
-    vaultEmpty.classList.remove('hidden');
+    if (vaultEmpty) vaultEmpty.classList.remove('hidden');
     return;
   }
-  vaultEmpty.classList.add('hidden');
+  if (vaultEmpty) vaultEmpty.classList.add('hidden');
 
   filtered.forEach(entry => {
     const item = document.createElement('li');
@@ -481,12 +481,12 @@ function renderVaultEntries() {
 
 function renderVaultState() {
   const showLocked = !state.vaultUnlocked;
-  vaultLockedPanel.classList.toggle('hidden', !showLocked);
-  vaultUnlockedPanel.classList.toggle('hidden', showLocked);
-  createMasterSection.classList.toggle('hidden', state.vaultInitialized !== false);
-  unlockMasterSection.classList.toggle('hidden', !state.vaultInitialized);
+  if (vaultLockedPanel) vaultLockedPanel.classList.toggle('hidden', !showLocked);
+  if (vaultUnlockedPanel) vaultUnlockedPanel.classList.toggle('hidden', showLocked);
+  if (createMasterSection) createMasterSection.classList.toggle('hidden', state.vaultInitialized !== false);
+  if (unlockMasterSection) unlockMasterSection.classList.toggle('hidden', !state.vaultInitialized);
   if (!state.vaultUnlocked) {
-    vaultSearch.value = '';
+    if (vaultSearch) vaultSearch.value = '';
     state.filter = '';
     state.entries = [];
   }
