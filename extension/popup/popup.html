@@ -105,8 +105,59 @@
 
       <section id="view-generator" class="view" role="tabpanel" aria-labelledby="tab-generator">
         <div class="panel">
-          <button id="generatePassword" type="button" class="primary">Generate</button>
-          <span id="generatorStatus" role="status" aria-live="polite"></span>
+          <div class="generator-controls">
+            <div class="control-group">
+              <div class="control-header">
+                <label for="lengthRange">Length</label>
+                <span id="lengthValue" class="value-badge">16</span>
+              </div>
+              <input type="range" id="lengthRange" class="range-slider" min="6" max="64" value="16" />
+            </div>
+
+            <div class="options-grid">
+              <label class="checkbox-card">
+                <input type="checkbox" id="includeUpper" checked />
+                <div class="checkbox-content">
+                  <span class="checkbox-label">ABC</span>
+                  <span class="checkbox-sub">Uppercase</span>
+                </div>
+              </label>
+
+              <label class="checkbox-card">
+                <input type="checkbox" id="includeLower" checked />
+                <div class="checkbox-content">
+                  <span class="checkbox-label">abc</span>
+                  <span class="checkbox-sub">Lowercase</span>
+                </div>
+              </label>
+
+              <label class="checkbox-card">
+                <input type="checkbox" id="includeNumbers" checked />
+                <div class="checkbox-content">
+                  <span class="checkbox-label">123</span>
+                  <span class="checkbox-sub">Numbers</span>
+                </div>
+              </label>
+
+              <label class="checkbox-card">
+                <input type="checkbox" id="includeSymbols" checked />
+                <div class="checkbox-content">
+                  <span class="checkbox-label">#$&</span>
+                  <span class="checkbox-sub">Symbols</span>
+                </div>
+              </label>
+            </div>
+
+            <label class="checkbox-row">
+              <input type="checkbox" id="avoidSimilar" />
+              <span>Avoid similar characters (e.g. i, l, 1, L, o, 0, O)</span>
+            </label>
+          </div>
+
+          <div class="action-row">
+            <button id="generatePassword" type="button" class="btn btn-primary">Generate Password</button>
+          </div>
+          <span id="generatorStatus" role="status" aria-live="polite" class="status-message"></span>
         </div>
         <div class="generated-output">
           <label for="generatedResult">Generated password</label>
