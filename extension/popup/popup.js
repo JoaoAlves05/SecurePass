@@ -268,10 +268,15 @@ function syncSettingsView() {
 function openSettingsPanel() {
   if (!settingsPanel) return;
   settingsPanel.setAttribute('aria-hidden', 'false');
+  // Move focus to the close button for accessibility
+  closeSettingsBtn?.focus();
 }
 
 function closeSettingsPanel() {
   if (!settingsPanel) return;
+  // Move focus back to the trigger button BEFORE hiding the panel
+  // This prevents the "aria-hidden element contains focus" error
+  openSettingsBtn?.focus();
   settingsPanel.setAttribute('aria-hidden', 'true');
 }
 
