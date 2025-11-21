@@ -387,43 +387,40 @@
           <span class="pill-indicator">Zero-knowledge</span>
         </div>
       </header>
-      <div class="modal-grid">
-        <label class="field-stack">
-          Website or app
-          <input type="text" id="entrySite" placeholder="https://example.com" required />
-          <span class="hint">Use the full URL or the product name to identify the credential.</span>
-        </label>
-        <label class="field-stack">
-          Username or email
-          <input type="text" id="entryUsername" placeholder="user@example.com" />
-          <span class="hint">Optional – leave blank for account-less secrets.</span>
-        </label>
-      </div>
-      <div class="modal-grid">
-        <label class="field-stack">
-          Password
-          <input type="text" id="entryPassword" required />
-          <span class="hint">Paste from the generator or type manually. We never log it.</span>
-        </label>
-        <label class="field-stack">
-          Notes (optional)
-          <textarea id="entryNotes" rows="2" placeholder="MFA, security questions, recovery codes"></textarea>
-          <span class="hint">Everything here stays encrypted and offline.</span>
-        </label>
-      </div>
-      <div class="note-box">
-        <div>
-          <p class="note-title">Design-focused layout</p>
-          <p class="hint">Grouped fields, inline helpers and badges make it obvious what you are saving.</p>
+      <div class="form-stack">
+        <div class="field-group">
+          <label for="entrySite">Website or app</label>
+          <div class="input-wrapper">
+            <input type="text" id="entrySite" placeholder="e.g. https://google.com" required />
+          </div>
+          <span class="hint">The URL or name of the service.</span>
         </div>
-        <div class="note-actions">
-          <span class="pill-indicator neutral">Consistent spacing</span>
-          <span class="pill-indicator">Accessible labels</span>
+
+        <div class="field-group">
+          <label for="entryUsername">Username</label>
+          <div class="input-wrapper">
+            <input type="text" id="entryUsername" placeholder="e.g. user@email.com" />
+          </div>
         </div>
-      </div>
-      <div class="modal-actions">
-        <button type="submit" class="primary">Save</button>
-        <button type="button" data-close="entryModal" class="secondary">Cancel</button>
+
+        <div class="field-group">
+          <label for="entryPassword">Password</label>
+          <div class="input-wrapper">
+            <input type="text" id="entryPassword" class="font-mono" required />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="entryNotes">Notes <span class="optional">(Optional)</span></label>
+          <div class="input-wrapper">
+            <textarea id="entryNotes" rows="3" placeholder="Security questions, PINs, or other details..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" data-close="entryModal" class="secondary">Cancel</button>
+          <button type="submit" class="primary">Save credential</button>
+        </div>
       </div>
     </form>
   </div>
