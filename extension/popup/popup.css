@@ -945,6 +945,13 @@ body[data-theme='dark'] .search-container input {
 .search-container input:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--primary);
+  border-color: var(--primary);
+}
+
+.breach-count {
+  color: var(--danger);
+  font-size: 1.1em;
+  font-weight: 700;
 }
 
 /* Align search with icon buttons */
@@ -959,7 +966,25 @@ body[data-theme='dark'] .search-container input {
   display: flex;
   align-items: center;
   height: 32px;
-  /* Match icon button height */
+  margin-right: 4px;
+}
+
+.search-container input {
+  width: 100%;
+  border: 1px solid transparent;
+  /* Prepare for border transition */
+  border-radius: 999px;
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--text);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme='dark'] .search-container input {
+  background: rgba(148, 163, 184, 0.15);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .vault-list {
@@ -994,35 +1019,53 @@ body[data-theme='dark'] .vault-item {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.vault-item header {
+.vault-item-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+  margin-bottom: 2px;
 }
 
-.vault-item h3 {
+.vault-site {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text);
   letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
-.vault-item .meta {
-  margin: 4px 0 0;
-  font-size: 0.72rem;
+.vault-date {
+  font-size: 0.7rem;
   color: var(--text-soft);
-  opacity: 0.7;
-  font-weight: 400;
-  letter-spacing: 0.01em;
+  white-space: nowrap;
+  margin-top: 2px;
 }
 
-.vault-item .username {
-  font-weight: 500;
-  font-size: 0.88rem;
+.vault-username {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
   color: var(--text-muted);
-  margin-top: 2px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vault-notes {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  background: rgba(0, 0, 0, 0.03);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+body[data-theme='dark'] .vault-notes {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .password-reveal {

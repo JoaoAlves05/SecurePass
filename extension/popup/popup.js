@@ -403,29 +403,39 @@ function renderVaultEntries() {
     item.className = 'vault-item';
     item.dataset.id = entry.id;
 
-    const header = document.createElement('header');
+    const header = document.createElement('div');
+    header.className = 'vault-item-header';
+
     const title = document.createElement('h3');
+    title.className = 'vault-site';
     title.textContent = entry.site || 'Untitled';
     header.appendChild(title);
 
-    const meta = document.createElement('p');
-    meta.className = 'meta';
+    const date = document.createElement('span');
+    date.className = 'vault-date';
     const updated = new Date(entry.updatedAt || entry.createdAt);
-    meta.textContent = `Updated ${updated.toLocaleString()}`;
-    header.appendChild(meta);
+    date.textContent = updated.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    header.appendChild(date);
 
     item.appendChild(header);
 
     if (entry.username) {
       const username = document.createElement('div');
-      username.className = 'username';
-      username.textContent = entry.username;
+      username.className = 'vault-username';
+      // Add a small user icon if desired, or just text
+      username.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> ${entry.username}`;
       item.appendChild(username);
     }
 
     if (entry.notes) {
-      const notes = document.createElement('p');
-      notes.className = 'meta';
+      const notes = document.createElement('div');
+      notes.className = 'vault-notes';
       notes.textContent = entry.notes;
       item.appendChild(notes);
     }
@@ -865,7 +875,7 @@ function attachEventListeners() {
       return;
     }
     if (response.result?.compromised) {
-      hibpStatus.innerHTML = `<strong style="color: var(--danger); font-size: 1.1em;">${response.result.count.toLocaleString()}</strong> breaches found`;
+      hibpStatus.innerHTML = `<strong class="breach-count">${response.result.count.toLocaleString()}</strong> breaches found`;
       hibpStatus.style.color = 'var(--text)';
       showToast(`Password found in ${response.result.count.toLocaleString()} breaches!`, 'error');
     } else {
