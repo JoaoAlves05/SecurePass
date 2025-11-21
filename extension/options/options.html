@@ -7,68 +7,91 @@
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <main>
-      <h1>SecurePass Assistant Settings</h1>
-      <form id="settingsForm">
-        <section>
-          <h2>Appearance</h2>
-          <label>
-            Theme
-            <select name="theme">
-              <option value="system">System</option>
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
-          </label>
-        </section>
+    <div class="app-shell">
+      <div class="app">
+        <header class="shell-header">
+          <div class="brand">
+            <p class="eyebrow">Configuration</p>
+            <h1>SecurePass Settings</h1>
+          </div>
+        </header>
 
-        <section>
-          <h2>Password generator</h2>
-          <label>
-            Minimum length
-            <input type="number" name="minLength" min="8" max="128" />
-          </label>
-          <label><input type="checkbox" name="includeUppercase" /> Include uppercase letters</label>
-          <label><input type="checkbox" name="includeLowercase" /> Include lowercase letters</label>
-          <label><input type="checkbox" name="includeNumbers" /> Include numbers</label>
-          <label><input type="checkbox" name="includeSymbols" /> Include symbols</label>
-          <label><input type="checkbox" name="avoidSimilar" /> Avoid similar characters (Il1O0)</label>
-        </section>
+        <main>
+          <form id="settingsForm">
+            <section class="settings-group">
+              <h2>Appearance</h2>
+              <div class="settings-grid">
+                <div>
+                  <label for="theme">Theme</label>
+                  <select name="theme" id="theme">
+                    <option value="system">System</option>
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                  </select>
+                </div>
+              </div>
+            </section>
 
-        <section>
-          <h2>Security</h2>
-          <label>
-            Vault auto-lock (minutes)
-            <input type="number" name="vaultTimeout" min="1" max="120" />
-          </label>
-          <label>
-            HIBP cache TTL (hours)
-            <input type="number" name="hibpCacheTtlHours" min="1" max="168" />
-          </label>
-        </section>
+            <section class="settings-group">
+              <h2>Password Generator</h2>
+              <div class="settings-grid">
+                <div>
+                  <label for="minLength">Minimum length</label>
+                  <input type="number" name="minLength" id="minLength" min="8" max="128" />
+                </div>
+                <div>
+                  <label>Character sets</label>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label class="checkbox-label"><input type="checkbox" name="includeUppercase" /> Include uppercase letters</label>
+                    <label class="checkbox-label"><input type="checkbox" name="includeLowercase" /> Include lowercase letters</label>
+                    <label class="checkbox-label"><input type="checkbox" name="includeNumbers" /> Include numbers</label>
+                    <label class="checkbox-label"><input type="checkbox" name="includeSymbols" /> Include symbols</label>
+                    <label class="checkbox-label"><input type="checkbox" name="avoidSimilar" /> Avoid similar characters (Il1O0)</label>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-        <section>
-          <h2>Sync</h2>
-          <label><input type="checkbox" name="useSync" /> Sync preferences via browser profile</label>
-        </section>
+            <section class="settings-group">
+              <h2>Security</h2>
+              <div class="settings-grid">
+                <div>
+                  <label for="vaultTimeout">Vault auto-lock (minutes)</label>
+                  <input type="number" name="vaultTimeout" id="vaultTimeout" min="1" max="120" />
+                </div>
+                <div>
+                  <label for="hibpCacheTtlHours">HIBP cache TTL (hours)</label>
+                  <input type="number" name="hibpCacheTtlHours" id="hibpCacheTtlHours" min="1" max="168" />
+                </div>
+              </div>
+            </section>
 
-        <div class="actions">
-          <button type="submit">Save settings</button>
-          <span id="status" role="status"></span>
-        </div>
-      </form>
+            <section class="settings-group">
+              <h2>Sync</h2>
+              <div class="settings-grid">
+                <label class="checkbox-label"><input type="checkbox" name="useSync" /> Sync preferences via browser profile</label>
+              </div>
+            </section>
 
-      <section class="roadmap">
-        <h2>Roadmap</h2>
-        <ol>
-          <li><strong>v0.1:</strong> Popup analysis + HIBP integration.</li>
-          <li><strong>v0.3:</strong> Form detection + floating panel.</li>
-          <li><strong>v0.5:</strong> Policy-aware password generator.</li>
-          <li><strong>v0.7:</strong> Encrypted local vault UI.</li>
-          <li><strong>v1.0:</strong> Settings page, dark mode, publishing polish.</li>
-        </ol>
-      </section>
-    </main>
+            <div class="actions">
+              <button type="submit">Save settings</button>
+              <span id="status" role="status"></span>
+            </div>
+          </form>
+
+          <section class="roadmap">
+            <h2>Roadmap</h2>
+            <ol>
+              <li><strong>v0.1:</strong> Popup analysis + HIBP integration.</li>
+              <li><strong>v0.3:</strong> Form detection + floating panel.</li>
+              <li><strong>v0.5:</strong> Policy-aware password generator.</li>
+              <li><strong>v0.7:</strong> Encrypted local vault UI.</li>
+              <li><strong>v1.0:</strong> Settings page, dark mode, publishing polish.</li>
+            </ol>
+          </section>
+        </main>
+      </div>
+    </div>
     <script type="module" src="options.js"></script>
   </body>
 </html>
