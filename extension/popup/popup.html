@@ -200,28 +200,42 @@
             Unlock with your master password to manage stored credentials.
           </p>
           <div id="createMaster" class="vault-state hidden">
-            <h3>Create a master password</h3>
-            <p>Encrypt the vault before syncing.</p>
-            <form id="createMasterForm" class="stack">
-              <label>
-                Master password
-                <input type="password" id="newMaster" autocomplete="new-password" required />
-              </label>
-              <label>
-                Confirm master password
-                <input type="password" id="confirmMaster" autocomplete="new-password" required />
-              </label>
-              <button type="submit" class="primary">Create vault</button>
+            <div class="form-intro">
+              <h3>Create a master password</h3>
+              <p class="modal-lead">Encrypt your vault before syncing. This password never leaves your device.</p>
+            </div>
+            <form id="createMasterForm" class="form-stack">
+              <div class="field-group">
+                <label for="newMaster">Master password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="newMaster" autocomplete="new-password" required
+                    placeholder="Choose a strong password" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="confirmMaster">Confirm password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="confirmMaster" autocomplete="new-password" required
+                    placeholder="Repeat password" />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Create vault</button>
             </form>
           </div>
           <div id="unlockMaster" class="vault-state">
-            <h3>Unlock your vault</h3>
-            <form id="unlockForm" class="stack">
-              <label>
-                Master password
-                <input type="password" id="vaultPassphrase" autocomplete="current-password" required />
-              </label>
-              <button type="submit" class="primary">Unlock</button>
+            <div class="form-intro">
+              <h3>Unlock your vault</h3>
+              <p class="modal-lead">Enter your master password to access your credentials.</p>
+            </div>
+            <form id="unlockForm" class="form-stack">
+              <div class="field-group">
+                <label for="vaultPassphrase">Master password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="vaultPassphrase" autocomplete="current-password" required
+                    placeholder="Enter password" />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Unlock vault</button>
             </form>
           </div>
         </div>
