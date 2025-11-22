@@ -769,7 +769,7 @@ body[data-theme='dark'] .password-field-container {
   font-family: var(--font-mono);
   font-size: 1.1rem;
   color: var(--text);
-  padding: 8px 8px;
+  padding: 8px 16px;
   outline: none;
   width: 100%;
 }
