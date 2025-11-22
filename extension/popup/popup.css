@@ -931,12 +931,16 @@ body[data-theme='dark'] .ghost {
   display: flex;
   align-items: center;
   margin-left: 4px;
+  padding: 4px 0;
+  /* Add vertical padding for shadow */
 }
 
 .search-container.active {
   width: 160px;
   opacity: 1;
   margin-right: 8px;
+  padding: 4px;
+  /* Ensure padding is present when active */
 }
 
 .search-container input {
@@ -1029,25 +1033,71 @@ body[data-theme='dark'] .vault-item {
   margin-top: 2px;
 }
 
-.vault-username {
+.vault-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  min-height: 24px;
+}
+
+.vault-username,
+.vault-password {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--text-muted);
   font-weight: 500;
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  width: 100%;
+}
+
+.vault-password-text {
+  flex: 1;
+  letter-spacing: 0.1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-password-toggle {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-soft);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.vault-password-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--primary);
+}
+
+body[data-theme='dark'] .vault-password-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .vault-notes {
   font-size: 0.85rem;
   color: var(--text-soft);
   background: rgba(0, 0, 0, 0.03);
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
-  margin-bottom: 8px;
+  margin-top: 4px;
+  margin-bottom: 12px;
   line-height: 1.5;
+  white-space: pre-wrap;
+  /* Preserve line breaks */
+  word-break: break-word;
+  /* Break long words */
+  overflow-wrap: anywhere;
+  /* Ensure everything wraps */
 }
 
 body[data-theme='dark'] .vault-notes {

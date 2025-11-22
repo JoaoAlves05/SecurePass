@@ -426,12 +426,64 @@ function renderVaultEntries() {
     item.appendChild(header);
 
     if (entry.username) {
+      const row = document.createElement('div');
+      row.className = 'vault-row';
       const username = document.createElement('div');
       username.className = 'vault-username';
-      // Add a small user icon if desired, or just text
-      username.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="user-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> ${entry.username}`;
-      item.appendChild(username);
+      username.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="user-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <span>${entry.username}</span>`;
+      row.appendChild(username);
+      item.appendChild(row);
     }
+
+    // Password Row
+    const passRow = document.createElement('div');
+    passRow.className = 'vault-row';
+    const passwordContainer = document.createElement('div');
+    passwordContainer.className = 'vault-password';
+
+    // Key Icon
+    const keyIcon = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="user-icon"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>`;
+
+    const passText = document.createElement('span');
+    passText.className = 'vault-password-text';
+    passText.textContent = '••••••••••••';
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'vault-password-toggle';
+    toggleBtn.title = 'Show password';
+    toggleBtn.innerHTML = ICONS.eye;
+
+    let isRevealed = false;
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      resetInactivityTimer();
+      isRevealed = !isRevealed;
+
+      if (isRevealed) {
+        passText.textContent = entry.password;
+        toggleBtn.innerHTML = ICONS.eyeOff;
+        toggleBtn.title = 'Hide password';
+        clearRevealTimer(entry.id);
+        const timer = setTimeout(() => {
+          isRevealed = false;
+          passText.textContent = '••••••••••••';
+          toggleBtn.innerHTML = ICONS.eye;
+          toggleBtn.title = 'Show password';
+        }, 10000); // 10s auto-hide
+        revealTimers.set(entry.id, timer);
+      } else {
+        passText.textContent = '••••••••••••';
+        toggleBtn.innerHTML = ICONS.eye;
+        toggleBtn.title = 'Show password';
+        clearRevealTimer(entry.id);
+      }
+    });
+
+    passwordContainer.innerHTML = keyIcon;
+    passwordContainer.appendChild(passText);
+    passwordContainer.appendChild(toggleBtn);
+    passRow.appendChild(passwordContainer);
+    item.appendChild(passRow);
 
     if (entry.notes) {
       const notes = document.createElement('div');
@@ -440,32 +492,10 @@ function renderVaultEntries() {
       item.appendChild(notes);
     }
 
-    const passwordReveal = document.createElement('div');
-    passwordReveal.className = 'password-reveal hidden';
-    item.appendChild(passwordReveal);
-
     const actions = document.createElement('div');
     actions.className = 'vault-actions';
 
-    const revealBtn = createVaultIconButton(ICONS.eye, 'Reveal password');
-    revealBtn.addEventListener('click', () => {
-      resetInactivityTimer();
-      const isHidden = passwordReveal.classList.contains('hidden');
-      if (isHidden) {
-        passwordReveal.textContent = entry.password;
-        passwordReveal.classList.remove('hidden');
-        revealBtn.innerHTML = ICONS.eyeOff;
-        revealBtn.setAttribute('aria-label', 'Hide password');
-        clearRevealTimer(entry.id);
-        const timer = setTimeout(() => {
-          hidePasswordReveal(passwordReveal, revealBtn, entry.id);
-        }, 10000);
-        revealTimers.set(entry.id, timer);
-      } else {
-        hidePasswordReveal(passwordReveal, revealBtn, entry.id);
-      }
-    });
-
+    // Copy Button
     const copyBtn = createVaultIconButton(ICONS.copy, 'Copy password');
     copyBtn.addEventListener('click', async () => {
       resetInactivityTimer();
@@ -485,7 +515,7 @@ function renderVaultEntries() {
       await deleteCredential(entry.id);
     });
 
-    actions.append(revealBtn, copyBtn, editBtn, deleteBtn);
+    actions.append(copyBtn, editBtn, deleteBtn);
     item.appendChild(actions);
     vaultList.appendChild(item);
   });
