@@ -1900,3 +1900,18 @@ body[data-theme='dark'] .modal-actions {
   opacity: 0.7;
   vertical-align: text-bottom;
 }
+
+.status-message {
+  font-size: 0.85rem;
+  margin-top: 8px;
+  min-height: 1.2em;
+  transition: color 0.2s ease;
+}
+
+.status-message.error {
+  color: var(--danger);
+}
+
+.status-message.success {
+  color: var(--primary);
+}

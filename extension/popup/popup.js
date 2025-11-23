@@ -848,13 +848,16 @@ async function handleGenerate() {
   setLoading(generateButton, false);
   if (!response?.ok) {
     generatorStatus.textContent = response?.error || 'Could not generate password.';
-    generatorStatus.style.color = 'var(--danger)';
+    generatorStatus.classList.remove('success');
+    generatorStatus.classList.add('error');
     return;
   }
   state.generatorPassword = response.password;
   generatedResult.value = response.password;
+  updateStrength(response.password);
   generatorStatus.textContent = 'Strong password generated.';
-  generatorStatus.style.color = 'var(--primary)';
+  generatorStatus.classList.remove('error');
+  generatorStatus.classList.add('success');
   showToast('New password generated.', 'success');
 }
 

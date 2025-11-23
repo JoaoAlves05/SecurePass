@@ -359,18 +359,19 @@
             <div>
               <p class="eyebrow">Security</p>
               <h3>Vault protection</h3>
-              <div class="stack">
-                <label for="autoLockRange" class="range-label">Auto-lock timer <span id="autoLockLabel">15
-                    min</span></label>
-                <input type="range" id="autoLockRange" min="1" max="60" step="1" value="15" class="range-slider" />
+              <div class="settings-grid">
+                <div class="stack">
+                  <label for="autoLockRange" class="range-label">Auto-lock timer <span id="autoLockLabel">15
+                      min</span></label>
+                  <input type="range" id="autoLockRange" min="1" max="60" step="1" value="15" class="range-slider" />
+                </div>
+                <div class="stack">
+                  <label for="clipboardRange" class="range-label">Clear clipboard <span
+                      id="clipboardLabel">30s</span></label>
+                  <input type="range" id="clipboardRange" min="0" max="120" step="10" value="30" class="range-slider" />
+                  <p class="input-hint">Set to 0 to disable auto-clear.</p>
+                </div>
               </div>
-              <div class="stack">
-                <label for="clipboardRange" class="range-label">Clear clipboard <span
-                    id="clipboardLabel">30s</span></label>
-                <input type="range" id="clipboardRange" min="0" max="120" step="10" value="30" class="range-slider" />
-                <p class="input-hint">Set to 0 to disable auto-clear.</p>
-              </div>
-            </div>
         </section>
 
         <section class="settings-group">
