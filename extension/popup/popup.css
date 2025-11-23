@@ -1342,11 +1342,87 @@ body[data-theme='dark'] .vault-icon-btn {
 
 .settings-chip {
   margin-left: auto;
-  padding: 8px 12px;
-  background: rgba(37, 99, 235, 0.15);
+  padding: 4px 10px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
   border-radius: 999px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+}
+
+.danger-zone {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.btn-danger-ghost {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-danger-ghost:hover {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: var(--danger);
+}
+
+.about-links {
+  display: flex;
+  gap: 12px;
+}
+
+.link-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.link-item:hover {
+  background: var(--bg-subtle);
+  border-color: var(--text-soft);
+}
+
+.link-item svg {
+  width: 18px;
+  height: 18px;
+}
+
+.input-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+.checkbox-card.small {
+  min-height: auto;
+}
+
+.checkbox-card.small .checkbox-content {
+  padding: 8px;
+}
+
+.checkbox-card.small .checkbox-label {
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .settings-overview {

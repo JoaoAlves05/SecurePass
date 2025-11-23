@@ -335,10 +335,8 @@
             <div>
               <p class="eyebrow">Appearance</p>
               <h3>Theme & accessibility</h3>
-              <p class="settings-description">Keep the popup in sync with your OS or force a curated light or dark look.
-              </p>
+              <p class="settings-description">Customize the look and feel of the extension.</p>
             </div>
-            <span class="pill-indicator neutral">Personal</span>
           </div>
           <div class="options-row chip-row">
             <label class="chip-option">
@@ -354,29 +352,27 @@
               <span>Light</span>
             </label>
           </div>
-          <div class="settings-footnote">
-            <p>Theme changes apply instantly to the popup, modals and vault screens.</p>
-          </div>
         </section>
 
         <section class="settings-group">
           <div class="settings-group-header">
             <div>
               <p class="eyebrow">Security</p>
-              <h3>Auto-lock discipline</h3>
-              <p class="settings-description">Control how quickly the vault re-locks when you step away.</p>
+              <h3>Vault protection</h3>
+              <p class="settings-description">Manage how your vault locks and handles sensitive data.</p>
             </div>
-            <span class="pill-indicator">Recommended</span>
           </div>
           <div class="settings-grid">
             <div class="stack">
               <label for="autoLockRange" class="range-label">Auto-lock timer <span id="autoLockLabel">15
                   min</span></label>
-              <input type="range" id="autoLockRange" min="1" max="60" step="1" value="15" />
+              <input type="range" id="autoLockRange" min="1" max="60" step="1" value="15" class="range-slider" />
             </div>
-            <div class="callout">
-              <h4>Smart lock</h4>
-              <p>We only keep the vault unlocked locally. A new session requires your master password again.</p>
+            <div class="stack">
+              <label for="clipboardRange" class="range-label">Clear clipboard <span
+                  id="clipboardLabel">30s</span></label>
+              <input type="range" id="clipboardRange" min="0" max="120" step="10" value="30" class="range-slider" />
+              <p class="input-hint">Set to 0 to disable auto-clear.</p>
             </div>
           </div>
         </section>
@@ -384,23 +380,108 @@
         <section class="settings-group">
           <div class="settings-group-header">
             <div>
-              <p class="eyebrow">Sync</p>
-              <h3>Cloud coordination</h3>
-              <p class="settings-description">Use Chrome Sync to keep encrypted vault data aligned across devices.</p>
+              <p class="eyebrow">Generator</p>
+              <h3>Defaults</h3>
+              <p class="settings-description">Set your preferred starting configuration for new passwords.</p>
             </div>
-            <span class="pill-indicator neutral">Optional</span>
           </div>
           <div class="settings-grid">
-            <label class="switch">
-              <input type="checkbox" id="syncToggle" />
-              <span class="slider"></span>
-              <span class="switch-label">Enable Chrome Sync</span>
-            </label>
-            <div class="callout muted">
-              <h4>Privacy first</h4>
-              <p>Only encrypted blobs leave your machine. Sync toggles do not change your master password or local
-                vault.</p>
+            <div class="stack">
+              <label for="defaultLengthRange" class="range-label">Default length <span
+                  id="defaultLengthLabel">16</span></label>
+              <input type="range" id="defaultLengthRange" min="8" max="64" step="1" value="16" class="range-slider" />
             </div>
+            <div class="options-grid">
+              <label class="checkbox-card small">
+                <input type="checkbox" id="defaultUpper" checked />
+                <div class="checkbox-content">
+                  <span class="checkbox-label">ABC</span>
+                </div>
+              </label>
+              <label class="checkbox-card small">
+                <input type="checkbox" id="defaultLower" checked />
+                <div class="checkbox-content">
+                  <span class="checkbox-label">abc</span>
+                </div>
+              </label>
+              <label class="checkbox-card small">
+                <input type="checkbox" id="defaultNumbers" checked />
+                <div class="checkbox-content">
+                  <span class="checkbox-label">123</span>
+                </div>
+              </label>
+              <label class="checkbox-card small">
+                <input type="checkbox" id="defaultSymbols" checked />
+                <div class="checkbox-content">
+                  <span class="checkbox-label">#$&</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-group">
+          <div class="settings-group-header">
+            <div>
+              <p class="eyebrow">Data</p>
+              <h3>Management</h3>
+              <p class="settings-description">Export your vault for backup or restore from a file.</p>
+            </div>
+          </div>
+          <div class="action-row">
+            <button id="exportVault" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Export JSON
+            </button>
+            <button id="importVaultBtn" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Import
+            </button>
+            <input type="file" id="importVaultFile" accept=".json" style="display: none;" />
+          </div>
+          <div class="danger-zone">
+            <button id="clearVault" class="btn btn-danger-ghost">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Clear Vault
+            </button>
+          </div>
+        </section>
+
+        <section class="settings-group">
+          <div class="settings-group-header">
+            <div>
+              <p class="eyebrow">About</p>
+              <h3>Password Tester</h3>
+              <p class="settings-description">Version 1.2.0 • Secure & Local</p>
+            </div>
+          </div>
+          <div class="about-links">
+            <a href="https://github.com/JoaoAlves05/Password-Tester" target="_blank" class="link-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path
+                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                </path>
+              </svg>
+              GitHub
+            </a>
           </div>
         </section>
       </div>

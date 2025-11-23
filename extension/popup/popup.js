@@ -41,6 +41,18 @@ const themeRadios = document.querySelectorAll('input[name="appearanceTheme"]');
 const autoLockRange = document.getElementById('autoLockRange');
 const autoLockLabel = document.getElementById('autoLockLabel');
 const syncToggle = document.getElementById('syncToggle');
+const clipboardRange = document.getElementById('clipboardRange');
+const clipboardLabel = document.getElementById('clipboardLabel');
+const defaultLengthRange = document.getElementById('defaultLengthRange');
+const defaultLengthLabel = document.getElementById('defaultLengthLabel');
+const defaultUpper = document.getElementById('defaultUpper');
+const defaultLower = document.getElementById('defaultLower');
+const defaultNumbers = document.getElementById('defaultNumbers');
+const defaultSymbols = document.getElementById('defaultSymbols');
+const exportVaultBtn = document.getElementById('exportVault');
+const importVaultBtn = document.getElementById('importVaultBtn');
+const importVaultFile = document.getElementById('importVaultFile');
+const clearVaultBtn = document.getElementById('clearVault');
 const toastEl = document.getElementById('toast');
 const viewTabs = document.querySelectorAll('.nav-item');
 const views = {
@@ -270,6 +282,23 @@ function syncSettingsView() {
   autoLockRange.value = timeout;
   autoLockLabel.textContent = `${timeout} min`;
   syncToggle.checked = Boolean(state.settings.useSync);
+
+  const clipboardTimeout = state.settings.clipboardTimeout || 30;
+  if (clipboardRange) clipboardRange.value = clipboardTimeout;
+  if (clipboardLabel) clipboardLabel.textContent = clipboardTimeout === 0 ? 'Never' : `${clipboardTimeout}s`;
+
+  if (state.settings.generatorDefaults) {
+    const defs = state.settings.generatorDefaults;
+    if (defaultLengthRange) {
+      defaultLengthRange.value = defs.length || 16;
+      if (defaultLengthLabel) defaultLengthLabel.textContent = defs.length || 16;
+    }
+    if (defaultUpper) defaultUpper.checked = defs.uppercase !== false;
+    if (defaultLower) defaultLower.checked = defs.lowercase !== false;
+    if (defaultNumbers) defaultNumbers.checked = defs.numbers !== false;
+    if (defaultSymbols) defaultSymbols.checked = defs.symbols !== false;
+  }
+
   updateThemeToggleIcon();
 }
 
@@ -299,6 +328,14 @@ async function sendMessage(type, payload = {}) {
 async function copyToClipboard(value) {
   try {
     await navigator.clipboard.writeText(value);
+
+    const timeout = state.settings?.clipboardTimeout ?? 30;
+    if (timeout > 0) {
+      setTimeout(() => {
+        navigator.clipboard.writeText('').catch(() => { });
+      }, timeout * 1000);
+    }
+
     return true;
   } catch (error) {
     return false;
@@ -773,12 +810,22 @@ async function loadVaultStatus() {
 
 function syncGeneratorControls() {
   if (!state.settings) return;
-  if (lengthRange) lengthRange.value = state.settings.minLength;
-  if (lengthValue) lengthValue.textContent = state.settings.minLength;
-  if (includeLower) includeLower.checked = state.settings.includeLowercase;
-  if (includeUpper) includeUpper.checked = state.settings.includeUppercase;
-  if (includeNumbers) includeNumbers.checked = state.settings.includeNumbers;
-  if (includeSymbols) includeSymbols.checked = state.settings.includeSymbols;
+  if (state.settings.generatorDefaults) {
+    const defs = state.settings.generatorDefaults;
+    if (lengthRange) lengthRange.value = defs.length || 16;
+    if (lengthValue) lengthValue.textContent = defs.length || 16;
+    if (includeLower) includeLower.checked = defs.lowercase !== false;
+    if (includeUpper) includeUpper.checked = defs.uppercase !== false;
+    if (includeNumbers) includeNumbers.checked = defs.numbers !== false;
+    if (includeSymbols) includeSymbols.checked = defs.symbols !== false;
+  } else {
+    if (lengthRange) lengthRange.value = state.settings.minLength;
+    if (lengthValue) lengthValue.textContent = state.settings.minLength;
+    if (includeLower) includeLower.checked = state.settings.includeLowercase;
+    if (includeUpper) includeUpper.checked = state.settings.includeUppercase;
+    if (includeNumbers) includeNumbers.checked = state.settings.includeNumbers;
+    if (includeSymbols) includeSymbols.checked = state.settings.includeSymbols;
+  }
   if (avoidSimilar) avoidSimilar.checked = state.settings.avoidSimilar;
   syncSettingsView();
 }
@@ -1077,6 +1124,120 @@ function attachEventListeners() {
     state.settings.useSync = syncToggle.checked;
     await saveSettings(state.settings);
   });
+
+  // New Settings Listeners
+  if (clipboardRange) {
+    clipboardRange.addEventListener('input', () => {
+      const val = Number(clipboardRange.value);
+      clipboardLabel.textContent = val === 0 ? 'Never' : `${val}s`;
+      state.settings.clipboardTimeout = val;
+      scheduleSettingsSave();
+    });
+  }
+
+  if (defaultLengthRange) {
+    defaultLengthRange.addEventListener('input', () => {
+      const val = Number(defaultLengthRange.value);
+      defaultLengthLabel.textContent = val;
+      if (!state.settings.generatorDefaults) state.settings.generatorDefaults = {};
+      state.settings.generatorDefaults.length = val;
+      scheduleSettingsSave();
+    });
+  }
+
+  [defaultUpper, defaultLower, defaultNumbers, defaultSymbols].forEach(cb => {
+    if (cb) {
+      cb.addEventListener('change', () => {
+        if (!state.settings.generatorDefaults) state.settings.generatorDefaults = {};
+        state.settings.generatorDefaults.uppercase = defaultUpper.checked;
+        state.settings.generatorDefaults.lowercase = defaultLower.checked;
+        state.settings.generatorDefaults.numbers = defaultNumbers.checked;
+        state.settings.generatorDefaults.symbols = defaultSymbols.checked;
+        scheduleSettingsSave();
+      });
+    }
+  });
+
+  if (exportVaultBtn) {
+    exportVaultBtn.addEventListener('click', async () => {
+      if (!requireUnlockedVault()) return;
+      const response = await sendMessage('LIST_CREDENTIALS');
+      if (response?.entries) {
+        const blob = new Blob([JSON.stringify(response.entries, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `password-tester-vault-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Vault exported successfully.', 'success');
+      } else {
+        showToast('Failed to export vault.', 'error');
+      }
+    });
+  }
+
+  if (importVaultBtn) {
+    importVaultBtn.addEventListener('click', () => {
+      if (!requireUnlockedVault()) return;
+      importVaultFile.click();
+    });
+  }
+
+  if (importVaultFile) {
+    importVaultFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const entries = JSON.parse(event.target.result);
+          if (!Array.isArray(entries)) throw new Error('Invalid format');
+
+          let count = 0;
+          for (const entry of entries) {
+            if (entry.site && entry.password) {
+              const { id, ...data } = entry;
+              await sendMessage('STORE_CREDENTIAL', {
+                entry: data,
+                passphrase: state.passphrase
+              });
+              count++;
+            }
+          }
+          showToast(`Imported ${count} entries.`, 'success');
+          await refreshVaultEntries();
+        } catch (err) {
+          showToast('Invalid JSON file.', 'error');
+        }
+        importVaultFile.value = '';
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  if (clearVaultBtn) {
+    clearVaultBtn.addEventListener('click', async () => {
+      if (!requireUnlockedVault()) return;
+      const confirmed = window.confirm('DANGER: This will permanently delete ALL entries in your vault. This action cannot be undone.\n\nAre you sure?');
+      if (confirmed) {
+        const response = await sendMessage('LIST_CREDENTIALS');
+        if (response?.entries) {
+          for (const entry of response.entries) {
+            await sendMessage('DELETE_CREDENTIAL', {
+              id: entry.id,
+              passphrase: state.passphrase
+            });
+          }
+          showToast('Vault cleared.', 'success');
+          await refreshVaultEntries();
+        }
+      }
+    });
+  }
 }
 
 async function initialise() {
