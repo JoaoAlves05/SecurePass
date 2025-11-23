@@ -883,39 +883,53 @@ body[data-theme='dark'] .password-field-container {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid transparent;
+  border: none;
 }
 
 .btn svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .btn-outline {
-  background: var(--surface);
-  border-color: var(--border);
-  color: var(--text);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .btn-outline:hover {
-  background: var(--bg-subtle);
-  border-color: var(--text-soft);
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--text-muted);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .btn-ghost:hover {
-  background: var(--bg-subtle);
+  background: rgba(0, 0, 0, 0.05);
   color: var(--text);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+body[data-theme='dark'] .btn-ghost {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+body[data-theme='dark'] .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .modal-header .icon-btn {
