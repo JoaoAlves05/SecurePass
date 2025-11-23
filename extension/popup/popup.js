@@ -1157,6 +1157,43 @@ function attachEventListeners() {
     }
   });
 
+  // Reset Settings
+  const resetSettingsBtn = document.getElementById('resetSettings');
+
+  if (resetSettingsBtn) {
+    resetSettingsBtn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to reset all settings to default? This cannot be undone.')) return;
+
+      // Reset to defaults
+      const defaults = {
+        theme: 'system',
+        minLength: 16,
+        includeUppercase: true,
+        includeLowercase: true,
+        includeNumbers: true,
+        includeSymbols: true,
+        avoidSimilar: true,
+        vaultTimeout: 15,
+        hibpCacheTtlHours: 24,
+        useSync: false,
+        clipboardTimeout: 30,
+        generatorDefaults: {
+          length: 16,
+          uppercase: true,
+          lowercase: true,
+          numbers: true,
+          symbols: true
+        }
+      };
+
+      state.settings = defaults;
+      await saveSettings(state.settings);
+      applyTheme(state.settings.theme);
+      syncSettingsView();
+      showToast('Settings reset to defaults.', 'success');
+    });
+  }
+
   if (exportVaultBtn) {
     exportVaultBtn.addEventListener('click', async () => {
       if (!requireUnlockedVault()) return;

@@ -1476,6 +1476,24 @@ body[data-theme='dark'] .settings-header-sticky {
   padding-bottom: 20px;
 }
 
+/* Row Icon */
+.row-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.row-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* Chip Checkboxes */
 .wrap-row {
   flex-wrap: wrap;
@@ -1485,6 +1503,8 @@ body[data-theme='dark'] .settings-header-sticky {
 .chip-checkbox {
   cursor: pointer;
   position: relative;
+  flex: 1;
+  min-width: 100px;
 }
 
 .chip-checkbox input {
@@ -1495,8 +1515,10 @@ body[data-theme='dark'] .settings-header-sticky {
 }
 
 .chip-checkbox span {
-  display: inline-block;
-  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
   background: var(--bg-subtle);
   border-radius: 8px;
   font-size: 0.85rem;
@@ -1504,6 +1526,8 @@ body[data-theme='dark'] .settings-header-sticky {
   color: var(--text-muted);
   transition: all 0.2s ease;
   border: 1px solid transparent;
+  height: 100%;
+  text-align: center;
 }
 
 .chip-checkbox input:checked+span {
