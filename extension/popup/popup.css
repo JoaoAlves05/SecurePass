@@ -1695,7 +1695,7 @@ body[data-theme='dark'] .settings-header-sticky {
   display: none;
 }
 
-.slider {
+.switch .slider {
   width: 42px;
   height: 22px;
   background: rgba(255, 255, 255, 0.5);
@@ -1705,7 +1705,7 @@ body[data-theme='dark'] .settings-header-sticky {
   box-shadow: inset 0 1px 6px rgba(15, 23, 42, 0.15);
 }
 
-.slider::after {
+.switch .slider::after {
   content: '';
   position: absolute;
   top: 3px;
@@ -2047,4 +2047,85 @@ body[data-theme='dark'] .modal-actions {
 
 .status-message.success {
   color: var(--primary);
+}
+/* Toggle Switch (for Chrome Sync) */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input[type="checkbox"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 999px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme='dark'] .toggle-switch .slider {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-switch .slider::before {
+  content: '';
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background: #fff;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch input:checked + .slider {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: inset 0 2px 4px rgba(37, 99, 235, 0.3), 0 0 0 1px rgba(37, 99, 235, 0.1);
+}
+
+body[data-theme='dark'] .toggle-switch input:checked + .slider {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: inset 0 2px 4px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(22px);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3), 0 1px 3px rgba(37, 99, 235, 0.2);
+}
+
+.toggle-switch input:focus + .slider {
+  box-shadow: 0 0 0 3px var(--primary-soft), inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme='dark'] .toggle-switch input:focus + .slider {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-switch:hover .slider {
+  border-color: var(--text-soft);
+}
+
+.toggle-switch input:checked:hover + .slider {
+  border-color: var(--primary-hover);
 }
