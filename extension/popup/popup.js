@@ -33,7 +33,7 @@ const hibpStatus = document.getElementById('hibpStatus');
 const hibpButton = document.getElementById('checkHibp');
 const togglePasswordBtn = document.getElementById('togglePassword');
 const copyTestPasswordBtn = document.getElementById('copyTestPassword');
-const themeToggle = document.getElementById('themeToggle');
+// const themeToggle = document.getElementById('themeToggle'); // Removed in new UI
 const openSettingsBtn = document.getElementById('openSettings');
 const closeSettingsBtn = document.getElementById('closeSettings');
 const settingsPanel = document.getElementById('settingsPanel');
@@ -257,13 +257,7 @@ function setLoading(button, loading) {
 }
 
 function updateThemeToggleIcon() {
-  if (!themeToggle) return;
-  const resolved = resolveTheme(state.settings?.theme || 'system');
-  const icon = resolved === 'dark' ? ICONS.sun : ICONS.moon;
-  themeToggle.innerHTML = icon;
-  const label = resolved === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
-  themeToggle.setAttribute('aria-label', label);
-  themeToggle.title = label;
+  // Deprecated in favor of radio buttons
 }
 
 function updatePasswordToggleIcon() {
@@ -1079,6 +1073,7 @@ function attachEventListeners() {
     });
   });
 
+  /*
   themeToggle.addEventListener('click', async () => {
     if (!state.settings) return;
     const currentIndex = THEMES.indexOf(state.settings.theme || 'system');
@@ -1087,6 +1082,7 @@ function attachEventListeners() {
     applyTheme(nextTheme);
     await saveSettings(state.settings);
   });
+  */
 
   openSettingsBtn.addEventListener('click', () => openSettingsPanel());
   closeSettingsBtn.addEventListener('click', () => closeSettingsPanel());
