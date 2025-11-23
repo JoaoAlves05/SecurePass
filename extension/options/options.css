@@ -341,10 +341,30 @@ body {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Row Icon */
+.row-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.row-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* Chip Checkboxes */
 .chip-checkbox {
   cursor: pointer;
   position: relative;
+  flex: 1;
+  min-width: 140px;
 }
 
 .chip-checkbox input {
@@ -355,8 +375,10 @@ body {
 }
 
 .chip-checkbox span {
-  display: inline-block;
-  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
   background: var(--bg-subtle);
   border-radius: 10px;
   font-size: 0.85rem;
@@ -364,6 +386,8 @@ body {
   color: var(--text-muted);
   transition: all 0.2s ease;
   border: 1px solid transparent;
+  height: 100%;
+  text-align: center;
 }
 
 .chip-checkbox input:checked+span {
@@ -374,6 +398,78 @@ body {
 
 .chip-checkbox:hover span {
   border-color: var(--border);
+}
+
+/* Action Buttons (Data Management) */
+.card-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+  font-family: var(--font);
+}
+
+.card-action-btn:hover {
+  background: var(--bg-subtle);
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btn-label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.btn-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.btn-arrow {
+  color: var(--text-soft);
+}
+
+.btn-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.card-action-btn.danger .btn-icon {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.card-action-btn.danger .btn-label {
+  color: var(--danger);
 }
 
 /* Toggle Switch */

@@ -146,4 +146,43 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
   }
 });
 
+// Data Management
+const resetSettingsBtn = document.getElementById('resetSettings');
+const clearDataBtn = document.getElementById('clearData');
+
+async function handleResetSettings() {
+  if (!confirm('Are you sure you want to reset all settings to default? This cannot be undone.')) return;
+
+  await saveSettings(DEFAULT_SETTINGS);
+  populateForm(DEFAULT_SETTINGS);
+
+  statusEl.textContent = 'Settings reset to defaults.';
+  statusEl.style.opacity = '1';
+  setTimeout(() => (statusEl.style.opacity = '0'), 2500);
+}
+
+async function handleClearData() {
+  if (!confirm('DANGER: This will permanently delete ALL your vault data and reset all settings.\n\nAre you absolutely sure?')) return;
+
+  // Clear local storage (vault + settings)
+  await chrome.storage.local.clear();
+  // Clear sync storage (synced settings)
+  await chrome.storage.sync.clear();
+
+  // Reload defaults
+  populateForm(DEFAULT_SETTINGS);
+
+  statusEl.textContent = 'All data cleared successfully.';
+  statusEl.style.opacity = '1';
+  setTimeout(() => (statusEl.style.opacity = '0'), 2500);
+}
+
+if (resetSettingsBtn) {
+  resetSettingsBtn.addEventListener('click', handleResetSettings);
+}
+
+if (clearDataBtn) {
+  clearDataBtn.addEventListener('click', handleClearData);
+}
+
 init();
