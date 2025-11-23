@@ -226,6 +226,11 @@ body {
   margin: 0;
 }
 
+.row-info.full-width {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
 .divider {
   height: 1px;
   background: var(--border-subtle);
