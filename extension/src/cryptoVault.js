@@ -268,9 +268,21 @@ export async function listCredentials() {
 }
 
 export async function importVaultData(data, passphrase) {
-  if (!data || !Array.isArray(data.entries)) {
-    throw new Error('Invalid vault data format');
+  console.log('Importing vault data:', data);
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid vault data format: not an object');
   }
+  
+  // Handle case where data might be wrapped or just the entries array
+  let entries = data.entries;
+  if (!entries && Array.isArray(data)) {
+    entries = data;
+  }
+  
+  if (!Array.isArray(entries)) {
+    throw new Error('Invalid vault data format: missing entries array');
+  }
+  
   const settings = await loadSettings();
   const timeout = settings.vaultTimeout || cache.timeoutMinutes || 15;
   
@@ -282,9 +294,9 @@ export async function importVaultData(data, passphrase) {
   // "Restore from JSON" in UI implies replacing. 
   // Let's replace the entries list but keep the structure.
   
-  const newData = { ...data };
+  const newData = { entries: [] };
   // Validate entries
-  newData.entries = newData.entries.map(entry => normalizeEntry(entry));
+  newData.entries = entries.map(entry => normalizeEntry(entry));
   
   await writeVault(newData, passphrase);
   resetTimeout(timeout);
