@@ -219,11 +219,22 @@ async function handleImportFile(event) {
     try {
       const data = JSON.parse(e.target.result);
       
-      const passphrase = prompt('Please enter your master password to encrypt the imported data:');
+      // Try to get passphrase from session storage first
+      let passphrase;
+      try {
+        const session = await chrome.storage.session.get('vaultPassphrase');
+        passphrase = session.vaultPassphrase;
+      } catch (err) {
+        // Ignore session error
+      }
+
       if (!passphrase) {
-        alert('Import cancelled. Master password is required.');
-        importVaultFile.value = '';
-        return;
+        passphrase = prompt('Please enter your master password to encrypt the imported data:');
+        if (!passphrase) {
+          alert('Import cancelled. Master password is required.');
+          importVaultFile.value = '';
+          return;
+        }
       }
 
       const response = await sendMessage('IMPORT_VAULT', { data, passphrase });

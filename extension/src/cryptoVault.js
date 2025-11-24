@@ -172,6 +172,13 @@ export async function initializeVault(passphrase) {
   cache.data = { entries: [] };
   const settings = await loadSettings();
   resetTimeout(settings.vaultTimeout || 15);
+  
+  try {
+    await chrome.storage.session.set({ 'vaultPassphrase': passphrase });
+  } catch (e) {
+    // Ignore
+  }
+  
   return true;
 }
 
@@ -189,6 +196,14 @@ export async function unlockVault(passphrase, timeoutMinutes = 15) {
   }
   cache.data = data;
   resetTimeout(timeoutMinutes);
+  
+  // Store passphrase in session for other contexts (like Options page)
+  try {
+    await chrome.storage.session.set({ 'vaultPassphrase': passphrase });
+  } catch (e) {
+    // Ignore session storage errors
+  }
+  
   return data;
 }
 
@@ -196,6 +211,12 @@ export function lockVault() {
   if (cache.timeout) clearTimeout(cache.timeout);
   cache.timeout = null;
   cache.data = null;
+  
+  try {
+    chrome.storage.session.remove('vaultPassphrase');
+  } catch (e) {
+    // Ignore
+  }
 }
 
 export async function storeCredential(entry, passphrase) {
@@ -294,11 +315,27 @@ export async function importVaultData(data, passphrase) {
   // "Restore from JSON" in UI implies replacing. 
   // Let's replace the entries list but keep the structure.
   
-  const newData = { entries: [] };
-  // Validate entries
-  newData.entries = entries.map(entry => normalizeEntry(entry));
+  // Append entries instead of replacing
+  const newEntries = entries.map(entry => normalizeEntry(entry));
   
-  await writeVault(newData, passphrase);
+  // Load existing data to append to
+  const currentData = await ensureUnlocked(passphrase, timeout);
+  const existingEntries = currentData.entries || [];
+  
+  // Merge: Add new entries, potentially checking for duplicates?
+  // Popup implementation just adds them. We will do the same for consistency.
+  // But we should probably avoid exact duplicates if possible?
+  // User asked to "do the same as popup". Popup:
+  // for (const entry of entries) { await sendMessage('STORE_CREDENTIAL', ...); }
+  // STORE_CREDENTIAL does: data.entries.push(normalized);
+  // So it just appends.
+  
+  const updatedData = {
+    ...currentData,
+    entries: [...existingEntries, ...newEntries]
+  };
+  
+  await writeVault(updatedData, passphrase);
   resetTimeout(timeout);
-  return newData.entries.length;
+  return newEntries.length;
 }
