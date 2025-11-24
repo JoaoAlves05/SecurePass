@@ -864,3 +864,8 @@ html {
   background: var(--primary-soft);
   color: var(--primary);
 }
+
+/* Utility */
+.hidden {
+  display: none !important;
+}
