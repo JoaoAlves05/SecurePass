@@ -332,6 +332,32 @@
         </section>
       </div>
     </main>
+
+    <!-- Generic Modal -->
+    <div id="modalOverlay" class="modal-overlay hidden">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3 id="modalTitle">Title</h3>
+          <button id="modalClose" class="modal-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="modalMessage">Message goes here.</p>
+          <div id="modalInputContainer" class="hidden">
+            <input type="password" id="modalInput" class="modal-input" placeholder="Enter your master password">
+            <p id="modalInputError" class="input-error hidden"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="modalCancel" class="btn-secondary">Cancel</button>
+          <button id="modalConfirm" class="btn-primary">Confirm</button>
+        </div>
+      </div>
+    </div>
   </div>
   <script type="module" src="options.js"></script>
 </body>

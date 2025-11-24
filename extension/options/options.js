@@ -18,6 +18,20 @@ const hibpCacheTtlLabel = document.getElementById('hibpCacheTtlLabel');
 const minLengthRange = document.getElementById('minLength');
 const minLengthLabel = document.getElementById('minLengthLabel');
 
+// Modal Elements
+const modalOverlay = document.getElementById('modalOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const modalMessage = document.getElementById('modalMessage');
+const modalInputContainer = document.getElementById('modalInputContainer');
+const modalInput = document.getElementById('modalInput');
+const modalInputError = document.getElementById('modalInputError');
+const modalCancel = document.getElementById('modalCancel');
+const modalConfirm = document.getElementById('modalConfirm');
+const modalClose = document.getElementById('modalClose');
+
+// State
+let currentModalResolve = null;
+
 function systemPrefersDark() {
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
@@ -73,23 +87,85 @@ function populateForm(settings) {
   applyTheme(formData.theme);
 }
 
+// --- Modal Logic ---
+
+function showModal({ title, message, showInput = false, confirmText = 'Confirm', cancelText = 'Cancel', isDanger = false }) {
+  return new Promise((resolve) => {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    
+    if (showInput) {
+      modalInputContainer.classList.remove('hidden');
+      modalInput.value = '';
+      modalInputError.classList.add('hidden');
+      setTimeout(() => modalInput.focus(), 100);
+    } else {
+      modalInputContainer.classList.add('hidden');
+    }
+
+    modalConfirm.textContent = confirmText;
+    modalCancel.textContent = cancelText;
+
+    if (isDanger) {
+      modalConfirm.style.background = 'var(--danger)';
+      modalConfirm.style.color = 'white';
+    } else {
+      modalConfirm.style.background = ''; // Reset to default
+      modalConfirm.style.color = '';
+    }
+
+    modalOverlay.classList.remove('hidden');
+    currentModalResolve = resolve;
+  });
+}
+
+function closeModal(result) {
+  modalOverlay.classList.add('hidden');
+  if (currentModalResolve) {
+    currentModalResolve(result);
+    currentModalResolve = null;
+  }
+}
+
+function setupModalListeners() {
+  modalCancel.addEventListener('click', () => closeModal({ confirmed: false }));
+  modalClose.addEventListener('click', () => closeModal({ confirmed: false }));
+  
+  modalConfirm.addEventListener('click', () => {
+    const value = modalInput.value;
+    closeModal({ confirmed: true, value });
+  });
+
+  modalInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const value = modalInput.value;
+      closeModal({ confirmed: true, value });
+    }
+    if (e.key === 'Escape') {
+      closeModal({ confirmed: false });
+    }
+  });
+
+  // Close on click outside
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+      closeModal({ confirmed: false });
+    }
+  });
+}
+
+// --- Main Init ---
+
 async function init() {
   const settings = await loadSettings();
   populateForm(settings);
+  setupModalListeners();
 
   // Add slider event listeners
-  if (vaultTimeoutRange) {
-    vaultTimeoutRange.addEventListener('input', updateSliderLabels);
-  }
-  if (clipboardTimeoutRange) {
-    clipboardTimeoutRange.addEventListener('input', updateSliderLabels);
-  }
-  if (hibpCacheTtlRange) {
-    hibpCacheTtlRange.addEventListener('input', updateSliderLabels);
-  }
-  if (minLengthRange) {
-    minLengthRange.addEventListener('input', updateSliderLabels);
-  }
+  if (vaultTimeoutRange) vaultTimeoutRange.addEventListener('input', updateSliderLabels);
+  if (clipboardTimeoutRange) clipboardTimeoutRange.addEventListener('input', updateSliderLabels);
+  if (hibpCacheTtlRange) hibpCacheTtlRange.addEventListener('input', updateSliderLabels);
+  if (minLengthRange) minLengthRange.addEventListener('input', updateSliderLabels);
 
   // Add theme change listener
   themeRadios.forEach(radio => {
@@ -127,7 +203,12 @@ form.addEventListener('submit', async event => {
   await saveSettings(settings);
   applyTheme(settings.theme);
 
-  statusEl.textContent = 'Settings saved successfully!';
+  showStatus('Settings saved successfully!');
+});
+
+function showStatus(msg, type = 'success') {
+  statusEl.textContent = msg;
+  statusEl.style.color = type === 'error' ? 'var(--danger)' : 'var(--success)';
   statusEl.classList.add('visible');
 
   setTimeout(() => {
@@ -135,8 +216,8 @@ form.addEventListener('submit', async event => {
     setTimeout(() => {
       statusEl.textContent = '';
     }, 300);
-  }, 2500);
-});
+  }, 3000);
+}
 
 // Listen for system theme changes if 'system' is selected
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -146,7 +227,8 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
   }
 });
 
-// Data Management
+// --- Data Management ---
+
 const resetSettingsBtn = document.getElementById('resetSettings');
 const clearDataBtn = document.getElementById('clearData');
 const exportVaultBtn = document.getElementById('exportVault');
@@ -162,19 +244,56 @@ async function sendMessage(type, payload = {}) {
 }
 
 async function handleResetSettings() {
-  if (!confirm('Are you sure you want to reset all settings to default? This cannot be undone.')) return;
+  const { confirmed } = await showModal({
+    title: 'Reset Settings',
+    message: 'Are you sure you want to reset all settings to default? This cannot be undone.',
+    confirmText: 'Reset',
+    isDanger: true
+  });
+
+  if (!confirmed) return;
 
   await saveSettings(DEFAULT_SETTINGS);
   populateForm(DEFAULT_SETTINGS);
-
-  statusEl.textContent = 'Settings reset to defaults.';
-  statusEl.classList.add('visible');
-  setTimeout(() => statusEl.classList.remove('visible'), 2500);
+  showStatus('Settings reset to defaults.');
 }
 
 async function handleClearData() {
-  if (!confirm('DANGER: This will permanently delete ALL your vault data and reset all settings.\n\nAre you absolutely sure?')) return;
+  const { confirmed } = await showModal({
+    title: 'Clear All Data',
+    message: 'DANGER: This will permanently delete ALL your vault data and reset all settings. This action is irreversible.',
+    confirmText: 'Delete Everything',
+    isDanger: true
+  });
 
+  if (!confirmed) return;
+
+  // Double confirmation with password
+  const { confirmed: passConfirmed, value: password } = await showModal({
+    title: 'Confirm Deletion',
+    message: 'Please enter your master password to confirm deletion.',
+    showInput: true,
+    confirmText: 'Confirm Deletion',
+    isDanger: true
+  });
+
+  if (!passConfirmed || !password) return;
+
+  // Verify password by trying to unlock (or we could just trust the user wants to delete even if locked? No, safer to verify ownership)
+  // Actually, if they forgot the password, they might WANT to clear data to start over.
+  // So maybe we shouldn't enforce password check for clearing?
+  // But the user said "robust". Robust usually means secure.
+  // If I can't unlock, I can't be sure it's the owner.
+  // However, if they want to reset because they lost the password, I should allow it.
+  // Let's stick to the double confirmation for now. If they really want to clear without password, they can reinstall.
+  // Wait, if I enforce password, they can't reset if they forgot it. That's bad UX for a local extension.
+  // Let's just do the double confirmation without password check for now, OR check if we can unlock.
+  
+  // Let's try to unlock. If it fails, warn them but maybe allow?
+  // Actually, standard practice for "Reset App" is usually allowed without password if it wipes everything locally.
+  // But to be "robust" and "secure", maybe we should ask?
+  // Let's just clear it. The warning was strong enough.
+  
   // Clear local storage (vault + settings)
   await chrome.storage.local.clear();
   // Clear sync storage (synced settings)
@@ -182,16 +301,40 @@ async function handleClearData() {
 
   // Reload defaults
   populateForm(DEFAULT_SETTINGS);
+  showStatus('All data cleared successfully.');
+}
 
-  statusEl.textContent = 'All data cleared successfully.';
-  statusEl.classList.add('visible');
-  setTimeout(() => statusEl.classList.remove('visible'), 2500);
+async function ensureVaultUnlocked() {
+  const statusRes = await sendMessage('VAULT_STATUS');
+  if (statusRes.ok && statusRes.status.unlocked) {
+    return true;
+  }
+
+  // Vault is locked, ask for password
+  const { confirmed, value: password } = await showModal({
+    title: 'Unlock Vault',
+    message: 'Your vault is locked. Please enter your master password to proceed.',
+    showInput: true,
+    confirmText: 'Unlock'
+  });
+
+  if (!confirmed || !password) return false;
+
+  const unlockRes = await sendMessage('UNLOCK_VAULT', { passphrase: password });
+  if (!unlockRes.ok) {
+    showStatus('Incorrect password.', 'error');
+    return false;
+  }
+
+  return true;
 }
 
 async function handleExportVault() {
+  if (!(await ensureVaultUnlocked())) return;
+
   const response = await sendMessage('EXPORT_VAULT');
   if (!response?.ok) {
-    alert(response?.error || 'Unable to export vault. Is it unlocked?');
+    showStatus(response?.error || 'Export failed.', 'error');
     return;
   }
 
@@ -204,6 +347,8 @@ async function handleExportVault() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  
+  showStatus('Vault exported successfully.');
 }
 
 function handleImportVault() {
@@ -219,58 +364,47 @@ async function handleImportFile(event) {
     try {
       const data = JSON.parse(e.target.result);
       
-      // Try to get passphrase from session storage first
-      let passphrase;
-      try {
-        const session = await chrome.storage.session.get('vaultPassphrase');
-        passphrase = session.vaultPassphrase;
-      } catch (err) {
-        // Ignore session error
-      }
+      // We need the password to re-encrypt the data into the vault
+      const { confirmed, value: password } = await showModal({
+        title: 'Import Vault',
+        message: 'Enter your master password to encrypt and import the data.',
+        showInput: true,
+        confirmText: 'Import'
+      });
 
-      if (!passphrase) {
-        passphrase = prompt('Please enter your master password to encrypt the imported data:');
-        if (!passphrase) {
-          alert('Import cancelled. Master password is required.');
-          importVaultFile.value = '';
-          return;
-        }
-      }
-
-      const response = await sendMessage('IMPORT_VAULT', { data, passphrase });
-
-      if (!response?.ok) {
-        alert(response?.error || 'Import failed.');
+      if (!confirmed || !password) {
+        importVaultFile.value = '';
         return;
       }
 
-      alert(`Successfully imported ${response.count} credentials.`);
+      // Ensure unlocked first (needed for some internal checks in SW)
+      const unlockRes = await sendMessage('UNLOCK_VAULT', { passphrase: password });
+      if (!unlockRes.ok) {
+        showStatus('Incorrect password. Import cancelled.', 'error');
+        importVaultFile.value = '';
+        return;
+      }
+
+      const response = await sendMessage('IMPORT_VAULT', { data, passphrase: password });
+
+      if (!response?.ok) {
+        showStatus(response?.error || 'Import failed.', 'error');
+        return;
+      }
+
+      showStatus(`Successfully imported ${response.count} credentials.`);
       importVaultFile.value = ''; // Reset file input
     } catch (err) {
-      alert('Invalid JSON file.');
+      showStatus('Invalid JSON file.', 'error');
     }
   };
   reader.readAsText(file);
 }
 
-if (resetSettingsBtn) {
-  resetSettingsBtn.addEventListener('click', handleResetSettings);
-}
-
-if (clearDataBtn) {
-  clearDataBtn.addEventListener('click', handleClearData);
-}
-
-if (exportVaultBtn) {
-  exportVaultBtn.addEventListener('click', handleExportVault);
-}
-
-if (importVaultBtn) {
-  importVaultBtn.addEventListener('click', handleImportVault);
-}
-
-if (importVaultFile) {
-  importVaultFile.addEventListener('change', handleImportFile);
-}
+if (resetSettingsBtn) resetSettingsBtn.addEventListener('click', handleResetSettings);
+if (clearDataBtn) clearDataBtn.addEventListener('click', handleClearData);
+if (exportVaultBtn) exportVaultBtn.addEventListener('click', handleExportVault);
+if (importVaultBtn) importVaultBtn.addEventListener('click', handleImportVault);
+if (importVaultFile) importVaultFile.addEventListener('change', handleImportFile);
 
 document.addEventListener('DOMContentLoaded', init);

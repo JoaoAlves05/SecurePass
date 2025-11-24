@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS = {
   includeSymbols: true,
   avoidSimilar: true,
   vaultTimeout: 15,
+  clipboardTimeout: 30,
   hibpCacheTtlHours: 24,
   useSync: false
 };
