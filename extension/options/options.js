@@ -149,6 +149,17 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 // Data Management
 const resetSettingsBtn = document.getElementById('resetSettings');
 const clearDataBtn = document.getElementById('clearData');
+const exportVaultBtn = document.getElementById('exportVault');
+const importVaultBtn = document.getElementById('importVaultBtn');
+const importVaultFile = document.getElementById('importVaultFile');
+
+async function sendMessage(type, payload = {}) {
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage({ type, ...payload }, response => {
+      resolve(response || { ok: false, error: 'No response from background.' });
+    });
+  });
+}
 
 async function handleResetSettings() {
   if (!confirm('Are you sure you want to reset all settings to default? This cannot be undone.')) return;
@@ -177,12 +188,70 @@ async function handleClearData() {
   setTimeout(() => (statusEl.style.opacity = '0'), 2500);
 }
 
+async function handleExportVault() {
+  const response = await sendMessage('EXPORT_VAULT');
+  if (!response?.ok) {
+    alert(response?.error || 'Unable to export vault. Is it unlocked?');
+    return;
+  }
+
+  const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `securepass-vault-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function handleImportVault() {
+  importVaultFile.click();
+}
+
+async function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const response = await sendMessage('IMPORT_VAULT', { data });
+
+      if (!response?.ok) {
+        alert(response?.error || 'Import failed.');
+        return;
+      }
+
+      alert(`Successfully imported ${response.count} credentials.`);
+      importVaultFile.value = ''; // Reset file input
+    } catch (err) {
+      alert('Invalid JSON file.');
+    }
+  };
+  reader.readAsText(file);
+}
+
 if (resetSettingsBtn) {
   resetSettingsBtn.addEventListener('click', handleResetSettings);
 }
 
 if (clearDataBtn) {
   clearDataBtn.addEventListener('click', handleClearData);
+}
+
+if (exportVaultBtn) {
+  exportVaultBtn.addEventListener('click', handleExportVault);
+}
+
+if (importVaultBtn) {
+  importVaultBtn.addEventListener('click', handleImportVault);
+}
+
+if (importVaultFile) {
+  importVaultFile.addEventListener('change', handleImportFile);
 }
 
 init();

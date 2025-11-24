@@ -1257,15 +1257,65 @@ body[data-theme='dark'] .vault-icon-btn {
   height: 16px;
 }
 
-.vault-icon-btn:hover {
-  background: rgba(37, 99, 235, 0.2);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
+/* Copy Button - Primary Blue */
+.vault-icon-btn[aria-label="Copy password"] {
+  color: var(--primary);
+  background: var(--primary-soft);
 }
 
-.vault-icon-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.18);
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15);
+.vault-icon-btn[aria-label="Copy password"]:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+/* Edit Button - Warning Amber */
+.vault-icon-btn[aria-label="Edit credential"] {
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+.vault-icon-btn[aria-label="Edit credential"]:hover {
+  background: var(--warning);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+/* Delete Button - Danger Red */
+.vault-icon-btn[aria-label="Delete credential"] {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.vault-icon-btn[aria-label="Delete credential"]:hover {
+  background: var(--danger);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* Dark Mode Adjustments */
+body[data-theme='dark'] .vault-icon-btn[aria-label="Copy password"] {
+  background: rgba(59, 130, 246, 0.15);
+}
+body[data-theme='dark'] .vault-icon-btn[aria-label="Copy password"]:hover {
+  background: var(--primary);
+}
+
+body[data-theme='dark'] .vault-icon-btn[aria-label="Edit credential"] {
+  background: rgba(245, 158, 11, 0.15);
+}
+body[data-theme='dark'] .vault-icon-btn[aria-label="Edit credential"]:hover {
+  background: var(--warning);
+}
+
+body[data-theme='dark'] .vault-icon-btn[aria-label="Delete credential"] {
+  background: rgba(239, 68, 68, 0.15);
+}
+body[data-theme='dark'] .vault-icon-btn[aria-label="Delete credential"]:hover {
+  background: var(--danger);
 }
 
 /* Settings Panel - Professional Overhaul */
