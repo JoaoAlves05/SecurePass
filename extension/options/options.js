@@ -29,8 +29,13 @@ const modalCancel = document.getElementById('modalCancel');
 const modalConfirm = document.getElementById('modalConfirm');
 const modalClose = document.getElementById('modalClose');
 
+// Vault Status Elements
+const vaultStatusEl = document.getElementById('vaultStatus');
+const vaultStatusText = vaultStatusEl?.querySelector('.status-text');
+
 // State
 let currentModalResolve = null;
+let vaultStatusInterval = null;
 
 function systemPrefersDark() {
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -175,6 +180,10 @@ async function init() {
       }
     });
   });
+
+  // Start polling vault status
+  checkVaultStatus();
+  vaultStatusInterval = setInterval(checkVaultStatus, 2000);
 }
 
 form.addEventListener('submit', async event => {
@@ -243,6 +252,25 @@ async function sendMessage(type, payload = {}) {
   });
 }
 
+// --- Vault Status Sync ---
+
+async function checkVaultStatus() {
+  const response = await sendMessage('VAULT_STATUS');
+  if (response.ok && vaultStatusEl && vaultStatusText) {
+    const isUnlocked = response.status.unlocked;
+    vaultStatusEl.classList.remove('hidden');
+    if (isUnlocked) {
+      vaultStatusEl.classList.add('unlocked');
+      vaultStatusEl.classList.remove('locked');
+      vaultStatusText.textContent = 'Vault Unlocked';
+    } else {
+      vaultStatusEl.classList.add('locked');
+      vaultStatusEl.classList.remove('unlocked');
+      vaultStatusText.textContent = 'Vault Locked';
+    }
+  }
+}
+
 async function handleResetSettings() {
   const { confirmed } = await showModal({
     title: 'Reset Settings',
@@ -279,20 +307,19 @@ async function handleClearData() {
 
   if (!passConfirmed || !password) return;
 
-  // Verify password by trying to unlock (or we could just trust the user wants to delete even if locked? No, safer to verify ownership)
-  // Actually, if they forgot the password, they might WANT to clear data to start over.
-  // So maybe we shouldn't enforce password check for clearing?
-  // But the user said "robust". Robust usually means secure.
-  // If I can't unlock, I can't be sure it's the owner.
-  // However, if they want to reset because they lost the password, I should allow it.
-  // Let's stick to the double confirmation for now. If they really want to clear without password, they can reinstall.
-  // Wait, if I enforce password, they can't reset if they forgot it. That's bad UX for a local extension.
-  // Let's just do the double confirmation without password check for now, OR check if we can unlock.
+  // VERIFY PASSWORD by attempting to unlock
+  // If the vault is already unlocked, we still want to verify the user knows the password (re-auth)
+  // But UNLOCK_VAULT works even if already unlocked (it just returns success)
+  // However, we should make sure the password is correct.
+  // If the password is wrong, UNLOCK_VAULT returns error.
   
-  // Let's try to unlock. If it fails, warn them but maybe allow?
-  // Actually, standard practice for "Reset App" is usually allowed without password if it wipes everything locally.
-  // But to be "robust" and "secure", maybe we should ask?
-  // Let's just clear it. The warning was strong enough.
+  const unlockRes = await sendMessage('UNLOCK_VAULT', { passphrase: password });
+  if (!unlockRes.ok) {
+    showStatus('Incorrect password. Data NOT cleared.', 'error');
+    return;
+  }
+
+  // Password verified, proceed with deletion
   
   // Clear local storage (vault + settings)
   await chrome.storage.local.clear();
@@ -302,6 +329,9 @@ async function handleClearData() {
   // Reload defaults
   populateForm(DEFAULT_SETTINGS);
   showStatus('All data cleared successfully.');
+  
+  // Update status immediately
+  checkVaultStatus();
 }
 
 async function ensureVaultUnlocked() {
@@ -326,6 +356,8 @@ async function ensureVaultUnlocked() {
     return false;
   }
 
+  // Update status immediately
+  checkVaultStatus();
   return true;
 }
 
@@ -394,6 +426,9 @@ async function handleImportFile(event) {
 
       showStatus(`Successfully imported ${response.count} credentials.`);
       importVaultFile.value = ''; // Reset file input
+      
+      // Update status immediately
+      checkVaultStatus();
     } catch (err) {
       showStatus('Invalid JSON file.', 'error');
     }

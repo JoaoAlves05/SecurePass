@@ -115,6 +115,54 @@ body {
   gap: 16px;
 }
 
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vault-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.vault-status.unlocked {
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.vault-status.unlocked .status-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 2px var(--success-bg);
+}
+
+.vault-status.locked {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.vault-status.locked .status-dot {
+  background: var(--warning);
+}
+
 .logo-icon {
   width: 52px;
   height: 52px;
