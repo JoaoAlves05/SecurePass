@@ -128,10 +128,10 @@ form.addEventListener('submit', async event => {
   applyTheme(settings.theme);
 
   statusEl.textContent = 'Settings saved successfully!';
-  statusEl.style.opacity = '1';
+  statusEl.classList.add('visible');
 
   setTimeout(() => {
-    statusEl.style.opacity = '0';
+    statusEl.classList.remove('visible');
     setTimeout(() => {
       statusEl.textContent = '';
     }, 300);
@@ -168,8 +168,8 @@ async function handleResetSettings() {
   populateForm(DEFAULT_SETTINGS);
 
   statusEl.textContent = 'Settings reset to defaults.';
-  statusEl.style.opacity = '1';
-  setTimeout(() => (statusEl.style.opacity = '0'), 2500);
+  statusEl.classList.add('visible');
+  setTimeout(() => statusEl.classList.remove('visible'), 2500);
 }
 
 async function handleClearData() {
@@ -184,8 +184,8 @@ async function handleClearData() {
   populateForm(DEFAULT_SETTINGS);
 
   statusEl.textContent = 'All data cleared successfully.';
-  statusEl.style.opacity = '1';
-  setTimeout(() => (statusEl.style.opacity = '0'), 2500);
+  statusEl.classList.add('visible');
+  setTimeout(() => statusEl.classList.remove('visible'), 2500);
 }
 
 async function handleExportVault() {
@@ -262,4 +262,4 @@ if (importVaultFile) {
   importVaultFile.addEventListener('change', handleImportFile);
 }
 
-init();
+document.addEventListener('DOMContentLoaded', init);
