@@ -43,6 +43,8 @@ const autoLockLabel = document.getElementById('autoLockLabel');
 const syncToggle = document.getElementById('syncToggle');
 const clipboardRange = document.getElementById('clipboardRange');
 const clipboardLabel = document.getElementById('clipboardLabel');
+const hibpCacheRange = document.getElementById('hibpCacheRange');
+const hibpCacheLabel = document.getElementById('hibpCacheLabel');
 const defaultLengthRange = document.getElementById('defaultLengthRange');
 const defaultLengthLabel = document.getElementById('defaultLengthLabel');
 const defaultUpper = document.getElementById('defaultUpper');
@@ -280,6 +282,10 @@ function syncSettingsView() {
   const clipboardTimeout = state.settings.clipboardTimeout || 30;
   if (clipboardRange) clipboardRange.value = clipboardTimeout;
   if (clipboardLabel) clipboardLabel.textContent = clipboardTimeout === 0 ? 'Never' : `${clipboardTimeout}s`;
+
+  const hibpCache = state.settings.hibpCacheTtlHours || 24;
+  if (hibpCacheRange) hibpCacheRange.value = hibpCache;
+  if (hibpCacheLabel) hibpCacheLabel.textContent = hibpCache === 1 ? '1 hour' : `${hibpCache} hours`;
 
   if (state.settings.generatorDefaults) {
     const defs = state.settings.generatorDefaults;
@@ -1130,6 +1136,15 @@ function attachEventListeners() {
       const val = Number(clipboardRange.value);
       clipboardLabel.textContent = val === 0 ? 'Never' : `${val}s`;
       state.settings.clipboardTimeout = val;
+      scheduleSettingsSave();
+    });
+  }
+
+  if (hibpCacheRange) {
+    hibpCacheRange.addEventListener('input', () => {
+      const val = Number(hibpCacheRange.value);
+      hibpCacheLabel.textContent = val === 1 ? '1 hour' : `${val} hours`;
+      state.settings.hibpCacheTtlHours = val;
       scheduleSettingsSave();
     });
   }
