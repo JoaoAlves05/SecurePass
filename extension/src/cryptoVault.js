@@ -266,3 +266,27 @@ export async function changeMasterPassword(oldPassphrase, newPassphrase) {
 export async function listCredentials() {
   return cache.data ? [...(cache.data.entries || [])] : [];
 }
+
+export async function importVaultData(data, passphrase) {
+  if (!data || !Array.isArray(data.entries)) {
+    throw new Error('Invalid vault data format');
+  }
+  const settings = await loadSettings();
+  const timeout = settings.vaultTimeout || cache.timeoutMinutes || 15;
+  
+  // Verify passphrase by attempting to unlock (or use existing unlock)
+  await ensureUnlocked(passphrase, timeout);
+  
+  // Overwrite or merge? Let's overwrite for "Restore" functionality as implied by "Import Vault" usually
+  // But to be safe, maybe we should merge? The user prompt didn't specify. 
+  // "Restore from JSON" in UI implies replacing. 
+  // Let's replace the entries list but keep the structure.
+  
+  const newData = { ...data };
+  // Validate entries
+  newData.entries = newData.entries.map(entry => normalizeEntry(entry));
+  
+  await writeVault(newData, passphrase);
+  resetTimeout(timeout);
+  return newData.entries.length;
+}

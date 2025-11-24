@@ -218,7 +218,15 @@ async function handleImportFile(event) {
   reader.onload = async (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      const response = await sendMessage('IMPORT_VAULT', { data });
+      
+      const passphrase = prompt('Please enter your master password to encrypt the imported data:');
+      if (!passphrase) {
+        alert('Import cancelled. Master password is required.');
+        importVaultFile.value = '';
+        return;
+      }
+
+      const response = await sendMessage('IMPORT_VAULT', { data, passphrase });
 
       if (!response?.ok) {
         alert(response?.error || 'Import failed.');
