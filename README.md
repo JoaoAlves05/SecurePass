@@ -19,7 +19,7 @@ cp .env.example .env
 docker-compose up --build
 ```
 
-Aceda a [http://localhost:8000](http://localhost:8000) (API) e [http://localhost:8000/web/demo.html](http://localhost:8000/web/demo.html) (demo).
+Aceda a [http://localhost:8000](http://localhost:8000) (API) e [**Live Demo**](https://joaoalves05.github.io/Password-Tester/web/index.html) (demo).
 
 ## Endpoints principais
 
