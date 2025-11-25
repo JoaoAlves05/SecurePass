@@ -11,7 +11,6 @@ import {
   lockVault,
   vaultStatus,
   changeMasterPassword,
-  changeMasterPassword,
   importVaultData,
   keepAlive
 } from '../src/cryptoVault.js';
