@@ -185,26 +185,28 @@ h1 {
 
 /* Demo Showcase */
 .demo-showcase {
-  margin-top: -2rem;
-  perspective: 1000px;
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 2rem;
 }
 
 .demo-frame-wrapper {
-  width: 380px;
-  height: 620px;
-  margin: 0 auto;
+  width: 400px; /* Increased width to fit 360px + margins comfortably */
+  height: 650px; /* Increased height to fit 600px + margins comfortably */
   background: var(--bg);
   border-radius: 16px;
   box-shadow: 
-    0 20px 40px -10px rgba(0, 0, 0, 0.1),
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
     0 0 0 1px var(--border);
-  padding: 10px;
-  transform: rotateX(5deg);
-  transition: transform 0.5s ease;
+  padding: 0;
+  overflow: hidden; /* Prevent double scrollbars */
 }
 
+/* Removed 3D transforms to fix blurriness */
 .demo-frame-wrapper:hover {
-  transform: rotateX(0deg) scale(1.02);
+  transform: translateY(-5px);
+  transition: transform 0.3s ease;
 }
 
 iframe {
