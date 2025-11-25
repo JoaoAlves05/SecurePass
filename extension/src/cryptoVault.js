@@ -6,11 +6,10 @@ const ITERATIONS = 100000;
 const ENCODER = new TextEncoder();
 const DECODER = new TextDecoder();
 const STORAGE_PREFERENCE = ['sync', 'local'];
+const ALARM_NAME = 'vaultAutoLock';
 
 let cache = {
-  data: null,
-  timeout: null,
-  timeoutMinutes: 15
+  data: null
 };
 
 function bufferToBase64(buffer) {
@@ -114,21 +113,99 @@ async function saveVaultRecord(record) {
   }
 }
 
-function resetTimeout(timeoutMinutes) {
-  if (cache.timeout) clearTimeout(cache.timeout);
-  cache.timeoutMinutes = timeoutMinutes;
-  cache.timeout = setTimeout(() => {
-    cache.data = null;
-    cache.timeout = null;
-  }, timeoutMinutes * 60 * 1000);
+// --- Persistence & Auto-Lock Logic ---
+
+async function updateActivity(timeoutMinutes) {
+  const now = Date.now();
+  
+  // Update session storage
+  try {
+    // We only update timestamp, assuming passphrase is already there
+    await chrome.storage.session.set({ 
+      vaultLastActivity: now,
+      vaultTimeoutMinutes: timeoutMinutes 
+    });
+  } catch (e) {
+    console.error('Failed to update session activity:', e);
+  }
+
+  // Reset Alarm
+  // We set the alarm to fire when the timeout expires from NOW.
+  // This ensures that even if the browser is open but SW is idle, the alarm will wake it up to lock.
+  try {
+    await chrome.alarms.create(ALARM_NAME, { delayInMinutes: timeoutMinutes });
+  } catch (e) {
+    console.error('Failed to create alarm:', e);
+  }
+}
+
+async function restoreVaultState() {
+  try {
+    const session = await chrome.storage.session.get(['vaultPassphrase', 'vaultLastActivity', 'vaultTimeoutMinutes']);
+    if (!session.vaultPassphrase) {
+      return false;
+    }
+
+    const now = Date.now();
+    const lastActivity = session.vaultLastActivity || 0;
+    const timeoutMinutes = session.vaultTimeoutMinutes || 15;
+    const timeoutMs = timeoutMinutes * 60 * 1000;
+
+    if (now - lastActivity > timeoutMs) {
+      // Timeout expired while SW was dead or browser was closed (but session persisted? unlikely for browser close, but possible for SW)
+      await lockVault();
+      return false;
+    }
+
+    // Valid session, restore data
+    const record = await loadVaultRecord();
+    if (!record) return false;
+
+    try {
+      const data = await decryptData(record, session.vaultPassphrase);
+      cache.data = data;
+      // Refresh activity on restore? No, only on explicit action.
+      // But we should ensure the alarm is active.
+      // If SW just woke up, alarm might have fired or be pending.
+      // Let's reset it to remaining time?
+      // Actually, just creating it again with delayInMinutes overwrites it.
+      // Calculate remaining minutes
+      const remainingMs = timeoutMs - (now - lastActivity);
+      const remainingMins = Math.max(0.1, remainingMs / 60000);
+      await chrome.alarms.create(ALARM_NAME, { delayInMinutes: remainingMins });
+      
+      return true;
+    } catch (e) {
+      await lockVault();
+      return false;
+    }
+  } catch (e) {
+    return false;
+  }
 }
 
 async function ensureUnlocked(passphrase, timeoutMinutes) {
+  // If cache is empty, try to restore from session first
   if (!cache.data) {
-    await unlockVault(passphrase, timeoutMinutes || cache.timeoutMinutes || 15);
-  } else if (timeoutMinutes) {
-    resetTimeout(timeoutMinutes);
+    const restored = await restoreVaultState();
+    if (restored) {
+      // If restored, check if we need to update activity (usually ensureUnlocked is called before an operation)
+      // So yes, we will update activity below.
+    }
   }
+
+  if (!cache.data) {
+    // Still locked, try to unlock with provided passphrase
+    if (passphrase) {
+      await unlockVault(passphrase, timeoutMinutes || 15);
+    } else {
+      throw new Error('Vault is locked');
+    }
+  } else {
+    // Already unlocked (or restored), update activity
+    await updateActivity(timeoutMinutes || 15);
+  }
+  
   return cache.data;
 }
 
@@ -151,12 +228,28 @@ function normalizeEntry(partial, existing) {
 }
 
 async function writeVault(data, passphrase) {
-  const record = await encryptData(data, passphrase);
+  // If we don't have passphrase passed explicitly, try to get from session
+  let pass = passphrase;
+  if (!pass) {
+    const session = await chrome.storage.session.get('vaultPassphrase');
+    pass = session.vaultPassphrase;
+  }
+  
+  if (!pass) throw new Error('Passphrase required to write vault');
+
+  const record = await encryptData(data, pass);
   await saveVaultRecord(record);
   cache.data = data;
 }
 
+// --- Public API ---
+
 export async function vaultStatus() {
+  // Try to restore state if needed (lazy load)
+  if (!cache.data) {
+    await restoreVaultState();
+  }
+
   const record = await loadVaultRecord();
   return {
     initialized: Boolean(record),
@@ -171,10 +264,16 @@ export async function initializeVault(passphrase) {
   await saveVaultRecord(payload);
   cache.data = { entries: [] };
   const settings = await loadSettings();
-  resetTimeout(settings.vaultTimeout || 15);
+  
+  const timeout = settings.vaultTimeout || 15;
   
   try {
-    await chrome.storage.session.set({ 'vaultPassphrase': passphrase });
+    await chrome.storage.session.set({ 
+      vaultPassphrase: passphrase,
+      vaultLastActivity: Date.now(),
+      vaultTimeoutMinutes: timeout
+    });
+    await updateActivity(timeout);
   } catch (e) {
     // Ignore
   }
@@ -195,11 +294,15 @@ export async function unlockVault(passphrase, timeoutMinutes = 15) {
     throw new Error('Invalid master password');
   }
   cache.data = data;
-  resetTimeout(timeoutMinutes);
   
-  // Store passphrase in session for other contexts (like Options page)
+  // Store session state
   try {
-    await chrome.storage.session.set({ 'vaultPassphrase': passphrase });
+    await chrome.storage.session.set({ 
+      vaultPassphrase: passphrase,
+      vaultLastActivity: Date.now(),
+      vaultTimeoutMinutes: timeoutMinutes
+    });
+    await updateActivity(timeoutMinutes);
   } catch (e) {
     // Ignore session storage errors
   }
@@ -207,13 +310,12 @@ export async function unlockVault(passphrase, timeoutMinutes = 15) {
   return data;
 }
 
-export function lockVault() {
-  if (cache.timeout) clearTimeout(cache.timeout);
-  cache.timeout = null;
+export async function lockVault() {
   cache.data = null;
   
   try {
-    chrome.storage.session.remove('vaultPassphrase');
+    await chrome.storage.session.remove(['vaultPassphrase', 'vaultLastActivity', 'vaultTimeoutMinutes']);
+    await chrome.alarms.clear(ALARM_NAME);
   } catch (e) {
     // Ignore
   }
@@ -221,20 +323,33 @@ export function lockVault() {
 
 export async function storeCredential(entry, passphrase) {
   const settings = await loadSettings();
-  const timeout = settings.vaultTimeout || cache.timeoutMinutes || 15;
+  const timeout = settings.vaultTimeout || 15;
   const data = await ensureUnlocked(passphrase, timeout);
   const normalized = normalizeEntry(entry);
   data.entries = data.entries || [];
   data.entries.push(normalized);
-  await writeVault(data, passphrase);
-  resetTimeout(timeout);
+  
+  // If passphrase not provided (e.g. from popup where we rely on session), ensureUnlocked handles it?
+  // ensureUnlocked returns data. writeVault needs passphrase.
+  // We need to ensure we have the passphrase.
+  // If ensureUnlocked restored from session, we don't have 'passphrase' arg populated if caller didn't send it.
+  // So we should fetch it from session if missing.
+  
+  let pass = passphrase;
+  if (!pass) {
+    const session = await chrome.storage.session.get('vaultPassphrase');
+    pass = session.vaultPassphrase;
+  }
+
+  await writeVault(data, pass);
+  await updateActivity(timeout);
   return normalized;
 }
 
 export async function updateCredential(id, updates, passphrase) {
   if (!id) throw new Error('Missing credential id');
   const settings = await loadSettings();
-  const timeout = settings.vaultTimeout || cache.timeoutMinutes || 15;
+  const timeout = settings.vaultTimeout || 15;
   const data = await ensureUnlocked(passphrase, timeout);
   data.entries = data.entries || [];
   const index = data.entries.findIndex(item => item.id === id);
@@ -243,15 +358,22 @@ export async function updateCredential(id, updates, passphrase) {
   }
   const updated = normalizeEntry({ ...updates, id }, data.entries[index]);
   data.entries[index] = updated;
-  await writeVault(data, passphrase);
-  resetTimeout(timeout);
+  
+  let pass = passphrase;
+  if (!pass) {
+    const session = await chrome.storage.session.get('vaultPassphrase');
+    pass = session.vaultPassphrase;
+  }
+
+  await writeVault(data, pass);
+  await updateActivity(timeout);
   return updated;
 }
 
 export async function deleteCredential(id, passphrase) {
   if (!id) throw new Error('Missing credential id');
   const settings = await loadSettings();
-  const timeout = settings.vaultTimeout || cache.timeoutMinutes || 15;
+  const timeout = settings.vaultTimeout || 15;
   const data = await ensureUnlocked(passphrase, timeout);
   data.entries = data.entries || [];
   const index = data.entries.findIndex(item => item.id === id);
@@ -259,8 +381,15 @@ export async function deleteCredential(id, passphrase) {
     throw new Error('Credential not found');
   }
   data.entries.splice(index, 1);
-  await writeVault(data, passphrase);
-  resetTimeout(timeout);
+  
+  let pass = passphrase;
+  if (!pass) {
+    const session = await chrome.storage.session.get('vaultPassphrase');
+    pass = session.vaultPassphrase;
+  }
+
+  await writeVault(data, pass);
+  await updateActivity(timeout);
 }
 
 export async function changeMasterPassword(oldPassphrase, newPassphrase) {
@@ -280,11 +409,40 @@ export async function changeMasterPassword(oldPassphrase, newPassphrase) {
   const newRecord = await encryptData(data, newPassphrase);
   await saveVaultRecord(newRecord);
   cache.data = data;
+  
   const settings = await loadSettings();
-  resetTimeout(settings.vaultTimeout || cache.timeoutMinutes || 15);
+  const timeout = settings.vaultTimeout || 15;
+  
+  // Update session with new password
+  try {
+    await chrome.storage.session.set({ 
+      vaultPassphrase: newPassphrase,
+      vaultLastActivity: Date.now(),
+      vaultTimeoutMinutes: timeout
+    });
+    await updateActivity(timeout);
+  } catch (e) {
+    // Ignore
+  }
 }
 
 export async function listCredentials() {
+  // Try restore if needed
+  if (!cache.data) {
+    await restoreVaultState();
+  }
+  
+  if (cache.data) {
+    // Update activity on list? Yes, viewing the vault counts as activity.
+    // We need to know the timeout.
+    // We can get it from session or settings.
+    try {
+       const session = await chrome.storage.session.get('vaultTimeoutMinutes');
+       const timeout = session.vaultTimeoutMinutes || 15;
+       await updateActivity(timeout);
+    } catch(e) {}
+  }
+
   return cache.data ? [...(cache.data.entries || [])] : [];
 }
 
@@ -294,7 +452,6 @@ export async function importVaultData(data, passphrase) {
     throw new Error('Invalid vault data format: not an object');
   }
   
-  // Handle case where data might be wrapped or just the entries array
   let entries = data.entries;
   if (!entries && Array.isArray(data)) {
     entries = data;
@@ -305,37 +462,50 @@ export async function importVaultData(data, passphrase) {
   }
   
   const settings = await loadSettings();
-  const timeout = settings.vaultTimeout || cache.timeoutMinutes || 15;
+  const timeout = settings.vaultTimeout || 15;
   
-  // Verify passphrase by attempting to unlock (or use existing unlock)
   await ensureUnlocked(passphrase, timeout);
   
-  // Overwrite or merge? Let's overwrite for "Restore" functionality as implied by "Import Vault" usually
-  // But to be safe, maybe we should merge? The user prompt didn't specify. 
-  // "Restore from JSON" in UI implies replacing. 
-  // Let's replace the entries list but keep the structure.
-  
-  // Append entries instead of replacing
   const newEntries = entries.map(entry => normalizeEntry(entry));
   
   // Load existing data to append to
-  const currentData = await ensureUnlocked(passphrase, timeout);
-  const existingEntries = currentData.entries || [];
+  // ensureUnlocked might have restored it, or we use passphrase
+  // If ensureUnlocked used session, passphrase arg might be undefined/null if not passed.
+  // But importVaultData is usually called with explicit passphrase from UI prompt?
+  // Actually, in my previous fix for import, I enforced passphrase.
+  // But if the vault is ALREADY unlocked, we might not need it if we can get it from session.
   
-  // Merge: Add new entries, potentially checking for duplicates?
-  // Popup implementation just adds them. We will do the same for consistency.
-  // But we should probably avoid exact duplicates if possible?
-  // User asked to "do the same as popup". Popup:
-  // for (const entry of entries) { await sendMessage('STORE_CREDENTIAL', ...); }
-  // STORE_CREDENTIAL does: data.entries.push(normalized);
-  // So it just appends.
+  let pass = passphrase;
+  if (!pass) {
+    const session = await chrome.storage.session.get('vaultPassphrase');
+    pass = session.vaultPassphrase;
+  }
+  
+  if (!pass) throw new Error('Passphrase required to import');
+
+  // We need to re-read data to be sure we have latest
+  const currentData = cache.data; 
+  const existingEntries = currentData.entries || [];
   
   const updatedData = {
     ...currentData,
     entries: [...existingEntries, ...newEntries]
   };
   
-  await writeVault(updatedData, passphrase);
-  resetTimeout(timeout);
+  await writeVault(updatedData, pass);
+  await updateActivity(timeout);
+  await writeVault(updatedData, pass);
+  await updateActivity(timeout);
   return newEntries.length;
+}
+
+export async function keepAlive() {
+  const settings = await loadSettings();
+  const timeout = settings.vaultTimeout || 15;
+  // Only update if unlocked
+  if (cache.data) {
+    await updateActivity(timeout);
+    return true;
+  }
+  return false;
 }

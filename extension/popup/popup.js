@@ -358,6 +358,10 @@ function setView(view) {
 
 function resetInactivityTimer() {
   if (!state.vaultUnlocked) return;
+  
+  // Notify background to keep session alive
+  sendMessage('KEEP_ALIVE').catch(() => {});
+
   const minutes = state.settings?.vaultTimeout || 15;
   clearTimeout(state.inactivityTimer);
   state.inactivityTimer = setTimeout(async () => {

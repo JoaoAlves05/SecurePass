@@ -11,7 +11,9 @@ import {
   lockVault,
   vaultStatus,
   changeMasterPassword,
-  importVaultData
+  changeMasterPassword,
+  importVaultData,
+  keepAlive
 } from '../src/cryptoVault.js';
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -155,6 +157,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         break;
       }
+      case 'KEEP_ALIVE': {
+        try {
+          const alive = await keepAlive();
+          sendResponse({ ok: true, alive });
+        } catch (error) {
+          sendResponse({ ok: false, error: error.message });
+        }
+        break;
+      }
 
       case 'SCHEDULE_CLIPBOARD_CLEAR': {
         const { timeout } = message;
@@ -179,6 +190,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'clearClipboard') {
     await clearClipboardFromBackground();
+  } else if (alarm.name === 'vaultAutoLock') {
+    lockVault();
   }
 });
 

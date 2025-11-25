@@ -151,6 +151,42 @@ window.chrome = {
       // Mock active tab
       callback([{ url: window.location.href }]);
     }
+  },
+  alarms: {
+    _alarms: new Map(),
+    create: (name, alarmInfo) => {
+      const delayInMinutes = alarmInfo.delayInMinutes || 0;
+      const delayMs = delayInMinutes * 60 * 1000;
+      
+      if (window.chrome.alarms._alarms.has(name)) {
+        clearTimeout(window.chrome.alarms._alarms.get(name).timer);
+      }
+
+      const timer = setTimeout(() => {
+        window.chrome.alarms._alarms.delete(name);
+        if (window.chrome.alarms.onAlarm._listeners) {
+          window.chrome.alarms.onAlarm._listeners.forEach(cb => cb({ name }));
+        }
+      }, delayMs);
+
+      window.chrome.alarms._alarms.set(name, { timer, info: alarmInfo });
+    },
+    clear: (name, callback) => {
+      if (window.chrome.alarms._alarms.has(name)) {
+        clearTimeout(window.chrome.alarms._alarms.get(name).timer);
+        window.chrome.alarms._alarms.delete(name);
+      }
+      if (callback) callback(true);
+    },
+    onAlarm: {
+      _listeners: new Set(),
+      addListener: (callback) => {
+        window.chrome.alarms.onAlarm._listeners.add(callback);
+      },
+      removeListener: (callback) => {
+        window.chrome.alarms.onAlarm._listeners.delete(callback);
+      }
+    }
   }
 };
 
