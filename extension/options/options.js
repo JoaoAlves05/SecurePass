@@ -184,6 +184,21 @@ async function init() {
   // Start polling vault status
   checkVaultStatus();
   vaultStatusInterval = setInterval(checkVaultStatus, 2000);
+
+  // Listen for storage changes to sync UI
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'sync' || area === 'local') {
+      // Check if any settings keys changed
+      const settingsKeys = Object.keys(DEFAULT_SETTINGS);
+      const hasSettingsChange = Object.keys(changes).some(key => settingsKeys.includes(key));
+      
+      if (hasSettingsChange) {
+        loadSettings().then(settings => {
+          populateForm(settings);
+        });
+      }
+    }
+  });
 }
 
 form.addEventListener('submit', async event => {

@@ -1319,7 +1319,20 @@ async function initialise() {
   lockVaultBtn.setAttribute('aria-label', 'Lock vault');
   attachEventListeners();
   await loadVaultStatus();
+  await loadVaultStatus();
   setView('tester');
+
+  // Listen for settings changes from Options page
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'sync' || area === 'local') {
+      loadSettings().then(settings => {
+        state.settings = settings;
+        applyTheme(state.settings.theme);
+        syncSettingsView();
+        syncGeneratorControls();
+      });
+    }
+  });
 }
 
 initialise();
