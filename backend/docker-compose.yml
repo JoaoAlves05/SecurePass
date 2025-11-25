@@ -12,7 +12,6 @@ services:
       - db
     volumes:
       - ./app:/app/app
-      - ./web:/web/web
   redis:
     image: redis:7
     ports:
