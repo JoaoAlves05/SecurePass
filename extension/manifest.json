@@ -16,7 +16,10 @@
   "permissions": [
     "activeTab",
     "tabs",
-    "storage"
+    "storage",
+    "alarms",
+    "offscreen",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "https://api.pwnedpasswords.com/*"

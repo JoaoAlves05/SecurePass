@@ -142,34 +142,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ ok: false, error: 'Vault is locked' });
             return;
           }
-          // We need the passphrase to re-encrypt. 
-          // Since we are in service worker and vault is unlocked, we assume we have access to the key in memory via cryptoVault.js cache?
-          // Wait, cryptoVault.js cache stores decrypted data, not the key/passphrase.
-          // `importVaultData` requires passphrase.
-          // But `serviceWorker` doesn't store passphrase in state.
-          // The frontend `options.js` doesn't have the passphrase either unless we prompt for it or if we stored it in session (which we don't seem to).
-          // However, `unlockVault` caches the decrypted data.
-          // `importVaultData` needs to ENCRYPT the new data, so it needs the passphrase.
-          // If we don't have the passphrase, we can't encrypt.
-          // BUT `cryptoVault.js` doesn't expose the key.
-          // We might need to ask the user for the master password again to import?
-          // OR we can change `cryptoVault.js` to cache the key/passphrase temporarily? (Not secure)
-          // OR `options.js` should prompt for password before import?
-          // The user said "not functioning well". This is likely why.
-          // Let's check if `options.js` has access to passphrase. It doesn't.
-          // `popup.js` has `state.passphrase`.
-          // `options.js` is separate.
-          // We should probably prompt for password in `options.js` or `serviceWorker` should handle it if it had the key.
-          // Since I can't easily change the architecture to store the key in SW without risk, I will assume for now that I need to pass the passphrase from the UI.
-          // BUT `options.js` doesn't have it.
-          // Maybe I should just return an error if no passphrase provided?
-          // Wait, `cryptoVault.js` `importVaultData` takes `passphrase`.
-          // If I can't get it, I can't import.
-          // I'll update `options.js` to prompt for password if needed, but for now let's just add the handler.
-          // Actually, if the vault is unlocked, maybe we can just update the cache and save?
-          // No, `saveVaultRecord` saves ENCRYPTED data. We need the key to encrypt.
-          // So we MUST have the passphrase.
-          // I will add a TODO or just try to get it from message.
           
           if (!message.passphrase) {
             sendResponse({ ok: false, error: 'Master password required for import' });
@@ -184,6 +156,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       }
 
+      case 'SCHEDULE_CLIPBOARD_CLEAR': {
+        const { timeout } = message;
+        if (timeout > 0) {
+          await chrome.alarms.create('clearClipboard', { delayInMinutes: timeout / 60 });
+        }
+        sendResponse({ ok: true });
+        break;
+      }
+
       default:
         sendResponse({ ok: false, error: 'Unknown message type' });
     }
@@ -192,3 +173,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handler();
   return true;
 });
+
+// --- Clipboard Auto-Clear Logic ---
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'clearClipboard') {
+    await clearClipboardFromBackground();
+  }
+});
+
+async function clearClipboardFromBackground() {
+  try {
+    await ensureOffscreenDocument();
+    await chrome.runtime.sendMessage({
+      type: 'CLEAR_CLIPBOARD',
+      target: 'offscreen'
+    });
+  } catch (error) {
+    console.error('Failed to clear clipboard:', error);
+  }
+}
+
+async function ensureOffscreenDocument() {
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: ['offscreen.html']
+  });
+
+  if (existingContexts.length > 0) {
+    return;
+  }
+
+  await chrome.offscreen.createDocument({
+    url: 'offscreen.html',
+    reasons: ['CLIPBOARD'],
+    justification: 'Clear clipboard after timeout'
+  });
+}

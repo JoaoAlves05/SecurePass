@@ -331,9 +331,9 @@ async function copyToClipboard(value) {
 
     const timeout = state.settings?.clipboardTimeout ?? 30;
     if (timeout > 0) {
-      setTimeout(() => {
-        navigator.clipboard.writeText('').catch(() => { });
-      }, timeout * 1000);
+      // Delegate clearing to background service worker (via alarms)
+      // so it persists even if popup is closed
+      await sendMessage('SCHEDULE_CLIPBOARD_CLEAR', { timeout });
     }
 
     return true;
