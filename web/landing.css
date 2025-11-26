@@ -235,6 +235,7 @@ header {
   padding-bottom: 6rem;
   text-align: center;
   /* overflow: hidden; Removed to prevent cutting off 3D elements */
+  background: transparent; /* Ensure body gradient shows through */
 }
 
 .hero-content {
@@ -266,10 +267,10 @@ header {
 /* Demo Showcase */
 .demo-showcase {
   position: relative;
-  max-width: 1000px;
+  max-width: 400px; /* Closer to extension size (360px) + padding */
   margin: 0 auto;
   perspective: 1000px;
-  padding-bottom: 2rem; /* Add space for the transform */
+  padding-bottom: 2rem;
 }
 
 .demo-frame-wrapper {
@@ -279,14 +280,13 @@ header {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05);
   overflow: hidden;
   position: relative;
-  /* aspect-ratio: 16/9; Removed to prevent small height on small screens */
-  height: 750px; /* Fixed height large enough for the 600px app */
+  height: 640px; /* 600px min-height + some buffer */
   transform: rotateX(2deg);
   transition: transform 0.5s ease;
 }
 
 .demo-frame-wrapper:hover {
-  transform: rotateX(0deg) scale(1.01);
+  transform: rotateX(0deg) scale(1.02);
 }
 
 .demo-frame-wrapper iframe {
