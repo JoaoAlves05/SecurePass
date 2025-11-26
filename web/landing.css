@@ -600,21 +600,7 @@ body {
 }
 
 /* Header */
-header {
-  padding: 1.5rem 0;
-  border-bottom: 1px solid var(--border);
-  background: rgba(15, 23, 42, 0.8); /* Dark background */
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-@media (prefers-color-scheme: dark) {
-  header {
-    background: rgba(15, 23, 42, 0.8);
-  }
-}
+/* Duplicate Header Styles Removed */
 
 .nav-wrapper {
   display: flex;
