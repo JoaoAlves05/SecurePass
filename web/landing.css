@@ -134,7 +134,7 @@ header {
 }
 
 header.scrolled {
-  background: rgba(2, 6, 23, 0.85); /* Dark slate with opacity */
+  background: rgba(2, 6, 23, 0.5); /* More transparent to match "top" color feel */
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   padding: 1rem 0;

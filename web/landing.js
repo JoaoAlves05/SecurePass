@@ -3,11 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetSection = document.getElementById('why-securepass');
   
   const handleScroll = () => {
-    if (!targetSection) return;
-    
-    const triggerPoint = targetSection.offsetTop - 100; // Trigger slightly before the section hits top
-    
-    if (window.scrollY > triggerPoint) {
+    // Trigger immediately after scrolling a bit
+    if (window.scrollY > 20) {
       header.classList.add('scrolled');
     } else {
       header.classList.remove('scrolled');
