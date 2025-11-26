@@ -7,6 +7,16 @@ const storage = {
   sync: window.localStorage // Mock sync with local storage for demo
 };
 
+// Check for Secure Context (required for crypto.subtle)
+const isSecureContext = window.isSecureContext;
+
+if (!isSecureContext) {
+  console.warn('SecurePass Demo: Not running in a Secure Context. Web Crypto API may be unavailable.');
+  // We can't easily polyfill crypto.subtle for real security, but for a DEMO we might want to warn the user.
+  // However, the app uses it for "actual" encryption in the demo.
+  // If it fails, we should show a UI error in the app, but here we can try to prevent the crash.
+}
+
 function getStorage(area, keys, callback) {
   const result = {};
   if (Array.isArray(keys)) {
@@ -69,7 +79,7 @@ window.chrome = {
         // Simulate install event on load if not initialized
         if (!localStorage.getItem('installed')) {
           localStorage.setItem('installed', 'true');
-          callback();
+          setTimeout(callback, 100); // Slight delay to ensure environment is ready
         }
       }
     },
@@ -92,20 +102,22 @@ window.chrome = {
           }
         };
 
+        let handled = false;
         for (const listener of listeners) {
+          // In actual Chrome API, if a listener returns true, it keeps the channel open.
+          // Here we just call them.
           const result = listener(message, {}, sendResponse);
           if (result === true) {
-            // Async response expected, listener will call sendResponse
-            return; 
+            handled = true;
           }
         }
-        // If no listener returned true (async), and sendResponse wasn't called, 
-        // we might want to call it with undefined or error? 
-        // For now, let's assume listeners handle it or we timeout.
+        
+        // If not handled (no listener returned true) and no response sent yet,
+        // we might need to fallback. But for this mock, we assume listeners will respond if they exist.
       }, 0);
     },
     getManifest: () => ({
-      version: '1.0.0',
+      version: '1.2.0',
       name: 'SecurePass Demo'
     }),
     lastError: null
@@ -128,13 +140,21 @@ window.chrome = {
       _data: {},
       get: (keys, cb) => {
         const result = {};
-        // Simplified get for session
         if (keys === null) {
            cb(window.chrome.storage.session._data);
            return;
         }
-        // ... implement if needed, for now basic support
-        cb(window.chrome.storage.session._data); 
+        if (typeof keys === 'string') {
+          result[keys] = window.chrome.storage.session._data[keys];
+        } else if (Array.isArray(keys)) {
+          keys.forEach(k => result[k] = window.chrome.storage.session._data[k]);
+        } else {
+           // Object defaults
+           Object.keys(keys).forEach(k => {
+             result[k] = window.chrome.storage.session._data[k] !== undefined ? window.chrome.storage.session._data[k] : keys[k];
+           });
+        }
+        cb(result); 
       },
       set: (items, cb) => {
         Object.assign(window.chrome.storage.session._data, items);
@@ -142,6 +162,7 @@ window.chrome = {
       },
       remove: (keys, cb) => {
          if (typeof keys === 'string') delete window.chrome.storage.session._data[keys];
+         if (Array.isArray(keys)) keys.forEach(k => delete window.chrome.storage.session._data[k]);
          if (cb) cb();
       }
     }
@@ -190,7 +211,7 @@ window.chrome = {
   }
 };
 
-// Polyfill for crypto.randomUUID if not available (older browsers, though unlikely for this user)
+// Polyfill for crypto.randomUUID if not available
 if (!crypto.randomUUID) {
   crypto.randomUUID = () => {
     return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
@@ -198,3 +219,10 @@ if (!crypto.randomUUID) {
     );
   };
 }
+
+// Error Handling for Demo
+window.addEventListener('error', (event) => {
+  console.error('Demo Error:', event.error);
+  // If it's a module error or crypto error, we might want to alert the user in the UI
+  // But since this script runs before the UI, we can't easily touch the DOM yet.
+});

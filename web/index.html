@@ -20,6 +20,7 @@
       <nav class="nav-links">
         <a href="#features">Features</a>
         <a href="#security">Security</a>
+        <a href="#how-it-works">How it Works</a>
         <a href="https://github.com/JoaoAlves05/SecurePass" target="_blank">GitHub</a>
       </nav>
       <a href="#" class="btn btn-primary">Add to Chrome</a>
@@ -31,9 +32,9 @@
       <div class="container">
         <div class="hero-content">
           <span class="badge">v1.2.0 Now Available</span>
-          <h1>Secure your digital life with military-grade encryption</h1>
+          <h1>Secure your digital life with <br>military-grade encryption</h1>
           <p class="lead">
-            Generate unbreakable passwords, check for data breaches, and store credentials securely in your local vault.
+            Generate unbreakable passwords, check for data breaches, and store credentials securely in your local vault. Zero-knowledge, open source, and free forever.
           </p>
           <div class="cta-group">
             <a href="#" class="btn btn-primary">
@@ -58,7 +59,7 @@
 
     <section class="features" style="background: var(--surface);">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
           <h2>Why SecurePass?</h2>
           <p class="lead">See how we stack up against the competition.</p>
         </div>
@@ -93,7 +94,7 @@
               </tr>
               <tr>
                 <td><strong>Cost</strong></td>
-                <td style="color: #10b981; font-weight: 600;">Free & Open Source</td>
+                <td style="color: var(--secondary); font-weight: 600;">Free & Open Source</td>
                 <td>Subscription</td>
                 <td>Free</td>
               </tr>
@@ -105,7 +106,7 @@
 
     <section id="features" class="suite-section">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header" style="text-align: center; margin-bottom: 5rem;">
           <h2>The SecurePass Suite</h2>
           <p class="lead">A complete toolkit for your digital security.</p>
         </div>
@@ -203,80 +204,45 @@
 
     <section id="how-it-works" class="features" style="background: var(--surface);">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
           <h2>Deep Dive: The Vault</h2>
           <p class="lead">Transparent, local-first security architecture.</p>
         </div>
         
-        <div class="security-content">
+        <div class="security-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;">
           <div>
              <h3>Local-First Data Processing</h3>
              <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
                Unlike traditional password managers that immediately sync your data to the cloud, SecurePass processes everything locally on your device.
              </p>
-             <ul class="security-list">
+             <ul class="suite-list">
                <li>
-                 <div class="icon-box" style="width: 32px; height: 32px; margin-bottom: 0;">
-                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                 </div>
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                  <div>
                    <strong>Encryption</strong>
-                   <p class="text-sm">Data is encrypted using AES-256-GCM before it ever touches storage.</p>
+                   <p style="font-size: 0.9rem; margin-bottom: 0;">Data is encrypted using AES-256-GCM before it ever touches storage.</p>
                  </div>
                </li>
                <li>
-                 <div class="icon-box" style="width: 32px; height: 32px; margin-bottom: 0;">
-                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                 </div>
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                  <div>
                    <strong>Key Derivation</strong>
-                   <p class="text-sm">Your master password is transformed into an encryption key using PBKDF2 with 100,000 iterations.</p>
+                   <p style="font-size: 0.9rem; margin-bottom: 0;">Your master password is transformed into an encryption key using PBKDF2 with 100,000 iterations.</p>
                  </div>
                </li>
              </ul>
           </div>
           <div style="background: var(--bg); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
-            <h4 style="margin-bottom: 1rem;">Data Flow Diagram</h4>
-            <div class="data-flow-container">
-              <div class="data-flow-step">
-                <span class="data-flow-badge badge-surface">User Input</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                <span class="data-flow-badge badge-blue">PBKDF2 Hashing</span>
-              </div>
-              <div class="data-flow-step">
-                <span class="data-flow-badge badge-blue">Derived Key</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                <span class="data-flow-badge badge-green">AES-256 Encryption</span>
-              </div>
-              <div class="data-flow-step">
-                <span class="data-flow-badge badge-green">Encrypted Blob</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                <span class="data-flow-badge badge-surface">Local Storage</span>
-              </div>
+            <h4 style="margin-bottom: 1rem; text-align: center;">Data Flow Diagram</h4>
+            <div style="display: flex; flex-direction: column; gap: 1rem; align-items: center;">
+              <div style="background: var(--surface); padding: 0.75rem 1.5rem; border-radius: 99px; border: 1px solid var(--border);">User Input</div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+              <div style="background: var(--primary-light); color: var(--primary); padding: 0.75rem 1.5rem; border-radius: 99px; font-weight: 600;">PBKDF2 Hashing</div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+              <div style="background: rgba(16, 185, 129, 0.1); color: var(--secondary); padding: 0.75rem 1.5rem; border-radius: 99px; font-weight: 600;">AES-256 Encryption</div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+              <div style="background: var(--surface); padding: 0.75rem 1.5rem; border-radius: 99px; border: 1px solid var(--border);">Local Storage</div>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="features">
-      <div class="container">
-        <div class="section-header">
-          <h2>Deep Dive: The Analyzer</h2>
-          <p class="lead">Understanding how we measure password strength.</p>
-        </div>
-        <div class="grid">
-          <div class="feature-card">
-            <h3>Entropy vs. Length</h3>
-            <p>Length is important, but randomness (entropy) is key. "Password123" is long but weak. "Tr0ub4dor&3" is shorter but stronger. We use the <strong>zxcvbn</strong> algorithm to calculate bits of entropy, detecting common patterns, names, and keyboard walks.</p>
-          </div>
-          <div class="feature-card">
-            <h3>k-Anonymity</h3>
-            <p>To check if your password was leaked without revealing it, we hash it with SHA-1. We send the first 5 characters (prefix) to the API. The API returns all hashes starting with that prefix. We then check locally if your full hash is in that list. The server never sees your password.</p>
-          </div>
-          <div class="feature-card">
-            <h3>Crack Time Estimation</h3>
-            <p>We estimate how long it would take a supercomputer to crack your password based on its entropy. This gives you a realistic understanding of your security posture.</p>
           </div>
         </div>
       </div>
@@ -284,21 +250,30 @@
 
     <section id="security" class="security">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
           <h2>Privacy & Anonymity</h2>
           <p class="lead">We protect your identity, even when checking for breaches.</p>
         </div>
         
-        <div class="grid">
+        <div class="features-grid">
            <div class="feature-card">
+             <div class="feature-icon">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.88"></path><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-3.16 4.19"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+             </div>
              <h3>k-Anonymity Model</h3>
              <p>When checking if a password is compromised, we never send the full password. We hash it (SHA-1) and send only the first 5 characters to the HaveIBeenPwned API.</p>
            </div>
            <div class="feature-card">
+             <div class="feature-icon">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+             </div>
              <h3>Zero-Knowledge</h3>
              <p>We don't know your master password. If you lose it, your data is lost forever. This ensures that no one (including us) can access your vault.</p>
            </div>
            <div class="feature-card">
+             <div class="feature-icon">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+             </div>
              <h3>Open Source</h3>
              <p>Our code is public. Security researchers and the community can audit every line of code to ensure there are no backdoors.</p>
              <a href="https://github.com/JoaoAlves05/SecurePass" target="_blank" style="display: inline-block; margin-top: 1rem; color: var(--primary); font-weight: 600; text-decoration: none;">View Source Code &rarr;</a>
@@ -307,10 +282,9 @@
       </div>
     </section>
 
-
-    <section class="features">
+    <section class="features" style="background: var(--surface);">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
           <h2>Frequently Asked Questions</h2>
         </div>
         <div class="faq-grid">
@@ -337,12 +311,21 @@
 
   <footer>
     <div class="container">
-      <div class="footer-links">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-        <a href="#">Contact</a>
+      <div class="footer-content">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          SecurePass
+        </div>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Contact</a>
+        </div>
+        <p style="margin: 0; color: var(--text-muted);">&copy; 2025 SecurePass. All rights reserved.</p>
       </div>
-      <p>&copy; 2025 SecurePass. All rights reserved.</p>
     </div>
   </footer>
 </body>
