@@ -25,7 +25,7 @@
       <a href="#" class="btn btn-primary">Add to Chrome</a>
     </div>
   </header>
-<!-- http://localhost:8000/web/index.html   -->
+  
   <main>
     <section class="hero">
       <div class="container">
@@ -134,21 +134,21 @@
           </div>
           <div style="background: var(--bg); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border);">
             <h4 style="margin-bottom: 1rem;">Data Flow Diagram</h4>
-            <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
-              <div style="display: flex; align-items: center; gap: 1rem;">
-                <span style="background: var(--surface); padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid var(--border);">User Input</span>
+            <div class="data-flow-container">
+              <div class="data-flow-step">
+                <span class="data-flow-badge badge-surface">User Input</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                <span style="background: #e0f2fe; color: #0369a1; padding: 0.5rem 1rem; border-radius: 6px;">PBKDF2 Hashing</span>
+                <span class="data-flow-badge badge-blue">PBKDF2 Hashing</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 1rem;">
-                <span style="background: #e0f2fe; color: #0369a1; padding: 0.5rem 1rem; border-radius: 6px;">Derived Key</span>
+              <div class="data-flow-step">
+                <span class="data-flow-badge badge-blue">Derived Key</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                <span style="background: #dcfce7; color: #15803d; padding: 0.5rem 1rem; border-radius: 6px;">AES-256 Encryption</span>
+                <span class="data-flow-badge badge-green">AES-256 Encryption</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 1rem;">
-                <span style="background: #dcfce7; color: #15803d; padding: 0.5rem 1rem; border-radius: 6px;">Encrypted Blob</span>
+              <div class="data-flow-step">
+                <span class="data-flow-badge badge-green">Encrypted Blob</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                <span style="background: var(--surface); padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid var(--border);">Local Storage</span>
+                <span class="data-flow-badge badge-surface">Local Storage</span>
               </div>
             </div>
           </div>
