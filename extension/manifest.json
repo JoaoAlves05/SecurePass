@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "SecurePass Assistant",
+  "name": "SecurePass",
   "description": "Analyze, generate, and protect passwords directly in your browser.",
   "version": "0.1.0",
   "action": {
-    "default_title": "SecurePass Assistant",
+    "default_title": "SecurePass",
     "default_popup": "popup/popup.html"
   },
   "icons": {

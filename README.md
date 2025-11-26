@@ -1,51 +1,50 @@
-# Password Strength Tester
+# SecurePass
 
-Serviço web para testar força de passwords e verificar exposição (pwned) via Have I Been Pwned (HIBP) usando k-anonymity.
+**SecurePass** is a Local-First Security Suite that analyzes, generates, and protects your passwords directly in your browser.
 
-> ✅ Agora também disponível como extensão de browser (Chrome/Firefox) em [`extension/`](extension/), com análise em tempo real, geração de passwords e cofre local encriptado.
+> 🔒 **Privacy First:** Your data never leaves your device. We use a Zero-Knowledge architecture with AES-256 encryption.
 
-## Funcionalidades
+## Features
 
-- Validação de força de password (zxcvbn)
-- Verificação de exposição (HIBP, nunca envia password/suffix)
-- Cache Redis, rate-limiting, logging estruturado
-- API REST e frontend demo
-- Docker-ready
+- **Password Tester:** Real-time strength analysis using zxcvbn entropy calculation. Check if your password has been exposed in known data breaches (HIBP) using k-anonymity.
+- **Secure Vault:** Store credentials locally with military-grade encryption.
+- **Smart Generator:** Create cryptographically strong passwords with customizable length and character sets.
 
-## Setup rápido
+## Installation
 
-```bash
-cp .env.example .env
-docker-compose up --build
-```
+### Extension (Chrome/Edge/Brave)
 
-Aceda a [http://localhost:8000](http://localhost:8000) (API) e [**Live Demo**](https://joaoalves05.github.io/Password-Tester/web/index.html) (demo).
+1.  Clone this repository.
+2.  Open `chrome://extensions`.
+3.  Enable "Developer mode".
+4.  Click "Load unpacked" and select the `extension/` folder.
 
-## Endpoints principais
+### Web Demo
 
-- `POST /api/v1/pwned-range` — body: `{ "prefix": "5BAA6" }`
-- `POST /api/v1/check` — body: `{ "prefix": "...", "suffix": "..." }`
-- `POST /api/v1/score` — body: `{ "zxcvbn": {...} }`
+Visit the live demo at: [https://JoaoAlves05.github.io/SecurePass/](https://JoaoAlves05.github.io/SecurePass/)
 
-## Segurança & Privacidade
+## Development
 
-- Nunca armazena passwords ou hashes completos.
-- Só recebe prefixo SHA-1 (5 chars) do cliente.
-- Cache HIBP em Redis (TTL 24h).
-- Rate limiting por IP/API key.
-- Logs nunca contêm passwords ou hashes completos.
+This project is organized as a monorepo:
 
-## Testes
+- `extension/`: The core browser extension.
+- `web/`: The static landing page and demo.
+- `backend/`: Optional Python backend (for future features).
+
+### Running Locally
+
+To run the web demo with live sync from the extension code:
 
 ```bash
-pytest --cov
+python3 scripts/dev.py
 ```
 
-## Variáveis de ambiente
+## Security & Privacy
 
-Ver `.env.example`.
+- **Zero-Knowledge:** We don't know your master password. If you lose it, your data is lost forever.
+- **Local Processing:** All encryption and logic happen in your browser.
+- **Open Source:** Audit the code yourself.
 
-## Notas
+## License
 
-- Em produção, configure CORS e segredos adequadamente.
-- Para SQLite local, use `sqlite+aiosqlite:///./test.db` em `DATABASE_URL`.
+MIT
