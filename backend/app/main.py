@@ -40,7 +40,14 @@ limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Password Strength Tester")
 
 # Serve the web/ folder as static files at /web
-app.mount("/web", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../web")), name="web")
+# Serve the web/ folder as static files at /web if it exists
+web_dir = os.path.join(os.path.dirname(__file__), "../../web")
+if not os.path.exists(web_dir):
+    # Fallback for Docker or other structures
+    web_dir = os.path.join(os.path.dirname(__file__), "../web")
+
+if os.path.exists(web_dir):
+    app.mount("/web", StaticFiles(directory=web_dir), name="web")
 
 # Security headers
 app.add_middleware(SecurityHeadersMiddleware)
