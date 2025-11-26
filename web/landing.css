@@ -203,6 +203,7 @@ h1 {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--border);
   padding: 0;
   overflow: hidden; /* Prevent double scrollbars */
+  margin: 0 auto; /* Ensure centering */
 }
 
 /* Removed 3D transforms to fix blurriness */
