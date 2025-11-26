@@ -122,20 +122,32 @@ section {
 
 /* Header */
 header {
-  padding: 1.25rem 0;
-  position: sticky;
+  padding: 1.5rem 0;
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
   z-index: 100;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--surface-border);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s ease;
 }
 
+header.scrolled {
+  background: rgba(2, 6, 23, 0.85); /* Dark slate with opacity */
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/*
 @media (prefers-color-scheme: light) {
   header {
     background: rgba(255, 255, 255, 0.7);
   }
 }
+*/
 
 .nav-wrapper {
   display: flex;
