@@ -591,7 +591,7 @@ body {
 header {
   padding: 1.5rem 0;
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(15, 23, 42, 0.8); /* Dark background */
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -668,9 +668,9 @@ header {
 
 /* Premium Polish */
 .hero {
-  background: radial-gradient(circle at 50% 0%, #eff6ff 0%, #ffffff 100%);
+  /* background: radial-gradient(circle at 50% 0%, #eff6ff 0%, #ffffff 100%); Removed conflicting white background */
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .hero::before {
@@ -697,7 +697,7 @@ header {
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--surface); /* Dark background */
   backdrop-filter: blur(10px);
   border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
