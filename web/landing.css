@@ -31,7 +31,8 @@
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Light Mode Override (if needed, but focusing on Dark/Premium first) */
+/* Light Mode Override (Disabled for Premium Dark Theme consistency) */
+/*
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #ffffff;
@@ -45,6 +46,7 @@
     --border: #e2e8f0;
   }
 }
+*/
 
 * {
   box-sizing: border-box;
@@ -232,7 +234,7 @@ header {
   padding-top: 8rem;
   padding-bottom: 6rem;
   text-align: center;
-  overflow: hidden;
+  /* overflow: hidden; Removed to prevent cutting off 3D elements */
 }
 
 .hero-content {
@@ -267,6 +269,7 @@ header {
   max-width: 1000px;
   margin: 0 auto;
   perspective: 1000px;
+  padding-bottom: 2rem; /* Add space for the transform */
 }
 
 .demo-frame-wrapper {
@@ -276,7 +279,8 @@ header {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05);
   overflow: hidden;
   position: relative;
-  aspect-ratio: 16/9;
+  /* aspect-ratio: 16/9; Removed to prevent small height on small screens */
+  height: 750px; /* Fixed height large enough for the 600px app */
   transform: rotateX(2deg);
   transition: transform 0.5s ease;
 }
