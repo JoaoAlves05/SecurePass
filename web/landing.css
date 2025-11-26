@@ -307,6 +307,51 @@ iframe {
   flex-shrink: 0;
 }
 
+/* Comparison Section */
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2rem;
+  background: var(--surface);
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.comparison-table th {
+  background: var(--bg);
+  font-weight: 600;
+}
+
+.comparison-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* FAQ Section */
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.faq-item h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.faq-item p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
 /* Footer */
 footer {
   padding: 4rem 0;
@@ -444,5 +489,12 @@ footer {
 
   .data-flow-step svg {
     transform: rotate(90deg);
+  }
+
+  /* Zoom out demo on very small screens */
+  .demo-frame-wrapper {
+    transform: scale(0.85);
+    transform-origin: top center;
+    margin-bottom: -80px; /* Compensate for empty space after scaling */
   }
 }

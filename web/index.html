@@ -56,6 +56,53 @@
       </div>
     </section>
 
+    <section class="features" style="background: var(--surface);">
+      <div class="container">
+        <div class="section-header">
+          <h2>Why SecurePass?</h2>
+          <p class="lead">See how we stack up against the competition.</p>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>SecurePass</th>
+                <th>Traditional Cloud Managers</th>
+                <th>Browser Built-in</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Storage Location</strong></td>
+                <td style="color: var(--primary); font-weight: 600;">Local Device Only</td>
+                <td>Cloud Servers</td>
+                <td>Local + Cloud Sync</td>
+              </tr>
+              <tr>
+                <td><strong>Encryption</strong></td>
+                <td>AES-256 (Zero-Knowledge)</td>
+                <td>Varies (Often not Zero-Knowledge)</td>
+                <td>Varies</td>
+              </tr>
+              <tr>
+                <td><strong>Breach Detection</strong></td>
+                <td>k-Anonymity (Privacy Preserving)</td>
+                <td>Sends Hash to Server</td>
+                <td>Basic</td>
+              </tr>
+              <tr>
+                <td><strong>Cost</strong></td>
+                <td style="color: #10b981; font-weight: 600;">Free & Open Source</td>
+                <td>Subscription</td>
+                <td>Free</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section id="features" class="features">
       <div class="container">
         <div class="section-header">
@@ -101,7 +148,7 @@
     <section id="how-it-works" class="features" style="background: var(--surface);">
       <div class="container">
         <div class="section-header">
-          <h2>How it Works</h2>
+          <h2>Deep Dive: The Vault</h2>
           <p class="lead">Transparent, local-first security architecture.</p>
         </div>
         
@@ -156,6 +203,29 @@
       </div>
     </section>
 
+    <section class="features">
+      <div class="container">
+        <div class="section-header">
+          <h2>Deep Dive: The Analyzer</h2>
+          <p class="lead">Understanding how we measure password strength.</p>
+        </div>
+        <div class="grid">
+          <div class="feature-card">
+            <h3>Entropy vs. Length</h3>
+            <p>Length is important, but randomness (entropy) is key. "Password123" is long but weak. "Tr0ub4dor&3" is shorter but stronger. We use the <strong>zxcvbn</strong> algorithm to calculate bits of entropy, detecting common patterns, names, and keyboard walks.</p>
+          </div>
+          <div class="feature-card">
+            <h3>k-Anonymity</h3>
+            <p>To check if your password was leaked without revealing it, we hash it with SHA-1. We send the first 5 characters (prefix) to the API. The API returns all hashes starting with that prefix. We then check locally if your full hash is in that list. The server never sees your password.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Crack Time Estimation</h3>
+            <p>We estimate how long it would take a supercomputer to crack your password based on its entropy. This gives you a realistic understanding of your security posture.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="security" class="security">
       <div class="container">
         <div class="section-header">
@@ -177,6 +247,33 @@
              <p>Our code is public. Security researchers and the community can audit every line of code to ensure there are no backdoors.</p>
              <a href="https://github.com/JoaoAlves05/SecurePass" target="_blank" style="display: inline-block; margin-top: 1rem; color: var(--primary); font-weight: 600; text-decoration: none;">View Source Code &rarr;</a>
            </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="features">
+      <div class="container">
+        <div class="section-header">
+          <h2>Frequently Asked Questions</h2>
+        </div>
+        <div class="faq-grid">
+          <div class="faq-item">
+            <h3>Where are my passwords stored?</h3>
+            <p>Your passwords are stored exclusively in your browser's local storage, encrypted with your master password. They are never sent to our servers.</p>
+          </div>
+          <div class="faq-item">
+            <h3>What if I lose my master password?</h3>
+            <p>Because we use a Zero-Knowledge architecture, we cannot recover your master password. If you lose it, your data is lost. This ensures that no one but you can access your vault.</p>
+          </div>
+          <div class="faq-item">
+            <h3>Is it really free?</h3>
+            <p>Yes, SecurePass is 100% free and open source. There are no premium plans or hidden fees.</p>
+          </div>
+          <div class="faq-item">
+            <h3>How does the breach check work?</h3>
+            <p>We use k-Anonymity. We hash your password and send only the first 5 characters of the hash to the Have I Been Pwned API. This returns a list of potential matches, which we check locally. The API never sees your full hash.</p>
+          </div>
         </div>
       </div>
     </section>
