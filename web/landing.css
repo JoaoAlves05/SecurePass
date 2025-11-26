@@ -30,6 +30,10 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
@@ -274,12 +278,33 @@ header {
 }
 
 @media (max-width: 480px) {
-  /* ... existing styles ... */
+  h1 {
+    font-size: 2rem;
+  }
+
+  .cta-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    justify-content: center;
+  }
+
+  .data-flow-step {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .data-flow-step svg {
+    transform: rotate(90deg);
+  }
   
   /* Aggressive Zoom out for demo on very small screens */
   .demo-frame-wrapper {
-    transform: scale(0.75); /* Reduced from 0.85 */
+    transform: scale(0.75);
     transform-origin: top center;
-    margin-bottom: -120px; /* Increased compensation */
+    margin-bottom: -120px;
   }
 }
