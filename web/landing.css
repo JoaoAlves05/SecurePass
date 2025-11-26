@@ -5,8 +5,8 @@
   --primary-light: rgba(59, 130, 246, 0.1);
   --secondary: #10b981;
   
-  --bg: #0f172a;
-  --bg-gradient: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
+  --bg: #020617; /* Darker Slate 950 */
+  --bg-gradient: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
   
   --surface: rgba(30, 41, 59, 0.7);
   --surface-hover: rgba(51, 65, 85, 0.8);
@@ -235,7 +235,7 @@ header {
   padding-bottom: 6rem;
   text-align: center;
   /* overflow: hidden; Removed to prevent cutting off 3D elements */
-  background: transparent; /* Ensure body gradient shows through */
+  background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.3) 0%, transparent 70%); /* Subtle glow behind hero */
 }
 
 .hero-content {
