@@ -175,7 +175,7 @@ header.scrolled {
 }
 
 .mobile-only {
-  display: none;
+  display: none !important; /* Force hide on desktop */
 }
 
 /* Mobile Navigation */
@@ -183,50 +183,67 @@ header.scrolled {
   .mobile-menu-toggle {
     display: block;
     z-index: 101;
+    position: relative; /* Ensure it stays above menu */
   }
 
   .desktop-only {
-    display: none;
+    display: none !important; /* Force hide on mobile */
   }
 
   .mobile-only {
-    display: inline-flex;
+    display: inline-flex !important;
     width: 100%;
     justify-content: center;
-    margin-top: 1rem;
+    margin-top: 2rem;
+    padding: 1rem;
+    font-size: 1.1rem;
   }
 
   .nav-links {
     position: fixed;
     top: 0;
     right: -100%;
-    width: 80%;
-    max-width: 300px;
+    width: 100%; /* Full width for better focus */
     height: 100vh;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(16px);
+    background: rgba(2, 6, 23, 0.98); /* Deep dark background */
+    backdrop-filter: blur(20px);
     flex-direction: column;
-    padding: 6rem 2rem 2rem;
-    transition: right 0.3s ease-in-out;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+    justify-content: center; /* Center items vertically */
+    align-items: center; /* Center items horizontally */
+    padding: 2rem;
+    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* Smooth ease-out */
     z-index: 100;
-    align-items: flex-start;
-    gap: 1.5rem;
+    gap: 2rem;
   }
 
   .nav-links.active {
     right: 0;
   }
 
-  .nav-links a {
-    font-size: 1.1rem;
-    width: 100%;
+  .nav-links a:not(.btn) {
+    font-size: 1.5rem; /* Larger text for touch */
+    font-weight: 600;
+    color: var(--text);
+    width: auto;
     padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: none;
+    position: relative;
   }
   
-  .nav-links a:last-child {
-    border-bottom: none;
+  .nav-links a:not(.btn)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: width 0.3s ease;
+  }
+
+  .nav-links a:not(.btn):hover::after {
+    width: 100%;
   }
 }
 
