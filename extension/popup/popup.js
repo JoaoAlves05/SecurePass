@@ -269,6 +269,21 @@ function updatePasswordToggleIcon() {
   togglePasswordBtn.setAttribute('aria-label', isHidden ? 'Show password' : 'Hide password');
 }
 
+function setupPasswordToggles() {
+  document.querySelectorAll('[data-toggle-password]').forEach(button => {
+    button.addEventListener('click', () => {
+      const targetId = button.dataset.togglePassword;
+      const input = document.getElementById(targetId);
+      if (!input) return;
+
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      button.innerHTML = isHidden ? ICONS.eyeOff : ICONS.eye;
+      button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+  });
+}
+
 function syncSettingsView() {
   if (!state.settings) return;
   themeRadios.forEach(radio => {
@@ -1318,6 +1333,7 @@ async function initialise() {
   lockVaultBtn.innerHTML = ICONS.lock;
   lockVaultBtn.setAttribute('aria-label', 'Lock vault');
   attachEventListeners();
+  setupPasswordToggles();
   await loadVaultStatus();
   await loadVaultStatus();
   setView('tester');
