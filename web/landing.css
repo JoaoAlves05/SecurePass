@@ -338,7 +338,7 @@ header.scrolled {
   padding-top: 8rem;
   padding-bottom: 6rem;
   text-align: center;
-  /* overflow: hidden; Removed to prevent cutting off 3D elements */
+  overflow: hidden; /* Essential for containing the 200% width background */
   background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.3) 0%, transparent 70%); /* Subtle glow behind hero */
 }
 
@@ -629,7 +629,8 @@ footer {
   }
   
   .hero {
-    padding-top: 6rem;
+    padding-top: 4rem; /* Reduced from 6rem to fix gap */
+    overflow: hidden; /* Prevent background from causing zoom out */
   }
 }
 
@@ -776,7 +777,7 @@ body {
 .hero {
   /* background: radial-gradient(circle at 50% 0%, #eff6ff 0%, #ffffff 100%); Removed conflicting white background */
   position: relative;
-  /* overflow: hidden; */
+  overflow: hidden; /* Ensure overflow is hidden here too */
 }
 
 .hero::before {
