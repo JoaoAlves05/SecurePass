@@ -1999,6 +1999,35 @@ body[data-theme='dark'] .input-wrapper:focus-within {
   letter-spacing: 0.02em;
 }
 
+.input-wrapper.has-toggle {
+  display: flex;
+  align-items: center;
+  padding-right: 6px;
+}
+
+.input-wrapper.has-toggle input {
+  flex: 1;
+  width: auto;
+}
+
+.input-wrapper.has-toggle .icon-btn {
+  color: var(--text-soft);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+}
+
+.input-wrapper.has-toggle .icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
+}
+
+body[data-theme='dark'] .input-wrapper.has-toggle .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
 .optional {
   font-weight: 400;
   color: var(--text-muted);
