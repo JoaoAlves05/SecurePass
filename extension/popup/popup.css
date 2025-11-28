@@ -1126,6 +1126,11 @@ body[data-theme='dark'] .vault-item {
   color: var(--text);
   letter-spacing: -0.01em;
   line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .vault-date {
@@ -1133,6 +1138,7 @@ body[data-theme='dark'] .vault-item {
   color: var(--text-soft);
   white-space: nowrap;
   margin-top: 2px;
+  flex-shrink: 0;
 }
 
 .vault-row {
