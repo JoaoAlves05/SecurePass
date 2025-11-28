@@ -622,6 +622,17 @@ footer {
     flex-direction: column;
     gap: 3rem;
     text-align: center;
+    align-items: stretch; /* Ensure children take full width */
+  }
+
+  .suite-text,
+  .suite-visual {
+    width: 100%; /* Force full width */
+    flex: none; /* Disable flex shrinking/growing */
+  }
+
+  .suite-visual {
+    padding: 3rem 1rem; /* Adjust padding for mobile */
   }
   
   .suite-list li {
