@@ -1,62 +1,48 @@
-chrome.runtime.onMessage.addListener(handleMessages);
-
-async function handleMessages(message) {
-  if (message.target !== 'offscreen') {
-    return;
-  }
-
-  if (message.type === 'CLEAR_CLIPBOARD') {
-    await clearClipboard();
-  }
-}
-
-async function clearClipboard() {
+// Clipboard ownership stays in this document; no password is persisted to storage.
+let timer;
+let serial = Promise.resolve();
+let generation = 0;
+const enqueue = task => {
+  const next = serial.then(task, task);
+  serial = next.catch(() => {});
+  return next;
+};
+function legacyClipboard(command, value = '') {
+  const textarea = document.createElement('textarea');
+  textarea.value = command === 'copy' && !value ? ' ' : value;
+  textarea.style.cssText = 'position:fixed;opacity:0;';
+  document.body.append(textarea); textarea.focus(); textarea.select();
+  const forceCopy = event => { event.clipboardData.setData('text/plain', value); event.preventDefault(); };
+  if (command === 'copy') document.addEventListener('copy', forceCopy);
   try {
-    // We need to focus the document to write to clipboard in some cases, 
-    // though offscreen documents have special permissions.
-    // Writing empty string to clear it.
-    const text = document.createElement('textarea');
-    document.body.appendChild(text);
-    text.value = '';
-    text.select();
-    document.execCommand('copy');
-    document.body.removeChild(text);
-    
-    // Alternative modern API if supported in offscreen context without focus
-    // await navigator.clipboard.writeText(''); 
-    // Note: execCommand is often more reliable in hidden/offscreen contexts for extensions historically,
-    // but navigator.clipboard is preferred if it works. 
-    // Let's try navigator.clipboard first, fall back if needed? 
-    // Actually, for offscreen documents with 'clipboardWrite' permission (which we might need to add if not implicit),
-    // navigator.clipboard.writeText('') should work.
-    // However, 'clipboardWrite' is not in manifest yet? 
-    // 'clipboardWrite' is usually required for writing. 
-    // 'activeTab' gives it for the tab, but offscreen is not a tab.
-    // Let's check if I need to add 'clipboardWrite' to manifest.
-    // The plan said "Add clipboardWrite permission (if not implicitly covered)". 
-    // I didn't add it yet. I should probably add it to be safe.
-    // But let's try the standard way first.
-    
-    try {
-        await navigator.clipboard.writeText('');
-    } catch (err) {
-        // Fallback to execCommand
-        const input = document.createElement('textarea');
-        document.body.appendChild(input);
-        input.value = '';
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-    }
-    
-  } catch (error) {
-    // Use logger from shared module to keep logs consistent. Offscreen can't import modules directly
-    // in all extension environments; fallback to console for compatibility.
-    try {
-      const { logger } = await import('./src/logger.js');
-      logger.error('Failed to clear clipboard:', error?.message || String(error));
-    } catch {
-      console.error('SecurePass offscreen: Failed to clear clipboard', error?.message || String(error));
-    }
-  }
+    if (!document.execCommand(command)) throw new Error('The browser could not access the clipboard.');
+    return textarea.value;
+  } finally { document.removeEventListener('copy', forceCopy); textarea.remove(); }
 }
+async function write(value) {
+  try { await navigator.clipboard.writeText(value); }
+  catch { legacyClipboard('copy', value); }
+}
+async function read() {
+  try { return await navigator.clipboard.readText(); }
+  catch { return legacyClipboard('paste'); }
+}
+chrome.runtime.onMessage.addListener((message, sender, respond) => {
+  if (message?.target !== 'offscreen' || sender.id !== chrome.runtime.id || sender.tab || sender.url !== chrome.runtime.getURL('background/serviceWorker.js')) return;
+  enqueue(async () => {
+    if (message.type !== 'COPY' || typeof message.value !== 'string' || message.value.length > 1024) throw new Error('Invalid clipboard request.');
+    clearTimeout(timer); generation++;
+    await write(message.value);
+    if (message.timeout > 0) {
+      const expected = message.value;
+      const ownGeneration = generation;
+      timer = setTimeout(() => enqueue(async () => {
+        if (ownGeneration !== generation) return;
+        // Only clear a matching copy; never erase content subsequently copied by the user.
+        if (await read() === expected) await write('');
+      }).catch(() => {}), message.timeout * 1000);
+    }
+    return { ok: true };
+  }).then(respond, error => respond({ ok: false, error: error.message }));
+  return true;
+});

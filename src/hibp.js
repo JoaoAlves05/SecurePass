@@ -1,117 +1,48 @@
 import { loadSettings } from './settings.js';
 import { getStorage, setStorage } from './utils/storage.js';
 
-const API_URL = 'https://api.pwnedpasswords.com/range/';
-
-// Singleton encoder — avoids allocating a new TextEncoder on every call.
-const ENCODER = new TextEncoder();
-
-// Maximum number of prefix buckets to keep in the cache.
-// Each HIBP response is ~25 KB, so 200 entries ≈ 5 MB maximum.
-const MAX_CACHE_ENTRIES = 200;
-
-async function sha1(message) {
-  const data = ENCODER.encode(message);
-  const hash = await crypto.subtle.digest('SHA-1', data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
-    .toUpperCase();
+const inFlight = new Map();
+let cacheWrites = Promise.resolve();
+const MAX_BYTES = 1024 * 1024;
+async function hash(value) {
+  return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(value))), b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 }
-
-async function getCache() {
-  const data = await getStorage('local', ['hibpCache']);
-  return data.hibpCache || {};
-}
-
-async function setCache(cache) {
-  await setStorage('local', { hibpCache: cache });
-}
-
-async function getCacheTtl() {
-  const settings = await loadSettings();
-  const hours = settings.hibpCacheTtlHours || 24;
-  return hours * 60 * 60 * 1000;
-}
-
-/**
- * Removes expired entries from the cache object and, if the cache exceeds
- * MAX_CACHE_ENTRIES, evicts the oldest entries (LRU-approximation by timestamp).
- */
-function pruneCache(cache, ttl) {
-  const now = Date.now();
-
-  // Remove expired entries
-  for (const key of Object.keys(cache)) {
-    if (!cache[key]?.timestamp || now - cache[key].timestamp >= ttl) {
-      delete cache[key];
-    }
-  }
-
-  // If still oversized, evict the oldest entries
-  const keys = Object.keys(cache);
-  if (keys.length > MAX_CACHE_ENTRIES) {
-    keys
-      .sort((a, b) => (cache[a]?.timestamp ?? 0) - (cache[b]?.timestamp ?? 0))
-      .slice(0, keys.length - MAX_CACHE_ENTRIES)
-      .forEach(k => delete cache[k]);
-  }
-
-  return cache;
-}
-
-export async function checkPassword(password) {
-  if (!password) {
-    return { compromised: false, count: 0 };
-  }
-
-  const hash = await sha1(password);
-  const prefix = hash.substring(0, 5);
-  const suffix = hash.substring(5);
-  const cache = await getCache();
-  const now = Date.now();
-  const cacheTtl = await getCacheTtl();
-  let responseText;
-
-  const entry = cache[prefix];
-
-  if (entry && now - entry.timestamp < cacheTtl) {
-    responseText = entry.payload;
-  } else {
-    let res;
-    try {
-      res = await fetch(API_URL + prefix, {
-        method: 'GET',
-        headers: { 'Add-Padding': 'true' }
+async function range(prefix, ttl) {
+  const cache = (await getStorage('local', 'hibpCache')).hibpCache || {};
+  if (typeof cache[prefix]?.payload === 'string' && Date.now() - cache[prefix].timestamp < ttl) return cache[prefix].payload;
+  if (!inFlight.has(prefix)) {
+    const work = (async () => {
+      const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, { headers: { 'Add-Padding': 'true' }, signal: AbortSignal.timeout(8000), credentials: 'omit', cache: 'no-store' });
+      if (!response.ok) throw new Error(`HIBP unavailable (${response.status}).`);
+      const payload = await response.text();
+      if (payload.length > 256000 || !payload.trim().split(/\r?\n/).every(line => /^[A-F0-9]{35}:\d+$/.test(line))) throw new Error('Invalid HIBP response.');
+      cacheWrites = cacheWrites.catch(() => {}).then(async () => {
+        const latest = (await getStorage('local', 'hibpCache')).hibpCache || {};
+        latest[prefix] = { timestamp: Date.now(), payload };
+        const keys = Object.keys(latest).sort((a, b) => latest[b].timestamp - latest[a].timestamp);
+        const pruned = {};
+        let size = 0;
+        for (const key of keys) {
+          if (Date.now() - latest[key].timestamp >= ttl || Object.keys(pruned).length >= 32 || size + latest[key].payload.length > MAX_BYTES) continue;
+          pruned[key] = latest[key]; size += latest[key].payload.length;
+        }
+        await setStorage('local', { hibpCache: pruned });
       });
-    } catch (error) {
-      if (error instanceof TypeError) {
-        // Some environments block custom headers (triggering a CORS failure).
-        // Retry without the padding header so the lookup can still succeed.
-        res = await fetch(API_URL + prefix, { method: 'GET' });
-      } else {
-        throw error;
-      }
-    }
-
-    if (!res.ok) {
-      throw new Error(`HIBP request failed with status ${res.status}`);
-    }
-
-    responseText = await res.text();
-
-    // Prune stale/excess entries before storing the new one to keep storage lean.
-    const pruned = pruneCache(cache, cacheTtl);
-    pruned[prefix] = { payload: responseText, timestamp: now };
-    await setCache(pruned);
+      // A successful network check remains usable if optional cache storage is full.
+      await cacheWrites.catch(() => {});
+      return payload;
+    })().finally(() => inFlight.delete(prefix));
+    inFlight.set(prefix, work);
   }
-
-  const lines = responseText.split('\n');
-  for (const line of lines) {
-    const [hashSuffix, count] = line.trim().split(':');
-    if (hashSuffix === suffix) {
-      return { compromised: true, count: parseInt(count, 10) };
-    }
-  }
-  return { compromised: false, count: 0 };
+  return inFlight.get(prefix);
+}
+export async function checkPassword(password) {
+  if (typeof password !== 'string' || !password.length || password.length > 1024) throw new Error('Enter a password (up to 1024 characters).');
+  const digest = await hash(password);
+  const ttl = (await loadSettings()).hibpCacheTtlHours * 3600000;
+  const result = await range(digest.slice(0, 5), ttl);
+  const suffix = digest.slice(5);
+  const line = result.split(/\r?\n/).find(item => item.startsWith(`${suffix}:`));
+  const count = line ? Number(line.split(':')[1]) : 0;
+  return { compromised: count > 0, count };
 }

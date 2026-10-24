@@ -1,119 +1,38 @@
 import { loadSettings } from './settings.js';
+import { validateConstraints } from './validation.js';
 
-const SIMILAR_CHARS = /[Il1O0]/g;
-
-function buildCharset(options, constraints) {
-  const requirements = {
-    requiresUppercase: false,
-    requiresLowercase: false,
-    requiresNumber: false,
-    requiresSymbol: false,
-    ...(constraints.customRequirements || {})
-  };
-
-  let charset = '';
-  if (options.includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
-  if (options.includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  if (options.includeNumbers) charset += '0123456789';
-  if (options.includeSymbols) charset += '!@#$%^&*()-_=+[]{}|;:,.<>?';
-
-  if (constraints.pattern) {
-    if (/\\d/.test(constraints.pattern) && !options.includeNumbers) {
-      charset += '0123456789';
-    }
-    if (/\[A-Z\]/.test(constraints.pattern) && !options.includeUppercase) {
-      charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    }
-    if (/\[a-z\]/.test(constraints.pattern) && !options.includeLowercase) {
-      charset += 'abcdefghijklmnopqrstuvwxyz';
-    }
-  }
-
-  if (requirements.requiresSymbol && !options.includeSymbols) {
-    charset += '!@#$%^&*()-_=+[]{}|;:,.<>?';
-  }
-
-  charset = Array.from(new Set(charset.split(''))).join('');
-
-  if (options.avoidSimilar) {
-    charset = charset.replace(SIMILAR_CHARS, '');
-  }
-
-  if (!charset) {
-    throw new Error('Select at least one character set for password generation.');
-  }
-
-  return charset;
+const GROUPS = { includeLowercase: 'abcdefghijklmnopqrstuvwxyz', includeUppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', includeNumbers: '0123456789', includeSymbols: '!@#$%^&*()-_=+[]{}|;:,.<>?' };
+const REQUIREMENTS = { requiresLowercase: 'includeLowercase', requiresUppercase: 'includeUppercase', requiresNumber: 'includeNumbers', requiresSymbol: 'includeSymbols' };
+function randomIndex(length) {
+  const limit = Math.floor(0x100000000 / length) * length;
+  const value = new Uint32Array(1);
+  do { crypto.getRandomValues(value); } while (value[0] >= limit);
+  return value[0] % length;
 }
-
-function ensureRequirements(password, charset, constraints) {
-  const requirements = {
-    requiresUppercase: false,
-    requiresLowercase: false,
-    requiresNumber: false,
-    requiresSymbol: false,
-    ...(constraints.customRequirements || {})
-  };
-  const replacements = [];
-  if (requirements.requiresUppercase && !/[A-Z]/.test(password)) {
-    replacements.push('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-  }
-  if (requirements.requiresLowercase && !/[a-z]/.test(password)) {
-    replacements.push('abcdefghijklmnopqrstuvwxyz');
-  }
-  if (requirements.requiresNumber && !/\d/.test(password)) {
-    replacements.push('0123456789');
-  }
-  if (requirements.requiresSymbol && !/[^\w\s]/.test(password)) {
-    replacements.push('!@#$%^&*()-_=+[]{}|;:,.<>?');
-  }
-
-  let result = password.split('');
-  const random = crypto.getRandomValues(new Uint32Array(replacements.length));
-
-  replacements.forEach((set, index) => {
-    const pos = random[index] % result.length;
-    const char = set[random[index] % set.length];
-    result[pos] = char;
-  });
-
-  return result.join('');
-}
-
-export async function generatePassword(constraints = {}) {
-  const settings = await loadSettings();
-  const overrides = constraints.overrides || {};
-  const options = {
-    ...settings,
-    ...overrides
-  };
-
-  const requestedLength = constraints.length || overrides.minLength || settings.minLength;
-  const length = Math.max(4, Math.min(requestedLength, constraints.maxLength || 64));
-  const charset = buildCharset(options, {
-    customRequirements: constraints.customRequirements || {},
-    pattern: constraints.pattern || null
-  });
-
-  const cryptoArray = new Uint32Array(length);
-  let password = '';
-
-  for (let attempt = 0; attempt < 50; attempt += 1) {
-    crypto.getRandomValues(cryptoArray);
-    password = Array.from(cryptoArray, value => charset[value % charset.length]).join('');
-    password = ensureRequirements(password, charset, {
-      customRequirements: constraints.customRequirements || {}
-    });
-
-    if (constraints.pattern) {
-      const regex = new RegExp(constraints.pattern);
-      if (!regex.test(password)) {
-        continue;
-      }
+export async function generatePassword(input = {}) {
+  const c = validateConstraints(input);
+  const options = { ...await loadSettings(), ...c.overrides };
+  const min = c.minLength || 1;
+  const max = c.maxLength || 128;
+  const length = Math.max(min, Math.min(c.length || options.minLength, max));
+  if (min > max || length > 128) throw new Error('Incompatible password length constraints.');
+  const groups = Object.fromEntries(Object.entries(GROUPS).map(([key, chars]) => [key, options.avoidSimilar ? chars.replace(/[Il1O0]/g, '') : chars]));
+  for (const [req, key] of Object.entries(REQUIREMENTS)) if (c.customRequirements[req]) options[key] = true;
+  const selected = Object.keys(groups).filter(key => options[key]);
+  if (!selected.length) throw new Error('Select at least one character set.');
+  // Enabled groups are guaranteed, not just probabilistically present.
+  if (length < selected.length) throw new Error('Length is too short for all selected character sets.');
+  const charset = selected.map(key => groups[key]).join('');
+  const regex = c.pattern ? new RegExp(`^(?:${c.pattern.replace(/^\^|\$$/g, '')})$`, 'u') : null;
+  for (let attempt = 0; attempt < 500; attempt++) {
+    const chars = selected.map(key => groups[key][randomIndex(groups[key].length)]);
+    while (chars.length < length) chars.push(charset[randomIndex(charset.length)]);
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = randomIndex(i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
     }
-
-    return password;
+    const password = chars.join('');
+    if (!regex || regex.test(password)) return password;
   }
-
-  return password;
+  throw new Error('Unable to satisfy the site pattern with the selected options. Adjust the character sets.');
 }

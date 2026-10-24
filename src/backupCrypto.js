@@ -1,4 +1,6 @@
 import { bufferToBase64, base64ToBuffer } from './encoding.js';
+import { MAX_IMPORT_BYTES } from './validation.js';
+import { decodeBytes } from './vault/crypto.js';
 
 const ENCODER = new TextEncoder();
 const DECODER = new TextDecoder();
@@ -74,6 +76,7 @@ export async function decryptBackupPayload(encryptedBackup, backupPassword) {
     throw new Error('Backup password is required for encrypted backups.');
   }
 
+  if (encryptedBackup.version !== 1 || JSON.stringify(encryptedBackup).length > MAX_IMPORT_BYTES) throw new Error('Unsupported or oversized encrypted backup.');
   const kdf = encryptedBackup.kdf || {};
   const cipher = encryptedBackup.cipher || {};
 
@@ -85,13 +88,13 @@ export async function decryptBackupPayload(encryptedBackup, backupPassword) {
   }
 
   const iterations = Number(kdf.iterations);
-  if (!Number.isFinite(iterations) || iterations < 100000) {
+  if (!Number.isInteger(iterations) || iterations < 100000 || iterations > 2000000) {
     throw new Error('Invalid backup KDF iterations.');
   }
 
-  const saltBuffer = base64ToBuffer(kdf.salt || '');
-  const ivBuffer = base64ToBuffer(cipher.iv || '');
-  const ciphertextBuffer = base64ToBuffer(cipher.ciphertext || '');
+  const saltBuffer = decodeBytes(kdf.salt, 16);
+  const ivBuffer = decodeBytes(cipher.iv, 12);
+  const ciphertextBuffer = decodeBytes(cipher.ciphertext, 16, MAX_IMPORT_BYTES);
 
   const key = await deriveBackupKey(backupPassword, saltBuffer, iterations);
 

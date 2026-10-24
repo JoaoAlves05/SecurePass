@@ -93,83 +93,66 @@ export function getDB() {
   });
 }
 
-export async function readLocalVaultRecordRaw() {
-  try {
-    const db = await getDB();
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(DB_STORE_NAME, 'readonly');
-      tx.oncomplete = () => db.close();
-      tx.onerror = () => {
-        db.close();
-        reject(tx.error);
-      };
-      const store = tx.objectStore(DB_STORE_NAME);
-      const request = store.get(VAULT_KEY);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
-    });
-  } catch {
-    return null;
-  }
-}
+export const recordRevision = record => record?.revision || record?.ciphertext || null;
 
-export async function writeLocalVaultRecordRaw(record) {
+export async function readLocalVaultRecordRaw() {
   const db = await getDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(DB_STORE_NAME, 'readwrite');
-    tx.oncomplete = () => db.close();
-    tx.onerror = () => {
-      db.close();
-      reject(tx.error);
-    };
-    const store = tx.objectStore(DB_STORE_NAME);
-    const request = store.put(record, VAULT_KEY);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(DB_STORE_NAME, 'readonly');
+    let result;
+    const request = tx.objectStore(DB_STORE_NAME).get(VAULT_KEY);
+    request.onsuccess = () => { result = request.result || null; };
+    tx.oncomplete = () => { db.close(); resolve(result); };
+    tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || new Error('Vault read aborted.')); };
   });
 }
 
-export async function readSyncVaultRecordRaw() {
-  try {
-    const items = await getStorage('sync', null);
-    const manifest = items[`${VAULT_KEY}_manifest`];
-    if (!manifest || typeof manifest.chunks !== 'number' || manifest.chunks < 1) return null;
-    try {
-      let fullString = '';
-      for (let i = 0; i < manifest.chunks; i += 1) {
-        const chunk = items[`${VAULT_KEY}_chunk_${i}`];
-        if (chunk === undefined) return null;
-        fullString += chunk;
+export async function writeLocalVaultRecordRaw(record, expectedRevision) {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(DB_STORE_NAME);
+    let failure;
+    const request = store.get(VAULT_KEY);
+    request.onsuccess = () => {
+      const previous = request.result || null;
+      if (expectedRevision !== undefined && recordRevision(previous) !== expectedRevision) {
+        failure = new Error('Vault changed in another context. Unlock again.');
+        tx.abort();
+        return;
       }
-      return JSON.parse(fullString);
-    } catch {
-      return null;
-    }
-  } catch {
-    return null;
-  }
+      if (previous) {
+        const recovery = store.get('recovery');
+        recovery.onsuccess = () => store.put([previous, ...(recovery.result || [])].slice(0, 5), 'recovery');
+      }
+      store.put(record, VAULT_KEY);
+    };
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = tx.onabort = () => { db.close(); reject(failure || tx.error || new Error('Vault write aborted.')); };
+  });
 }
 
-export async function writeSyncVaultRecordRaw(record) {
-  const items = await getStorage('sync', `${VAULT_KEY}_manifest`);
-  const oldManifest = items[`${VAULT_KEY}_manifest`];
-  const oldChunksCount = oldManifest ? oldManifest.chunks : 0;
+export async function readRecoveryRecords() {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE_NAME, 'readonly');
+    const request = tx.objectStore(DB_STORE_NAME).get('recovery');
+    tx.oncomplete = () => { db.close(); resolve(request.result || []); };
+    tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || new Error('Recovery read failed.')); };
+  });
+}
 
-  const serialized = JSON.stringify(record);
-  const chunkCount = Math.ceil(serialized.length / CHUNK_SIZE);
-  const payload = { [`${VAULT_KEY}_manifest`]: { chunks: chunkCount, updatedAt: Date.now() } };
-
-  let chunkIdx = 0;
-  for (let i = 0; i < serialized.length; i += CHUNK_SIZE) {
-    payload[`${VAULT_KEY}_chunk_${chunkIdx}`] = serialized.substring(i, i + CHUNK_SIZE);
-    chunkIdx += 1;
+// Read-only migration support for the original unversioned Sync layout.
+export async function readLegacySyncRecord() {
+  const items = await getStorage('sync', null);
+  const manifest = items[`${VAULT_KEY}_manifest`];
+  if (!manifest) return null;
+  if (!Number.isInteger(manifest.chunks) || manifest.chunks < 1 || manifest.chunks > 100) throw new Error('Invalid legacy Sync manifest.');
+  let json = '';
+  for (let i = 0; i < manifest.chunks; i++) {
+    const part = items[`${VAULT_KEY}_chunk_${i}`];
+    if (typeof part !== 'string') throw new Error('Sync is incomplete. Retry after synchronization; do not create a new vault.');
+    json += part;
   }
-
-  const keysToRemove = [];
-  for (let i = chunkIdx; i < oldChunksCount; i += 1) keysToRemove.push(`${VAULT_KEY}_chunk_${i}`);
-
-  if (keysToRemove.length) {
-    await removeStorage('sync', keysToRemove);
-  }
-  await setStorage('sync', payload);
+  return JSON.parse(json);
 }

@@ -2,7 +2,8 @@ import { sendMessage } from './messaging.js';
 import { showToast } from './toast.js';
 import { updateStrength } from './tester.js';
 import { scheduleSettingsSave, syncSettingsView } from './settings.js';
-import { state, setView, detectActiveOrigin, openEntryModal } from '../popup.js';
+import { state } from '../state.js';
+import { setView, detectActiveOrigin, openEntryModal } from './ui.js';
 import { copyToClipboard } from '../../src/utils/clipboard.js';
 
 const lengthRange = document.getElementById('lengthRange');
@@ -27,22 +28,12 @@ function setLoading(button, loading) {
 
 export function syncGeneratorControls() {
   if (!state.settings) return;
-  if (state.settings.generatorDefaults) {
-    const defs = state.settings.generatorDefaults;
-    if (lengthRange) lengthRange.value = defs.length || 16;
-    if (lengthValue) lengthValue.textContent = defs.length || 16;
-    if (includeLower) includeLower.checked = defs.lowercase !== false;
-    if (includeUpper) includeUpper.checked = defs.uppercase !== false;
-    if (includeNumbers) includeNumbers.checked = defs.numbers !== false;
-    if (includeSymbols) includeSymbols.checked = defs.symbols !== false;
-  } else {
-    if (lengthRange) lengthRange.value = state.settings.minLength;
-    if (lengthValue) lengthValue.textContent = state.settings.minLength;
-    if (includeLower) includeLower.checked = state.settings.includeLowercase;
-    if (includeUpper) includeUpper.checked = state.settings.includeUppercase;
-    if (includeNumbers) includeNumbers.checked = state.settings.includeNumbers;
-    if (includeSymbols) includeSymbols.checked = state.settings.includeSymbols;
-  }
+  if (lengthRange) lengthRange.value = state.settings.minLength;
+  if (lengthValue) lengthValue.textContent = state.settings.minLength;
+  if (includeLower) includeLower.checked = state.settings.includeLowercase;
+  if (includeUpper) includeUpper.checked = state.settings.includeUppercase;
+  if (includeNumbers) includeNumbers.checked = state.settings.includeNumbers;
+  if (includeSymbols) includeSymbols.checked = state.settings.includeSymbols;
   if (avoidSimilar) avoidSimilar.checked = state.settings.avoidSimilar;
   syncSettingsView();
 }
@@ -50,7 +41,7 @@ export function syncGeneratorControls() {
 export async function handleGenerate() {
   setLoading(generateButton, true);
   if (generatorStatus) generatorStatus.textContent = '';
-  
+
   const constraints = {
     length: Number(lengthRange.value),
     overrides: {
@@ -62,10 +53,10 @@ export async function handleGenerate() {
       avoidSimilar: avoidSimilar.checked
     }
   };
-  
+
   const response = await sendMessage('GENERATE_PASSWORD', { constraints });
   setLoading(generateButton, false);
-  
+
   if (!response?.ok) {
     if (generatorStatus) {
       generatorStatus.textContent = response?.error || 'Could not generate password.';
@@ -74,13 +65,13 @@ export async function handleGenerate() {
     }
     return;
   }
-  
+
   state.generatorPassword = response.password;
   if (generatedResult) generatedResult.value = response.password;
   updateStrength(response.password);
-  
+
   if (generatorStatus) {
-    generatorStatus.textContent = 'Strong password generated.';
+    generatorStatus.textContent = 'Password generated with the selected rules.';
     generatorStatus.classList.remove('error');
     generatorStatus.classList.add('success');
   }

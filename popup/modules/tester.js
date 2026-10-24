@@ -1,7 +1,7 @@
 import { evaluatePassword } from '../../src/passwordStrength.js';
 import { sendMessage } from './messaging.js';
 import { showToast } from './toast.js';
-import { detectActiveOrigin, openEntryModal } from '../popup.js';
+import { detectActiveOrigin, openEntryModal } from './ui.js';
 import { copyToClipboard } from '../../src/utils/clipboard.js';
 
 const passwordInput = document.getElementById('passwordInput');
@@ -53,8 +53,8 @@ export function updateStrength(password) {
     strengthVerdict.classList.remove('badge-weak', 'badge-medium', 'badge-strong');
     strengthVerdict.classList.add(scoreToBadge(score));
   }
-  if (entropyEl) entropyEl.textContent = `Entropy: ${entropy} bits`;
-  if (crackTimeEl) crackTimeEl.textContent = `Crack time: ${crackTime}`;
+  if (entropyEl) entropyEl.textContent = `Random-character upper bound: ${entropy} bits`;
+  if (crackTimeEl) crackTimeEl.textContent = crackTime;
 
   if (suggestionsList) {
     suggestionsList.innerHTML = '';
@@ -147,10 +147,12 @@ export function attachTesterListeners() {
         hibpStatus.textContent = 'Checking…';
         hibpStatus.className = 'text-muted';
       }
-      
-      const response = await sendMessage('HIBP_CHECK', { password: passwordInput.value });
+
+      const checkedPassword = passwordInput.value;
+      const response = await sendMessage('HIBP_CHECK', { password: checkedPassword });
       setLoading(hibpButton, false);
-      
+      if (passwordInput.value !== checkedPassword) return;
+
       if (!response?.ok) {
         if (hibpStatus) {
           hibpStatus.textContent = response?.error || 'Could not check breaches.';
@@ -158,7 +160,7 @@ export function attachTesterListeners() {
         }
         return;
       }
-      
+
       if (response.result?.compromised) {
         if (hibpStatus) {
           hibpStatus.innerHTML = `<strong class="breach-count">${response.result.count.toLocaleString()}</strong> breaches found`;

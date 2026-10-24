@@ -1,6 +1,10 @@
 import { sendMessage } from './messaging.js';
 import { showToast } from './toast.js';
-import { state, resetInactivityTimer, renderVaultState, setView, openModal, closeModal, sanitizeValue, detectActiveOrigin, ICONS } from '../popup.js';
+import { state, ICONS, sanitizeValue } from '../state.js';
+import { resetInactivityTimer, renderVaultState, clearSensitiveUI } from './vaultSession.js';
+import { setView, openModal, closeModal, detectActiveOrigin, openEntryModal } from './ui.js';
+import { resolveUnlockSetup, setUnlockResolver } from './modalResolver.js';
+export { resolveUnlockSetup };
 import { copyToClipboard } from '../../src/utils/clipboard.js';
 
 const vaultList = document.getElementById('vaultList');
@@ -25,7 +29,6 @@ const currentMasterInput = document.getElementById('currentMaster');
 const nextMasterInput = document.getElementById('nextMaster');
 const confirmNextMasterInput = document.getElementById('confirmNextMaster');
 
-let unlockSetupResolver = null;
 let revealTimers = new Map();
 
 function clearRevealTimer(id) {
@@ -38,7 +41,7 @@ function clearRevealTimer(id) {
 function createVaultIconButton(iconSvg, title, variant = 'secondary') {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = `icon-button ${variant}`;
+  btn.className = `icon-btn ${variant === 'danger' ? 'danger' : ''}`;
   btn.innerHTML = iconSvg;
   btn.title = title;
   btn.setAttribute('aria-label', title);
@@ -47,7 +50,9 @@ function createVaultIconButton(iconSvg, title, variant = 'secondary') {
 
 export function renderEntries() {
   if (!vaultList || !vaultEmptyPanel) return;
-  vaultList.innerHTML = '';
+  for (const timer of revealTimers.values()) clearTimeout(timer);
+  revealTimers.clear();
+  vaultList.replaceChildren();
   const filtered = state.entries.filter(e => {
     if (!state.filter) return true;
     const term = state.filter.toLowerCase();
@@ -109,18 +114,21 @@ export function renderEntries() {
         passText.textContent = entry.password;
         toggleBtn.innerHTML = ICONS.eyeOff;
         toggleBtn.title = 'Hide password';
+        toggleBtn.setAttribute('aria-label', 'Hide password');
         clearRevealTimer(entry.id);
         const timer = setTimeout(() => {
           isRevealed = false;
           passText.textContent = '••••••••••••';
           toggleBtn.innerHTML = ICONS.eye;
           toggleBtn.title = 'Show password';
+        toggleBtn.setAttribute('aria-label', 'Show password');
         }, 10000);
         revealTimers.set(entry.id, timer);
       } else {
         passText.textContent = '••••••••••••';
         toggleBtn.innerHTML = ICONS.eye;
         toggleBtn.title = 'Show password';
+        toggleBtn.setAttribute('aria-label', 'Show password');
         clearRevealTimer(entry.id);
       }
     });
@@ -151,7 +159,7 @@ export function renderEntries() {
     const editBtn = createVaultIconButton(ICONS.edit, 'Edit credential');
     editBtn.addEventListener('click', () => {
       // Need to open entry modal for this entry
-      import('../popup.js').then(p => p.openEntryModal(entry));
+      openEntryModal(entry);
     });
 
     const deleteBtn = createVaultIconButton(ICONS.trash, 'Delete credential', 'danger');
@@ -182,15 +190,8 @@ export async function promptForMasterPassword(message = 'Enter your master passw
   if (unlockSetupForm) unlockSetupForm.reset();
   openModal('unlockSetupModal');
   return new Promise(resolve => {
-    unlockSetupResolver = resolve;
+    setUnlockResolver(resolve);
   });
-}
-
-export function resolveUnlockSetup(value) {
-  if (unlockSetupResolver) {
-    unlockSetupResolver(value);
-    unlockSetupResolver = null;
-  }
 }
 
 export function requireUnlockedVault() {
@@ -212,7 +213,7 @@ export async function ensureVaultAccessible(promptLabel = 'Enter your master pas
   }
 
   const typed = await promptForMasterPassword(promptLabel);
-  const passphrase = (typed || '').trim();
+  const passphrase = typed || '';
   if (!passphrase) {
     showToast('Master password is required.', 'warning');
     return false;
@@ -225,7 +226,7 @@ export async function ensureVaultAccessible(promptLabel = 'Enter your master pas
     return false;
   }
 
-  state.passphrase = passphrase;
+
   state.vaultUnlocked = true;
   state.vaultInitialized = true;
   state.entries = response.data?.entries || [];
@@ -236,11 +237,12 @@ export async function ensureVaultAccessible(promptLabel = 'Enter your master pas
 }
 
 export async function lockVault(showMessage = false) {
-  await sendMessage('LOCK_VAULT');
+  const response = await sendMessage('LOCK_VAULT');
+  if (!response.ok) { showToast(response.error, 'error'); return; }
   state.vaultUnlocked = false;
-  state.passphrase = null;
+
   state.entries = [];
-  clearTimeout(state.inactivityTimer);
+  clearSensitiveUI();
   renderVaultState();
   renderEntries();
   if (showMessage) {
@@ -257,14 +259,14 @@ export async function refreshVaultEntries() {
     return;
   }
   state.entries = response.entries || [];
+  const warning = document.getElementById('vaultSyncStatus'); warning.hidden = !response.syncPending; warning.textContent = response.syncPending ? `Saved locally. Sync pending: ${response.syncError}` : '';
   renderEntries();
 }
 
 export async function deleteCredential(id) {
   if (!requireUnlockedVault()) return;
   const response = await sendMessage('DELETE_CREDENTIAL', {
-    id,
-    passphrase: state.passphrase
+    id
   });
   if (!response?.ok) {
     showToast(response?.error || 'Unable to delete credential.', 'error');
@@ -278,13 +280,13 @@ export async function deleteCredential(id) {
 export async function handleEntrySubmit(event) {
   event.preventDefault();
   if (!requireUnlockedVault()) return;
-  const site = sanitizeValue(entrySiteInput.value, 255, true);
-  const username = sanitizeValue(entryUsernameInput.value, 255, true);
+  const site = sanitizeValue(entrySiteInput.value, 255);
+  const username = sanitizeValue(entryUsernameInput.value, 255);
   const password = sanitizeValue(entryPasswordInput.value, 1024, false);
-  const notes = sanitizeValue(entryNotesInput.value, 4096, true);
+  const notes = sanitizeValue(entryNotesInput.value, 4096);
 
   if (!site) {
-    showToast('Website or app is required.', 'warning');
+    showToast('Website is required.', 'warning');
     entrySiteInput.focus();
     return;
   }
@@ -299,13 +301,11 @@ export async function handleEntrySubmit(event) {
   if (state.editingEntryId) {
     response = await sendMessage('UPDATE_CREDENTIAL', {
       id: state.editingEntryId,
-      updates: payload,
-      passphrase: state.passphrase
+      updates: payload
     });
   } else {
     response = await sendMessage('STORE_CREDENTIAL', {
-      entry: payload,
-      passphrase: state.passphrase
+      entry: payload
     });
   }
 
@@ -331,7 +331,7 @@ export async function handleUnlock(event) {
     showToast(response?.error || 'Unable to unlock vault.', 'error');
     return;
   }
-  state.passphrase = passphrase;
+
   state.vaultUnlocked = true;
   state.vaultInitialized = true;
   vaultPassphraseInput.value = '';
@@ -375,7 +375,7 @@ export async function handleCreateMaster(event) {
     showToast('Vault created. Unlock with your new master password.', 'success');
     return;
   }
-  state.passphrase = master;
+
   state.vaultInitialized = true;
   state.vaultUnlocked = true;
   state.entries = unlockResponse.data?.entries || [];
@@ -407,8 +407,9 @@ export async function changeMasterPassword(event) {
     showToast(response?.error || 'Unable to change master password.', 'error');
     return;
   }
-  state.passphrase = next;
+
   closeModal('masterModal');
   resetInactivityTimer();
-  showToast('Master password updated.', 'success');
+  document.getElementById('masterForm').reset();
+  showToast('Master password updated. Reconfigure biometric unlock.', 'success');
 }

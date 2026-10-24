@@ -1,139 +1,101 @@
-/**
- * Validation and sanitization utilities for SecurePass Backend
- */
+import { normalizeSite } from './security/origins.js';
 
-export const MAX_LENGTHS = {
-  site: 255,
-  username: 255,
-  password: 1024,
-  notes: 4096,
-  id: 64
-};
-
+export const MAX_LENGTHS = { site: 255, username: 255, password: 1024, notes: 4096, id: 64 };
 export const BACKUP_VERSION = 1;
+export const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
+export const MAX_ENTRIES = 5000;
+export const MAX_VAULT_BYTES = 3 * 1024 * 1024;
 
-export function createVaultBackup(entries) {
-  return {
-    kind: 'securepass-vault-backup',
-    version: BACKUP_VERSION,
-    exportedAt: new Date().toISOString(),
-    entries: Array.isArray(entries) ? entries : []
-  };
-}
-
-function sanitizeString(str) {
-  if (typeof str !== 'string') return '';
-  // Remove control characters (except common whitespace), keep printable characters
-  return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
-}
-
+// Secrets and user data are never trimmed or HTML-sanitized. Escape when rendering.
 export function validateString(value, maxLength, fieldName, required = false) {
   if (value === undefined || value === null) {
     if (required) throw new Error(`${fieldName} is required`);
     return '';
   }
-
-  if (typeof value !== 'string') {
-    throw new Error(`${fieldName} must be a string`);
+  if (typeof value !== 'string' || value.length > maxLength || (required && !value.length)) {
+    throw new Error(`Invalid ${fieldName} (maximum ${maxLength} characters).`);
   }
-
-  const sanitized = sanitizeString(value);
-
-  if (required && sanitized.length === 0) {
-    throw new Error(`${fieldName} cannot be empty`);
-  }
-
-  if (sanitized.length > maxLength) {
-    throw new Error(`${fieldName} exceeds maximum length of ${maxLength} characters`);
-  }
-
-  return sanitized;
+  return value;
 }
 
-export function validateEntry(entry, isUpdate = false) {
-  if (!entry || typeof entry !== 'object') {
-    throw new Error('Invalid entry format');
-  }
-
-  // ID is optional on create, required on update (usually handled separately, but validated here if present)
-  let id = entry.id;
-  if (id !== undefined) {
-    id = validateString(id, MAX_LENGTHS.id, 'id', isUpdate);
-  }
-
-  const site = validateString(entry.site, MAX_LENGTHS.site, 'site', !isUpdate); // For updates, it might be partial, but our app sends full objects usually. Let's assume full object.
-  const username = validateString(entry.username, MAX_LENGTHS.username, 'username', false);
-  const password = validateString(entry.password, MAX_LENGTHS.password, 'password', !isUpdate); // Password usually required unless partial update
-  const notes = validateString(entry.notes, MAX_LENGTHS.notes, 'notes', false);
-
-  const cleanEntry = {};
-  if (id) cleanEntry.id = id;
-  if (entry.site !== undefined) cleanEntry.site = site;
-  if (entry.username !== undefined) cleanEntry.username = username;
-  if (entry.password !== undefined) cleanEntry.password = password;
-  if (entry.notes !== undefined) cleanEntry.notes = notes;
-  if (entry.createdAt) cleanEntry.createdAt = validateString(entry.createdAt, 64, 'createdAt', false);
-
-  return cleanEntry;
+export function validateMaster(value, creating = false) {
+  const pass = validateString(value, 1024, 'master password', true);
+  if (creating && pass.length < 12) throw new Error('Use at least 12 characters for the master password.');
+  return pass;
 }
 
-export function validateConstraints(constraints) {
-  if (!constraints || typeof constraints !== 'object') return {};
+function date(value, fallback) {
+  if (value === undefined) return fallback;
+  if (typeof value !== 'string' || value.length > 64 || !Number.isFinite(Date.parse(value))) throw new Error('Invalid entry date.');
+  return new Date(value).toISOString();
+}
 
-  const cleanConstraints = {};
-  
-  if (constraints.length !== undefined) {
-    if (typeof constraints.length !== 'number' || constraints.length < 1 || constraints.length > 128) {
-      throw new Error('Password length must be a number between 1 and 128');
-    }
-    cleanConstraints.length = constraints.length;
+export function validateEntry(entry, partial = false) {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw new Error('Invalid entry.');
+  const result = {};
+  for (const [key, limit] of Object.entries(MAX_LENGTHS)) {
+    if (entry[key] !== undefined) result[key] = validateString(entry[key], limit, key, ['site', 'password', 'id'].includes(key));
+    else if (!partial && ['site', 'password'].includes(key)) throw new Error(`${key} is required`);
   }
+  if (result.site !== undefined) result.site = normalizeSite(result.site);
+  for (const key of ['createdAt', 'updatedAt']) if (entry[key] !== undefined) result[key] = date(entry[key]);
+  return result;
+}
 
-  const booleanFields = ['lowercase', 'uppercase', 'numbers', 'symbols', 'avoidSimilar'];
-  for (const field of booleanFields) {
-    if (constraints[field] !== undefined) {
-      cleanConstraints[field] = Boolean(constraints[field]);
-    }
-  }
-
-  return cleanConstraints;
+export function createVaultBackup(entries) {
+  return { kind: 'securepass-vault-backup', version: BACKUP_VERSION, exportedAt: new Date().toISOString(), entries };
 }
 
 export function validateImportData(data) {
-  if (!data || typeof data !== 'object') {
-    throw new Error('Invalid import data format: must be an object');
-  }
+  if (!data || typeof data !== 'object' || new TextEncoder().encode(JSON.stringify(data)).length > MAX_IMPORT_BYTES) throw new Error('Invalid or oversized backup.');
+  if (data.version !== undefined && data.version !== BACKUP_VERSION) throw new Error('Unsupported backup version.');
+  if (data.kind !== undefined && data.kind !== 'securepass-vault-backup') throw new Error('Unsupported backup kind.');
+  const entries = Array.isArray(data) ? data : data.entries || data.vault?.entries;
+  if (!Array.isArray(entries) || entries.length > MAX_ENTRIES) throw new Error('Invalid backup entries.');
+  const ids = new Set();
+  const now = new Date().toISOString();
+  const clean = entries.map(entry => {
+    const item = validateEntry(entry);
+    item.id ||= crypto.randomUUID();
+    if (ids.has(item.id)) throw new Error('Duplicate credential ID in backup.');
+    ids.add(item.id);
+    item.createdAt = date(item.createdAt, now);
+    item.updatedAt = date(item.updatedAt, item.createdAt);
+    return { username: '', notes: '', ...item };
+  });
+  return { entries: clean, version: BACKUP_VERSION };
+}
 
-  let entries = data.entries;
-  if (!entries && data.vault && Array.isArray(data.vault.entries)) {
-    entries = data.vault.entries;
-  }
-  if (!entries && Array.isArray(data)) {
-    entries = data;
-  }
-
-  if (!Array.isArray(entries)) {
-    throw new Error('Invalid import data format: missing entries array');
-  }
-
-  // Validate each entry and filter out completely mangled ones, or fail the whole import?
-  // Failing the whole import is safer. Let's validate all.
-  const cleanEntries = [];
-  for (let i = 0; i < entries.length; i++) {
-    try {
-      const clean = validateEntry(entries[i]);
-      // Must have password
-      if (!clean.password) {
-        throw new Error('Password is required');
-      }
-      cleanEntries.push(clean);
-    } catch (err) {
-      throw new Error(`Invalid entry at index ${i}: ${err.message}`);
+export function validateConstraints(input = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid generator options.');
+  const result = {};
+  for (const key of ['length', 'minLength', 'maxLength']) {
+    if (input[key] !== undefined) {
+      if (!Number.isInteger(input[key]) || input[key] < 1 || input[key] > 128) throw new Error(`Invalid ${key}: use 1–128.`);
+      result[key] = input[key];
     }
   }
-
-  const version = typeof data.version === 'number' ? data.version : null;
-  const exportedAt = typeof data.exportedAt === 'string' ? data.exportedAt : null;
-
-  return { entries: cleanEntries, version, exportedAt };
+  if (input.pattern) {
+    if (typeof input.pattern !== 'string' || input.pattern.length > 256) throw new Error('Unsupported password pattern.');
+    // Only a small, bounded HTML-pattern subset is accepted; arbitrary regex can block the worker.
+    if (!/^\^?(?:\[[A-Za-z0-9!@#$%^&*()_+=.,:;? /\\\-]+\]|\\[dw]|[A-Za-z0-9])(?:\{\d{1,3}(?:,\d{0,3})?\}|[+*?])?\$?$/.test(input.pattern)) {
+      throw new Error('This site uses an unsupported pattern. Choose a password manually.');
+    }
+    result.pattern = input.pattern;
+  }
+  result.overrides = {};
+  for (const key of ['includeLowercase', 'includeUppercase', 'includeNumbers', 'includeSymbols', 'avoidSimilar']) {
+    if (input.overrides?.[key] !== undefined) {
+      if (typeof input.overrides[key] !== 'boolean') throw new Error(`Invalid ${key}.`);
+      result.overrides[key] = input.overrides[key];
+    }
+  }
+  result.customRequirements = {};
+  for (const key of ['requiresUppercase', 'requiresLowercase', 'requiresNumber', 'requiresSymbol']) {
+    if (input.customRequirements?.[key] !== undefined) {
+      if (typeof input.customRequirements[key] !== 'boolean') throw new Error(`Invalid ${key}.`);
+      result.customRequirements[key] = input.customRequirements[key];
+    }
+  }
+  return result;
 }

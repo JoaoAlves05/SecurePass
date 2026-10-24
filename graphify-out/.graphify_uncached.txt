@@ -1,0 +1,17 @@
+/home/johnny/projects/SecurePass/AGENTS.md
+/home/johnny/projects/SecurePass/ARCHITECTURE.md
+/home/johnny/projects/SecurePass/README.md
+/home/johnny/projects/SecurePass/SECURITY.md
+/home/johnny/projects/SecurePass/auth/auth.html
+/home/johnny/projects/SecurePass/docs/IMPLEMENTATION.md
+/home/johnny/projects/SecurePass/docs/REVIEW_PHASE1.md
+/home/johnny/projects/SecurePass/docs/VALIDATION.md
+/home/johnny/projects/SecurePass/offscreen.html
+/home/johnny/projects/SecurePass/popup/popup.html
+/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png
+/home/johnny/projects/SecurePass/docs/screenshots/phase1-settings.png
+/home/johnny/projects/SecurePass/docs/screenshots/phase1-vault.png
+/home/johnny/projects/SecurePass/icons/icon-128.png
+/home/johnny/projects/SecurePass/icons/icon-16.png
+/home/johnny/projects/SecurePass/icons/icon-32.png
+/home/johnny/projects/SecurePass/icons/icon-48.png

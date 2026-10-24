@@ -1,544 +1,200 @@
-import {
-  getStorage, setStorage, removeStorage,
-  readLocalVaultRecordRaw, writeLocalVaultRecordRaw,
-  readSyncVaultRecordRaw, writeSyncVaultRecordRaw
-} from './utils/storage.js';
-import { loadSettings } from './settings.js';
-import { validateEntry, validateImportData } from './validation.js';
-import { bufferToBase64, base64ToBuffer } from './encoding.js';
-import { VAULT_KEY, META_KEY, PRF_EVAL_LABEL, ALARM_NAME } from './constants.js';
-import { logger } from './logger.js';
-
-const BIOMETRIC_KEY = 'securepassBiometric';
-const TRUSTED_DEVICE_KEY = 'securepassTrustedDeviceKey';
-const ITERATIONS = 600000;
-const ENCODER = new TextEncoder();
-const DECODER = new TextDecoder();
-
-const BRUTE_FORCE_MAX_ATTEMPTS = 5;
-const BRUTE_FORCE_LOCKOUT_MS = 30_000;
-
-let cache = { data: null };
-let unlockedPassphrase = null;
-let bruteForceAttempts = 0;
-let lockoutUntil = 0;
+// Public vault service. Only background handlers call mutations; UI and content use messages.
+import { getStorage, setStorage, removeStorage, readLocalVaultRecordRaw, writeLocalVaultRecordRaw, readRecoveryRecords, recordRevision } from './utils/storage.js';
+import { validateEntry, validateImportData, validateMaster, MAX_ENTRIES, MAX_VAULT_BYTES } from './validation.js';
+import { createRecord, decryptRecord, decryptWithKey, encryptEntries, validateRecord } from './vault/crypto.js';
+import { withVaultOperation as operation } from './vault/queue.js';
+import { loadRecord, commitRecord, assertCurrent } from './vault/repository.js';
+import * as session from './vault/session.js';
+import { loadSettings, saveSettings } from './settings.js';
 
 
-
-async function deriveKey(passphrase, salt, iterations = ITERATIONS) {
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    ENCODER.encode(passphrase),
-    { name: 'PBKDF2' },
-    false,
-    ['deriveKey']
-  );
-  return crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt,
-      iterations,
-      hash: 'SHA-256'
-    },
-    keyMaterial,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
-}
-
-async function encryptData(data, passphrase) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKey(passphrase, salt.buffer);
-  const encoded = ENCODER.encode(JSON.stringify(data));
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
-  return {
-    salt: bufferToBase64(salt.buffer),
-    iv: bufferToBase64(iv.buffer),
-    ciphertext: bufferToBase64(ciphertext),
-    iterations: ITERATIONS
-  };
-}
-
-async function decryptData(record, passphrase) {
-  const { salt, iv, ciphertext, iterations } = record;
-  const key = await deriveKey(passphrase, base64ToBuffer(salt), iterations);
-  const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: new Uint8Array(base64ToBuffer(iv)) },
-    key,
-    base64ToBuffer(ciphertext)
-  );
-  return JSON.parse(DECODER.decode(decrypted));
-}
-
-async function loadVaultRecord() {
-  const settings = await loadSettings();
-  if (settings.useSync) {
-    return readSyncVaultRecordRaw();
-  } else {
-    try {
-      return await readLocalVaultRecordRaw();
-    } catch (error) {
-      logger.error('Failed to load vault from IndexedDB:', error?.message || String(error));
-      return null;
-    }
-  }
-}
-
-async function saveVaultRecord(record) {
-  const settings = await loadSettings();
-  if (settings.useSync) {
-    return writeSyncVaultRecordRaw(record);
-  } else {
-    return writeLocalVaultRecordRaw(record);
-  }
-}
-
-async function getVaultTimeout() {
-  const settings = await loadSettings();
-  return settings.vaultTimeout || 15;
-}
-
-// --- Persistence & Auto-Lock Logic ---
-
-async function updateActivity(timeoutMinutes) {
-  const now = Date.now();
-  
-  // Update session storage
-  try {
-    // We only update timestamp
-    await setStorage('session', { 
-      vaultLastActivity: now,
-      vaultTimeoutMinutes: timeoutMinutes 
-    });
-
-    // Make auto-lock smarter: Configure OS-level idle/lock detection
-    const timeoutSeconds = Math.max(60, timeoutMinutes * 60); // minimum 60s
-    chrome.idle.setDetectionInterval(timeoutSeconds);
-
-  } catch (e) {
-    logger.error('Failed to configure idle detection:', e?.message || String(e));
-  }
-
-  // Backup alarm in case idle API is flaky or SW shuts down
-  try {
-    await chrome.alarms.create(ALARM_NAME, { delayInMinutes: timeoutMinutes });
-  } catch (e) {
-    logger.error('Failed to create alarm:', e?.message || String(e));
-  }
-}
-
-
-
-async function ensureUnlocked(passphrase, timeoutMinutes) {
-  if (!cache.data) {
-    if (passphrase) {
-      await unlockVault(passphrase, timeoutMinutes || 15);
-    } else {
-      throw new Error('Vault is locked');
-    }
-  } else {
-    await updateActivity(timeoutMinutes || 15);
-  }
-
-  return cache.data;
-}
-
-function normalizeEntry(partial, existing) {
-  const now = new Date().toISOString();
-  
-  const rawEntry = {
-    id: partial.id || existing?.id || crypto.randomUUID(),
-    site: partial.site ?? existing?.site ?? '',
-    username: partial.username ?? existing?.username ?? '',
-    notes: partial.notes ?? existing?.notes ?? '',
-    password: partial.password || existing?.password,
-    createdAt: existing?.createdAt || partial.createdAt || now
-  };
-  
-  if (!rawEntry.password) {
-    throw new Error('Password is required');
-  }
-
-  const cleanEntry = validateEntry(rawEntry, false);
-  cleanEntry.updatedAt = now;
-  return cleanEntry;
-}
-
-async function writeVault(data, passphrase) {
-  const pass = passphrase || unlockedPassphrase;
-  if (!pass) throw new Error('Passphrase required to write vault');
-
-  const record = await encryptData(data, pass);
-  await saveVaultRecord(record);
-  cache.data = data;
-}
-
-export async function overwriteVaultEntries(entries, passphrase) {
-  const pass = passphrase || unlockedPassphrase;
-  if (!pass) throw new Error('Passphrase required to rewrite vault');
-
-  const data = { entries: Array.isArray(entries) ? entries : [] };
-  await writeVault(data, pass);
-  await updateActivity(await getVaultTimeout());
-  return data;
-}
-
-// --- Public API ---
+export const lockVault = session.revokeSession;
+export const onVaultLock = session.observeLock;
+export const vaultGeneration = session.generation;
+export const assertVaultGeneration = session.assertGeneration;
+export { getSyncStatus, changeSyncMode, resolveSyncGeneration, retrySync, compactSync, clearSyncArchive } from './vault/syncService.js';
 
 export async function vaultStatus() {
-  const record = await loadVaultRecord();
-  return {
-    initialized: Boolean(record),
-    unlocked: Boolean(cache.data)
-  };
+  const record = await loadRecord();
+  const sync = (await getStorage('local', 'syncStatus')).syncStatus;
+  return { initialized: Boolean(record), unlocked: record ? await session.sessionStatus(record) : false, revision: record?.revision, syncPending: Boolean((await loadSettings()).useSync && sync?.pending), syncError: sync?.error };
 }
 
-export async function initializeVault(passphrase) {
-  const record = await loadVaultRecord();
-  if (record) return false;
-  const payload = await encryptData({ entries: [] }, passphrase);
-  await saveVaultRecord(payload);
-  cache.data = { entries: [] };
-  unlockedPassphrase = passphrase;
-  // Do not persist the plaintext passphrase in session storage for security.
-  // Keep only activity metadata via updateActivity.
-  await updateActivity(await getVaultTimeout());
-  return true;
-}
-
-export async function unlockVault(passphrase, timeoutMinutes = 15) {
-  if (Date.now() < lockoutUntil) {
-    const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
-    throw new Error(`Vault locked due to too many failed attempts. Try again in ${remaining} seconds.`);
-  }
-
-  const record = await loadVaultRecord();
-  if (!record) {
-    await initializeVault(passphrase);
-    return cache.data;
-  }
-  let data;
-  try {
-    data = await decryptData(record, passphrase);
-    
-    // Reset brute-force triggers on success
-    bruteForceAttempts = 0;
-    lockoutUntil = 0;
-  } catch (error) {
-    bruteForceAttempts++;
-    if (bruteForceAttempts >= BRUTE_FORCE_MAX_ATTEMPTS) {
-      lockoutUntil = Date.now() + BRUTE_FORCE_LOCKOUT_MS;
-      bruteForceAttempts = 0;
-      throw new Error(`Invalid master password. Vault locked for ${BRUTE_FORCE_LOCKOUT_MS / 1000} seconds.`);
-    }
-    throw new Error('Invalid master password');
-  }
-  cache.data = data;
-  unlockedPassphrase = passphrase;
-  // Do not persist the plaintext passphrase in session storage for security.
-  await updateActivity(timeoutMinutes);
-  return data;
-}
-
-export async function lockVault() {
-  if (cache.data?.entries) {
-    for (const entry of cache.data.entries) {
-      entry.password = 0;
-      entry.username = 0;
-      entry.notes = 0;
-    }
-  }
-  cache.data = null;
-  unlockedPassphrase = null;
-  try {
-    await removeStorage('session', ['vaultLastActivity', 'vaultTimeoutMinutes']);
-    await chrome.alarms.clear(ALARM_NAME);
-  } catch {
-    // Ignore
-  }
-}
-
-export async function storeCredential(entry, passphrase) {
-  const timeout = await getVaultTimeout();
-  const data = await ensureUnlocked(passphrase, timeout);
-  const normalized = normalizeEntry(entry);
-  data.entries = data.entries || [];
-  data.entries.push(normalized);
-  const pass = passphrase || unlockedPassphrase;
-  if (!pass) throw new Error('Passphrase required');
-
-  await writeVault(data, pass);
-  await updateActivity(timeout);
-  await saveCredentialMeta(normalized);
-  return normalized;
-}
-
-export async function updateCredential(id, updates, passphrase) {
-  if (!id) throw new Error('Missing credential id');
-  const timeout = await getVaultTimeout();
-  const data = await ensureUnlocked(passphrase, timeout);
-  data.entries = data.entries || [];
-  const index = data.entries.findIndex(item => item.id === id);
-  if (index === -1) throw new Error('Credential not found');
-  const updated = normalizeEntry({ ...updates, id }, data.entries[index]);
-  data.entries[index] = updated;
-  const pass = passphrase || unlockedPassphrase;
-  if (!pass) throw new Error('Passphrase required');
-
-  await writeVault(data, pass);
-  await updateActivity(timeout);
-  await saveCredentialMeta(updated);
-  return updated;
-}
-
-export async function deleteCredential(id, passphrase) {
-  if (!id) throw new Error('Missing credential id');
-  const timeout = await getVaultTimeout();
-  const data = await ensureUnlocked(passphrase, timeout);
-  data.entries = data.entries || [];
-  const index = data.entries.findIndex(item => item.id === id);
-  if (index === -1) throw new Error('Credential not found');
-  data.entries.splice(index, 1);
-  const pass = passphrase || unlockedPassphrase;
-  if (!pass) throw new Error('Passphrase required');
-
-  await writeVault(data, pass);
-  await updateActivity(timeout);
-  await removeCredentialMeta(id);
-}
-
-export async function changeMasterPassword(oldPassphrase, newPassphrase) {
-  if (!newPassphrase) throw new Error('New master password required');
-  const record = await loadVaultRecord();
-  if (!record) throw new Error('Vault not initialized');
-  const currentPassphrase = oldPassphrase || unlockedPassphrase;
-  if (!currentPassphrase) throw new Error('Current master password required');
-  let data;
-  try {
-    data = await decryptData(record, currentPassphrase);
-  } catch {
-    throw new Error('Invalid current master password');
-  }
-  const newRecord = await encryptData(data, newPassphrase);
-  await saveVaultRecord(newRecord);
-  cache.data = data;
-  unlockedPassphrase = newPassphrase;
-  // Do not persist plaintext passphrase. Update activity metadata only.
-  await updateActivity(await getVaultTimeout());
-}
-
-export async function listCredentials() {
-  if (cache.data) {
-    try {
-      const session = await getStorage('session', 'vaultTimeoutMinutes');
-      const timeout = session.vaultTimeoutMinutes || 15;
-      await updateActivity(timeout);
-    } catch {}
-  }
-
-  return cache.data ? [...(cache.data.entries || [])] : [];
-}
-
-export async function importVaultData(data, passphrase) {
-  const cleanData = validateImportData(data);
-  const newEntries = cleanData.entries;
-  const timeout = await getVaultTimeout();
-
-  await ensureUnlocked(passphrase, timeout);
-
-  const pass = passphrase || unlockedPassphrase;
-  if (!pass) throw new Error('Passphrase required to import');
-
-  const currentData = cache.data;
-  const existingEntries = currentData.entries || [];
-  const updatedData = { ...currentData, entries: [...existingEntries, ...newEntries] };
-
-  await writeVault(updatedData, pass);
-  await updateActivity(timeout);
-  // Sync metadata store
-  for (const entry of newEntries) await saveCredentialMeta(entry);
-  return newEntries.length;
-}
-
-export async function keepAlive() {
-  if (cache.data) {
-    await updateActivity(await getVaultTimeout());
+export function initializeVault(passphrase) {
+  validateMaster(passphrase, true);
+  return operation(async epoch => {
+    if (await loadRecord()) return false;
+    const { record, bytes } = await createRecord([], passphrase);
+    session.assertGeneration(epoch);
+    await commitRecord(record, null);
+    await session.activate(record, [], bytes, epoch);
     return true;
-  }
-  return false;
-}
-
-// ─── Metadata Store ────────────────────────────────────────────────────────────
-// Stores {id, username, site} without passwords.
-// Allows showing credential stubs even when vault is locked.
-
-async function saveCredentialMeta(entry) {
-  try {
-    const items = await getStorage('local', META_KEY);
-    const meta = items[META_KEY] || [];
-    const { id, username, site, createdAt, updatedAt } = entry;
-    const record = { id, username: username || '', site: site || '', createdAt, updatedAt };
-    const idx = meta.findIndex(m => m.id === id);
-    if (idx >= 0) meta[idx] = record;
-    else meta.push(record);
-    await setStorage('local', { [META_KEY]: meta });
-  } catch (e) {
-    logger.warn('SecurePass: failed to save credential meta:', e?.message || String(e));
-  }
-}
-
-async function removeCredentialMeta(id) {
-  try {
-    const items = await getStorage('local', META_KEY);
-    const meta = (items[META_KEY] || []).filter(m => m.id !== id);
-    await setStorage('local', { [META_KEY]: meta });
-  } catch (e) {
-    logger.warn('SecurePass: failed to remove credential meta:', e?.message || String(e));
-  }
-}
-
-export async function listCredentialsMeta() {
-  try {
-    const items = await getStorage('local', META_KEY);
-    return items[META_KEY] || [];
-  } catch {
-    return [];
-  }
-}
-
-// Backfill: syncs the metadata store from vault entries.
-// Called when vault is unlocked to ensure pre-existing credentials have metadata.
-export async function syncMetadataFromEntries(entries) {
-  if (!entries || !entries.length) return;
-  try {
-    const items = await getStorage('local', META_KEY);
-    const meta = items[META_KEY] || [];
-    const existingIds = new Set(meta.map(m => m.id));
-    let changed = false;
-    for (const entry of entries) {
-      if (!existingIds.has(entry.id)) {
-        meta.push({
-          id: entry.id,
-          username: entry.username || '',
-          site: entry.site || '',
-          createdAt: entry.createdAt,
-          updatedAt: entry.updatedAt,
-        });
-        changed = true;
-      }
-    }
-    if (changed) {
-      await setStorage('local', { [META_KEY]: meta });
-    }
-  } catch (e) {
-    logger.warn('SecurePass: failed to sync metadata:', e?.message || String(e));
-  }
-}
-
-// ─── Biometric / WebAuthn Helpers ─────────────────────────────────────────────
-
-export function getPRFEvalLabel() { return PRF_EVAL_LABEL; }
-
-export async function getBiometricData() {
-  const items = await getStorage('local', BIOMETRIC_KEY);
-  return items[BIOMETRIC_KEY] || null;
-}
-
-export async function isBiometricEnabled() {
-  const d = await getBiometricData();
-  return d?.enabled === true;
-}
-
-export async function clearBiometricData() {
-  await removeStorage('local', BIOMETRIC_KEY);
-}
-
-export async function saveBiometricSetup(credentialId, encryptedPassphrase, prfAvailable, mode = 'prf-unlock') {
-  await setStorage('local', {
-    [BIOMETRIC_KEY]: {
-      enabled: true,
-      credentialId,
-      encryptedPassphrase,
-      prfAvailable,
-      mode,
-      createdAt: new Date().toISOString(),
-    }
   });
 }
 
-async function getOrCreateTrustedDeviceKey() {
-  const existing = await getStorage('local', TRUSTED_DEVICE_KEY);
-  if (existing?.[TRUSTED_DEVICE_KEY]) {
-    return base64ToBuffer(existing[TRUSTED_DEVICE_KEY]);
+export function unlockVault(passphrase) {
+  validateMaster(passphrase);
+  return operation(async epoch => {
+    const attempt = (await getStorage('session', 'unlockAttempts')).unlockAttempts || { count: 0, until: 0 };
+    if (attempt.until > Date.now()) throw new Error('Too many attempts. Wait 30 seconds.');
+    let record = await loadRecord();
+    if (!record) throw new Error('Vault not initialized. Create it explicitly.');
+    validateRecord(record);
+    let decrypted;
+    try { decrypted = await decryptRecord(record, passphrase); } catch {
+      const count = attempt.count + 1;
+      await setStorage('session', { unlockAttempts: { count: count >= 5 ? 0 : count, until: count >= 5 ? Date.now() + 30000 : 0 } });
+      throw new Error('Invalid master password or corrupted vault.');
+    }
+    session.assertGeneration(epoch);
+    if (decrypted.legacy) {
+      const migrated = await createRecord(decrypted.entries, passphrase);
+      session.assertGeneration(epoch);
+      await commitRecord(migrated.record, recordRevision(record));
+      record = migrated.record;
+      decrypted.bytes = migrated.bytes;
+    }
+    await setStorage('session', { unlockAttempts: { count: 0, until: 0 } });
+    await session.activate(record, decrypted.entries, decrypted.bytes, epoch);
+    await removeStorage('local', ['securepassMeta', 'securepassTrustedDeviceKey']);
+    return { entries: structuredClone(decrypted.entries) };
+  });
+}
+
+export async function requireVault({ touch = false } = {}) {
+  const record = await loadRecord();
+  if (!record) throw new Error('Vault not initialized.');
+  return session.current(record, { touch });
+}
+
+async function mutate(transform, epoch) {
+  const state = await requireVault();
+  await assertCurrent(state.record);
+  session.assertGeneration(epoch);
+  const entries = await transform(state.entries);
+  if (entries.length > MAX_ENTRIES || new TextEncoder().encode(JSON.stringify({ entries })).length > MAX_VAULT_BYTES) throw new Error('Vault capacity reached (5,000 entries or 3 MB). Export a backup before reducing entries.');
+  const record = await encryptEntries(state.record, entries, state.bytes);
+  session.assertGeneration(epoch);
+  await commitRecord(record, state.record.revision);
+  await session.activate(record, entries, state.bytes, epoch);
+  return entries;
+}
+
+function normalize(entry, existing) {
+  const now = new Date().toISOString();
+  return { username: '', notes: '', ...existing, ...validateEntry(entry, Boolean(existing)),
+    id: existing?.id || entry.id || crypto.randomUUID(), createdAt: existing?.createdAt || entry.createdAt || now, updatedAt: now };
+}
+
+export function storeCredential(entry) {
+  return operation(async epoch => {
+    const normalized = normalize(entry);
+    await mutate(entries => {
+      if (entries.some(e => e.id === normalized.id)) throw new Error('Credential ID already exists.');
+      return [...entries, normalized];
+    }, epoch);
+    return normalized;
+  });
+}
+
+export function updateCredential(id, updates) {
+  return operation(async epoch => {
+    let updated;
+    await mutate(entries => {
+      const index = entries.findIndex(e => e.id === id);
+      if (index < 0) throw new Error('Credential not found.');
+      updated = normalize(updates, entries[index]);
+      entries[index] = updated;
+      return entries;
+    }, epoch);
+    return updated;
+  });
+}
+
+export function deleteCredential(id) {
+  return operation(epoch => mutate(entries => {
+    if (!entries.some(e => e.id === id)) throw new Error('Credential not found.');
+    return entries.filter(e => e.id !== id);
+  }, epoch));
+}
+
+export function overwriteVaultEntries(entries) {
+  return operation(epoch => mutate(() => validateImportData({ entries }).entries, epoch));
+}
+
+export function importVaultData(data, _passphrase, strategy = 'skip') {
+  const incoming = validateImportData(data).entries;
+  if (!['skip', 'replace'].includes(strategy)) throw new Error('Invalid import strategy.');
+  return operation(async epoch => {
+    let count = 0;
+    await mutate(entries => {
+      const byId = new Map(entries.map(e => [e.id, e]));
+      for (const item of incoming) {
+        const match = byId.get(item.id) || [...byId.values()].find(e => e.site === item.site && e.username === item.username);
+        if (match && strategy === 'skip') continue;
+        byId.set(match?.id || item.id, { ...item, id: match?.id || item.id });
+        count++;
+      }
+      return [...byId.values()];
+    }, epoch);
+    return count;
+  });
+}
+
+export async function listCredentials() {
+  try { return (await requireVault()).entries; } catch (error) {
+    if (error.message === 'Vault is locked') return [];
+    throw error;
   }
-
-  const raw = crypto.getRandomValues(new Uint8Array(32));
-  await setStorage('local', { [TRUSTED_DEVICE_KEY]: bufferToBase64(raw.buffer) });
-  return raw.buffer;
 }
 
-async function importTrustedDeviceAesKey() {
-  const keyBytes = await getOrCreateTrustedDeviceKey();
-  return crypto.subtle.importKey(
-    'raw',
-    keyBytes,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
+export function keepAlive() {
+  return operation(async () => { await requireVault({ touch: true }); return true; });
 }
 
-export async function clearTrustedDeviceKey() {
-  await removeStorage('local', TRUSTED_DEVICE_KEY);
+export function changeMasterPassword(oldPassphrase, newPassphrase) {
+  validateMaster(newPassphrase, true);
+  return operation(async epoch => {
+    const state = await requireVault();
+    await assertCurrent(state.record);
+    await decryptRecord(state.record, validateMaster(oldPassphrase));
+    const rotated = await createRecord(state.entries, newPassphrase, { vaultId: state.record.vaultId, parents: [state.record.revision, ...state.record.parents] });
+    session.assertGeneration(epoch);
+    await commitRecord(rotated.record, state.record.revision);
+    await removeStorage('local', ['securepassBiometric', 'securepassTrustedDeviceKey']);
+    await session.activate(rotated.record, state.entries, rotated.bytes, epoch);
+  });
 }
 
-export async function encryptPassphraseWithTrustedDevice(passphrase) {
-  const key = await importTrustedDeviceAesKey();
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, ENCODER.encode(passphrase));
-  return { iv: bufferToBase64(iv.buffer), ciphertext: bufferToBase64(ct) };
+export function unlockWithBiometricKey(bytes, vaultId, keyEpoch, expectedEpoch, credentialId) {
+  return operation(async epoch => {
+    session.assertGeneration(expectedEpoch);
+    const config = (await getStorage('local', 'securepassBiometric')).securepassBiometric;
+    if (config?.version !== 2 || config.credentialId !== credentialId || config.keyEpoch !== keyEpoch || config.vaultId !== vaultId) throw new Error('Biometric setup was revoked.');
+    const record = await loadRecord();
+    if (record?.vaultId !== vaultId || record.keyEpoch !== keyEpoch) throw new Error('Biometric setup was revoked. Use the master password.');
+    const entries = await decryptWithKey(record, bytes);
+    await session.activate(record, entries, bytes, epoch);
+  });
 }
 
-export async function decryptPassphraseWithTrustedDevice(encryptedData) {
-  const key = await importTrustedDeviceAesKey();
-  const iv = new Uint8Array(base64ToBuffer(encryptedData.iv));
-  const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    base64ToBuffer(encryptedData.ciphertext)
-  );
-  return DECODER.decode(decrypted);
+export async function recoveryStatus() {
+  return (await readRecoveryRecords()).map((record, index) => ({ index, revision: record.revision, updatedAt: record.updatedAt, legacy: !record.version }));
 }
 
-// Derives an AES-256-GCM key from a WebAuthn PRF output via HKDF.
-async function prfToAesKey(prfB64) {
-  const raw = base64ToBuffer(prfB64);
-  const base = await crypto.subtle.importKey('raw', raw, { name: 'HKDF' }, false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(32), info: ENCODER.encode(PRF_EVAL_LABEL) },
-    base,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
-}
-
-export async function encryptPassphraseWithPRF(passphrase, prfB64) {
-  const key = await prfToAesKey(prfB64);
-  const iv  = crypto.getRandomValues(new Uint8Array(12));
-  const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, ENCODER.encode(passphrase));
-  return { iv: bufferToBase64(iv.buffer), ciphertext: bufferToBase64(ct) };
-}
-
-export async function decryptPassphraseWithPRF(encryptedData, prfB64) {
-  const key      = await prfToAesKey(prfB64);
-  const iv       = new Uint8Array(base64ToBuffer(encryptedData.iv));
-  const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    base64ToBuffer(encryptedData.ciphertext)
-  );
-  return DECODER.decode(decrypted);
+export function restoreRecovery(index, passphrase) {
+  return operation(async epoch => {
+    const records = await readRecoveryRecords();
+    if (!Number.isInteger(index) || !records[index]) throw new Error('Recovery snapshot not found.');
+    const recovered = await decryptRecord(records[index], validateMaster(passphrase));
+    const current = await loadRecord();
+    const next = await createRecord(recovered.entries, passphrase, { vaultId: records[index].vaultId });
+    session.assertGeneration(epoch);
+    // Restoring starts locally; syncing this history requires explicit conflict resolution.
+    const settings = await loadSettings();
+    await saveSettings({ ...settings, useSync: false }, { allowSyncChange: true });
+    await writeLocalVaultRecordRaw(next.record, recordRevision(current));
+    await removeStorage('local', 'securepassBiometric');
+    await session.activate(next.record, recovered.entries, next.bytes, epoch);
+  });
 }

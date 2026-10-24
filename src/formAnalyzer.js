@@ -1,124 +1,34 @@
 export function analyzeFormContext(field) {
   const form = field.form || field.closest('form');
-  let context = 'unknown';
-  let usernameField = null;
-  let confirmField = null;
-
-  if (form) {
-    const inputs = Array.from(form.querySelectorAll('input:not([type="hidden"]):not([style*="display: none"]):not([style*="display:none"])'));
-    const passwordFields = inputs.filter(el => el.type === 'password' || el.dataset.password === 'true');
-    const textFields = inputs.filter(el => ['text', 'email'].includes(el.type) || (el.name && (el.name.toLowerCase().includes('user') || el.name.toLowerCase().includes('email'))));
-    
-    // Find confirm field (usually the second password field)
-    confirmField = passwordFields.find(el => el !== field && el.getBoundingClientRect().top >= field.getBoundingClientRect().top);
-    if (!confirmField) {
-      confirmField = passwordFields.find(el => el !== field);
-    }
-    
-    // Find username field (usually the closest text/email field before password)
-    const fieldIndex = inputs.indexOf(field);
-    if (fieldIndex > 0) {
-       for(let i = fieldIndex - 1; i >= 0; i--) {
-          if (textFields.includes(inputs[i])) {
-             usernameField = inputs[i];
-             break;
-          }
-       }
-    }
-    if (!usernameField && textFields.length > 0) usernameField = textFields[0];
-
-    const formAction = (form.getAttribute('action') || '').toLowerCase();
-    const formText = form.innerText.toLowerCase();
-    
-    const isRegister = confirmField || passwordFields.length > 1 || 
-      ['register', 'signup', 'sign up', 'create', 'join'].some(k => formText.includes(k) || formAction.includes(k.replace(' ', '')));
-      
-    const isLogin = !isRegister && passwordFields.length === 1 && 
-      ['login', 'signin', 'sign in', 'log in', 'auth'].some(k => formText.includes(k) || formAction.includes(k.replace(' ', '')));
-
-    if (isRegister) context = 'register';
-    else if (isLogin) context = 'login';
-    else context = 'unknown'; // could just be a 1-step thing
-  } else {
-    const allInputs = Array.from(document.querySelectorAll('input:not([type="hidden"])'));
-    const idx = allInputs.indexOf(field);
-    if (idx > 0) {
-      const prev = allInputs[idx - 1];
-      if (['text', 'email'].includes(prev.type)) {
-        usernameField = prev;
-      }
-    }
-    context = 'unknown';
-  }
-
-  return { context, usernameField, confirmField };
+  const inputs = [...(form || document).querySelectorAll('input')].filter(el => el.type !== 'hidden');
+  const passwords = inputs.filter(el => el.type === 'password' || el.autocomplete === 'new-password' || el.autocomplete === 'current-password');
+  const current = passwords.find(el => el.autocomplete === 'current-password');
+  const fresh = passwords.filter(el => el.autocomplete === 'new-password');
+  const changing = Boolean(current && fresh.length) || passwords.length >= 3;
+  const primary = changing ? (fresh[0] || passwords[1]) : passwords[0];
+  const usernameField = inputs.find(el => el.autocomplete === 'username') ||
+    inputs.slice(0, inputs.indexOf(field)).reverse().find(el => ['text', 'email'].includes(el.type)) || null;
+  const confirmField = field === primary ? (fresh.find(el => el !== primary) || (passwords.length === 2 && !current ? passwords[1] : changing ? passwords[2] : null)) : null;
+  return { context: changing ? 'change' : fresh.length || passwords.length > 1 ? 'register' : 'login', usernameField, confirmField, primaryField: primary, isCurrent: changing && field === (current || passwords[0]) };
 }
-
 export function extractConstraints(field) {
-  const minAttr = parseInt(field.getAttribute('minlength') || '0', 10);
-  const maxAttr = parseInt(field.getAttribute('maxlength') || '0', 10);
-  const min = Number.isFinite(minAttr) && minAttr > 0 ? minAttr : 0;
-  const max = Number.isFinite(maxAttr) && maxAttr > 0 ? maxAttr : 0;
-  const pattern = field.getAttribute('pattern');
-  const title = field.getAttribute('title') || '';
-  const datasetPattern = field.dataset.pattern || null;
-
-  const { context, usernameField, confirmField } = analyzeFormContext(field);
-
-  const custom = {
-    requiresUppercase: /uppercase|capital/i.test(title),
-    requiresLowercase: /lowercase/i.test(title),
-    requiresNumber: /number|digit/i.test(title),
-    requiresSymbol: /special|symbol/i.test(title)
-  };
-
-  const minLength = Math.max(min, 8);
-  const maxLength = max ? Math.max(minLength, max) : Math.max(minLength + 4, 128);
-
-  return {
-    minLength,
-    maxLength,
-    pattern: datasetPattern || pattern || null,
-    confirmField,
-    usernameField,
-    context,
-    notes: title,
-    customRequirements: custom
-  };
+  const min = field.minLength > 0 ? field.minLength : 1;
+  const max = Math.min(field.maxLength > 0 ? field.maxLength : 128, 128);
+  return { minLength: min, maxLength: max, pattern: field.getAttribute('pattern') || undefined };
 }
-
 export function observePasswordFields(callback) {
-  const seen = new WeakSet();
-  function process(root = document) {
-    const fields = root.querySelectorAll('input[type="password"]:not([data-securepass])');
-    fields.forEach(field => {
-      if (seen.has(field)) return;
-      seen.add(field);
-      field.dataset.securepass = '1';
-      callback(field, extractConstraints(field));
-    });
-  }
-
-  process();
-
-  let timeoutId = null;
-  const debouncedProcess = () => {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      if (window.requestIdleCallback) {
-        requestIdleCallback(() => process(document.documentElement), { timeout: 1000 });
-      } else {
-        process(document.documentElement);
-      }
-    }, 300); // 300ms debounce
+  let scheduled;
+  const scan = () => {
+    scheduled = null;
+    document.querySelectorAll('input[type="password"]').forEach(field => callback(field, extractConstraints(field)));
   };
-
+  scan();
   const observer = new MutationObserver(mutations => {
-    const hasAddedNodes = mutations.some(m => m.addedNodes.length > 0);
-    if (hasAddedNodes) {
-      debouncedProcess();
+    if (mutations.some(m => m.type === 'attributes' || m.addedNodes.length || m.removedNodes.length)) {
+      clearTimeout(scheduled);
+      scheduled = setTimeout(scan, 100);
     }
   });
-
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['type', 'autocomplete', 'minlength', 'maxlength', 'pattern'] });
+  return () => { clearTimeout(scheduled); observer.disconnect(); };
 }

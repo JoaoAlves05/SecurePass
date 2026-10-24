@@ -11,7 +11,7 @@
   --glass-bg: rgba(255, 255, 255, 0.65);
   --glass-border: rgba(255, 255, 255, 0.4);
   --glass-highlight: rgba(255, 255, 255, 0.8);
-  
+
   --surface: var(--glass-bg);
   --surface-raised: rgba(255, 255, 255, 0.85);
   --border: var(--glass-border);
@@ -130,7 +130,7 @@ body[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
   flex-direction: column;
   height: 100vh;
   background: var(--bg);
-  background-image: 
+  background-image:
     radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
     radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
@@ -1633,7 +1633,7 @@ body:has(.settings-panel[aria-hidden='false']) .main-content {
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  background-image: 
+  background-image:
     radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
     radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
@@ -2299,7 +2299,7 @@ body[data-theme='dark'] .about-card {
   position: fixed;
   inset: 0;
   background: var(--bg);
-  background-image: 
+  background-image:
     radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
     radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
@@ -2534,8 +2534,8 @@ body[data-theme='dark'] .input-wrapper textarea {
 
 /* Stop Chrome autofill from breaking glassmorphism */
 .input-wrapper input:-webkit-autofill,
-.input-wrapper input:-webkit-autofill:hover, 
-.input-wrapper input:-webkit-autofill:focus, 
+.input-wrapper input:-webkit-autofill:hover,
+.input-wrapper input:-webkit-autofill:focus,
 .input-wrapper input:-webkit-autofill:active {
   -webkit-background-clip: text;
   -webkit-text-fill-color: var(--text);
@@ -2544,7 +2544,7 @@ body[data-theme='dark'] .input-wrapper textarea {
 }
 
 body[data-theme='dark'] .input-wrapper input:-webkit-autofill,
-body[data-theme='dark'] .input-wrapper input:-webkit-autofill:hover, 
+body[data-theme='dark'] .input-wrapper input:-webkit-autofill:hover,
 body[data-theme='dark'] .input-wrapper input:-webkit-autofill:focus,
 body[data-theme='dark'] .input-wrapper input:-webkit-autofill:active {
   -webkit-text-fill-color: #f8fafc;
@@ -2906,3 +2906,20 @@ body[data-theme='dark'] .alert-box.warning {
   color: #fbbf24;
   border-color: rgba(245, 158, 11, 0.3);
 }
+
+/* Recovery controls share the settings spacing and remain usable at popup width. */
+.recovery-section { display: flex; flex-direction: column; gap: 10px; }
+.recovery-section button, .recovery-section select { width: 100%; padding: 10px 12px; }
+.recovery-section p, #vaultSyncStatus { overflow-wrap: anywhere; }
+#vaultSyncStatus { margin: 12px; padding: 10px; border: 1px solid var(--border); }
+#saveCandidates:empty { display: none; }
+
+.vault-actions .icon-btn { width: 40px; height: 40px; border-radius: 12px; }
+.vault-actions .danger, #wipeDevice { color: var(--danger); }
+.vault-notes { color: var(--text-muted); }
+.recovery-section button, .recovery-section select {
+  background: var(--glass-bg); color: var(--text); border: 1px solid var(--border);
+  border-radius: 12px; font: inherit; min-height: 40px;
+}
+.recovery-section button:hover { border-color: var(--primary); }
+.recovery-section button:focus-visible, .recovery-section select:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

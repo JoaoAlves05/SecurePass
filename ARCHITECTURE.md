@@ -1,90 +1,60 @@
-# SecurePass Architecture Overview
+# SecurePass architecture
 
-Welcome to the SecurePass architecture guide. This document explains how the extension is structured, how the different components communicate, and the data flow for the main features.
+The extension uses native ES modules. There is no build process and no runtime third-party code. `background/serviceWorker.js` registers listeners, applies message authorization and dispatches to feature handlers. It does not implement encryption or UI flows.
 
-## High-Level Architecture
+## Boundaries
 
-SecurePass is built as a Manifest V3 (MV3) Chrome Extension. It follows a strictly modular architecture divided into four main layers:
+| Module | Responsibility |
+|---|---|
+| `src/security/` | Exact origin policy and context/capability checks |
+| `src/vault/crypto.js` | Versioned envelope encryption, bounded KDF, key wrapping, legacy decryption |
+| `src/vault/session.js` | Restricted volatile data key, deadline, restoration after worker suspension, immediate generation revocation |
+| `src/vault/queue.js` | Serial operations and a Web Lock across extension contexts |
+| `src/vault/repository.js` | Local-first commits and explicit pending Sync publication |
+| `src/vault/sync.js` | Immutable chunks/manifests, integrity checking and divergent heads |
+| `src/vault/syncService.js` | Enable/disable, archive, resolve, merge, retry and compact |
+| `src/vault/recovery.js` | Explicit external recovery and device erasure |
+| `src/cryptoVault.js` | Vault application service: create/unlock, copy-on-write CRUD, rotation and import |
+| `src/biometric/` | WebAuthn client, proof verification, expiring owner-bound ceremonies, PRF key wrapping |
+| `src/autofill/` | Origin/document-bound confirmation requests and expiring save candidates |
+| `src/clipboard/` and `offscreen.js` | One offscreen clipboard owner with serialized copy/conditional cleanup |
+| `src/messageHandlers/` | Thin adapters from message DTOs to application services |
+| `popup/state.js` | Popup state and shared constant icons; no bootstrap side effects |
+| `popup/modules/` | Independent UI features, dialogs, session view, data management, Sync and biometrics |
+| `popup/popup.js` | Bootstrap/listener composition only; feature modules never import it |
+| `auth/` | Extension-owned confirmation window; no embedding in a visited page |
+| `content/` | Field discovery, native value events and tools; no master password input or vault cache |
+| `tests/` | Unit/integration regressions and disposable Chromium scenarios |
 
-1. **Background Service Worker (`background/`)**: The central brain and message router.
-2. **Core Source (`src/`)**: Shared utilities, cryptography, and business logic.
-3. **Popup Interface (`popup/`)**: The main user interface when clicking the extension icon.
-4. **Content Scripts (`content/`)**: The inline tools injected directly into web pages (e.g., the autofill overlay).
-5. **Auth Iframe (`auth/`)**: A dedicated environment for handling WebAuthn (Biometric) interactions.
+`npm run check` verifies module syntax, import paths, absence of import cycles and version consistency. New features should add a service and a small message adapter with an explicit capability policy, plus a UI module in the relevant context.
 
----
+## Vault format and lifetime
 
-## Directory Structure
+Version 2 uses a random 256-bit data encryption key. PBKDF2-SHA256 (600,000 iterations, random 128-bit salt) derives a key that wraps the data key with AES-256-GCM. Credential data is separately encrypted with AES-256-GCM and a fresh 96-bit IV. Identity, key epoch, revision and ancestry are bound as authenticated data.
 
-```text
-SecurePass/
-├── background/
-│   └── serviceWorker.js       # Thin orchestrator that routes messages
-├── src/
-│   ├── messageHandlers/       # Modules handling specific background events
-│   │   ├── vaultHandlers.js
-│   │   ├── biometricHandlers.js
-│   │   └── utilHandlers.js
-│   ├── cryptoVault.js         # Encryption/Decryption logic (AES-GCM)
-│   ├── encoding.js            # Safe Base64 <-> ArrayBuffer conversions
-│   ├── hibp.js                # Have I Been Pwned API integration & caching
-│   ├── constants.js           # Global constants (DB names, alarms)
-│   ├── passwordGenerator.js   # Logic for generating passwords
-│   ├── passwordStrength.js    # Logic for evaluating password strength
-│   └── utils/
-│       └── storage.js         # IndexedDB & Chrome Storage wrappers
-├── popup/
-│   ├── popup.html             # Main popup UI
-│   ├── popup.js               # Bootstrap script & WebAuthn registration logic
-│   └── modules/               # UI modules (vault, generator, tester, etc.)
-├── content/
-│   ├── content.js             # Bootstrap script injected into pages
-│   └── modules/               # Dynamically imported modules (ui, autofill, biometric)
-├── auth/
-│   ├── auth.html              # Iframe for WebAuthn context
-│   └── auth.js                # WebAuthn assertion (authentication) logic
-└── manifest.json              # Extension manifest (MV3)
-```
+On unlock, the data key and deadline are held in restricted `storage.session`, which persists across worker suspension but is cleared on browser restart/reload. Credential snapshots are decrypted as needed. The master password is not retained after the operation. Every operation verifies its generation and the session deadline; locking invalidates pending operations synchronously before asynchronous cleanup. Mutations use copies, serialize through a queue and a Web Lock, and publish cache state only after IndexedDB transaction completion. A revision comparison rejects stale writers.
 
----
+Existing unversioned vaults are read without modifying the user's password. Successful unlock migrates to version 2 while retaining the original encrypted record in recovery. Missing, corrupt and unavailable storage are distinct outcomes; unlock never creates a vault implicitly.
 
-## Core Components & Data Flow
+## Sync model
 
-### 1. The Background Message Router
-Instead of a massive `switch/case` statement, `serviceWorker.js` uses a **Map-based router**. When a part of the extension (like the popup or content script) needs to do something complex, it sends a message via `chrome.runtime.sendMessage`. 
+The local IndexedDB vault remains the durable working copy. Each version 2 record has a unique revision and bounded ancestry. Sync stores immutable chunks under revision-specific keys and publishes a checksum-bearing manifest only after chunk verification. The transport may deliver a manifest before all chunks to another device; this is an explicit incomplete state, never an empty vault.
 
-The service worker looks up the message type in its `Map` and delegates the work to a specific handler in `src/messageHandlers/`. This keeps the background script thin and scalable.
+Offline sibling revisions form multiple heads. The background refuses to edit over an unseen remote head until the user explicitly resolves it. Resolution preserves encrypted remote heads in a device-local archive and the previous local record in transactional recovery history. The UI supports download or preserving conflicting credentials in a merge. Publication failure after a local commit is reported as pending Sync; it does not pretend the local save failed.
 
-### 2. Vault Storage & Encryption
-- **IndexedDB**: The encrypted vault is stored here because `chrome.storage.local` has tight quota limits.
-- **Encryption**: `src/cryptoVault.js` uses native Web Crypto API (`AES-GCM`). 
-- **Session State**: When you unlock the vault, the derived master key is held temporarily in `chrome.storage.session`. This ensures the vault locks automatically when the browser is closed or after an inactivity timeout.
+Compaction considers a single storage snapshot and deletes only manifests/chunks for published ancestors of retained heads. It follows transitive ancestry before deletion, so truncating a newer record’s ancestry list does not resurrect an older head. It does not delete unreferenced in-flight uploads or other heads. Quota preflight leaves room for metadata, and no failed publication removes the prior valid generation. Old offline histories outside the retained ancestry window require explicit conflict resolution.
 
-### 3. Content Scripts & Inline Autofill
-- `content.js` is injected into every web page. It dynamically imports its modules (`ui.js`, `autofill.js`, `biometric.js`) using ES module syntax.
-- **Shadow DOM**: The floating SecurePass button and the autofill panel are created inside a Shadow DOM. This guarantees that the host website's CSS won't break the extension's UI, and the extension's CSS won't leak onto the page.
-- **Autofill Flow**:
-  1. The user focuses a password field.
-  2. The content script detects it and shows the floating button.
-  3. Clicking the button opens the autofill panel.
-  4. If the vault is locked, the user can unlock it via master password or Biometrics (WebAuthn).
-  5. Once unlocked, clicking a saved credential instantly fills the form.
+## Message flows
 
-### 4. Biometric Authentication (WebAuthn PRF)
-SecurePass uses the WebAuthn PRF (Pseudo-Random Function) extension to derive an encryption key from your biometrics (like Touch ID or Windows Hello).
-- **The Challenge**: Content scripts and Service Workers cannot reliably invoke WebAuthn on the extension's origin.
-- **The Solution**: Registration (`navigator.credentials.create`) is performed directly in the trusted context of the extension popup (`popup/popup.js`). For authentication during autofill, the extension injects a hidden iframe (`auth/auth.html`) hosted on the extension's origin. The iframe securely handles the WebAuthn assertion and communicates the PRF output back to the service worker to unlock the vault.
+1. A content script asks for autofill with its browser-supplied origin/document identity.
+2. The background opens an extension-owned window and binds the request to that window's tab.
+3. The window unlocks through the master password or verified PRF. Its unlock response contains no full vault.
+4. The user chooses a credential filtered by exact origin in the background.
+5. The background consumes the request, checks revocation and sends that single credential to the original document ID.
+6. The content script checks its pending request and field, applies native input/change events, and never submits the form.
 
-### 5. HIBP (Have I Been Pwned)
-- When evaluating a password, the extension hashes it using SHA-1.
-- It sends *only the first 5 characters* of the hash to the HIBP API (k-Anonymity model).
-- The results are cached in `chrome.storage.local` using an LRU (Least Recently Used) strategy inside `src/hibp.js` to prevent memory leaks and API rate limits.
+Management messages are restricted to the exact bundled popup page. The confirmation window has a smaller capability set. Content scripts cannot call general vault mutations, list all entries, unlock the vault or complete biometric ceremonies. Local/session/Sync storage is restricted before the background accepts requests. Public resource exposure includes only content modules and the form analyzer.
 
----
+## Biometric model
 
-## Expanding the Extension
-
-If you want to add new features, follow the established patterns:
-1. **New UI in Popup**: Create a new module in `popup/modules/` and import it into `popup.js`.
-2. **New Background Logic**: Create a new handler in `src/messageHandlers/` and register it in the router inside `serviceWorker.js`.
-3. **New Page Interactions**: Add logic to `content/modules/` and ensure the module is listed in `web_accessible_resources` inside `manifest.json`.
+Registration requires the master password. A create ceremony is followed by a real assertion that must return PRF output. The background verifies the public key signature, challenge, credential ID, origin, RP ID hash, UP/UV flags and authenticator counter. Ceremonies expire, are bound to the trusted document and are consumed once. The PRF key wraps the data key with vault/credential/epoch authenticated context. Master rotation, recovery or explicit revocation invalidates the wrapper. No verify-only session seed or persistent Trusted Device bypass is supported.

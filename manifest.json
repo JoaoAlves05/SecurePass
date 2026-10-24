@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "SecurePass",
   "description": "Analyze, generate, and protect passwords directly in your browser.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "action": {
     "default_title": "SecurePass",
     "default_popup": "popup/popup.html"
@@ -15,14 +15,12 @@
   },
   "permissions": [
     "activeTab",
-    "tabs",
     "storage",
     "alarms",
     "offscreen",
     "clipboardWrite",
     "idle",
-    "notifications",
-    "windows"
+    "clipboardRead"
   ],
   "host_permissions": [
     "https://api.pwnedpasswords.com/*"
@@ -33,29 +31,31 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content/content.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content/content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
-
   "web_accessible_resources": [
     {
       "resources": [
-        "src/encoding.js",
         "src/formAnalyzer.js",
-        "src/passwordStrength.js",
-        "src/utils/storage.js",
-        "popup/popup.css",
-
-        "auth/auth.html",
-        "auth/auth.js",
         "content/modules/*"
       ],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
     }
   ],
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; connect-src 'self' https://api.pwnedpasswords.com; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors *"
-  }
+    "extension_pages": "default-src 'self'; script-src 'self'; connect-src 'self' https://api.pwnedpasswords.com; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+  },
+  "minimum_chrome_version": "122",
+  "incognito": "not_allowed"
 }

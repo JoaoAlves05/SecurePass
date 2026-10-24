@@ -15,7 +15,7 @@ export function positionFloating(button, field) {
   button.style.opacity = '';
   button.style.pointerEvents = '';
   const top = rect.top + rect.height / 2 - 13; // 13 = half of 26px button
-  let left = rect.right + 4;
+  let left = Math.max(rect.left, rect.right - 30);
   if (left + 26 > window.innerWidth) {
     left = rect.right - 32;
   }
@@ -496,34 +496,16 @@ export function setupShadowDom() {
 }
 
 export async function resolveThemeClass() {
-  try {
-    const storage = await import(chrome.runtime.getURL('src/utils/storage.js'));
-    const syncInfo = await storage.getStorage('local', 'settingsSync');
-    const area = syncInfo?.settingsSync?.useSync ? 'sync' : 'local';
-    const stored = await storage.getStorage(area, 'settings');
-    const theme = stored?.settings?.theme || 'system';
-    if (theme === 'dark') return 'sp-dark';
-    if (theme === 'light') return 'sp-light';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'sp-dark' : 'sp-light';
-  } catch {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'sp-dark' : 'sp-light';
-  }
+  const response = await chrome.runtime.sendMessage({ type: 'PUBLIC_SETTINGS' });
+  const theme = response?.settings?.theme || 'system';
+  return theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'sp-dark' : 'sp-light') : `sp-${theme}`;
 }
-
 export function updateAllThemes(shadowRoot) {
-  resolveThemeClass().then(cls => {
-    shadowRoot.querySelectorAll('.securepass-panel').forEach(panel => {
-      panel.classList.remove('sp-dark', 'sp-light');
-      panel.classList.add(cls);
-    });
-  });
+  resolveThemeClass().then(cls => shadowRoot.querySelectorAll('.securepass-panel').forEach(panel => {
+    panel.classList.remove('sp-dark', 'sp-light'); panel.classList.add(cls);
+  })).catch(() => {});
 }
-
 export async function initThemeSync(shadowRoot) {
-  const storageModule = await import(chrome.runtime.getURL('src/utils/storage.js'));
-  storageModule.onStorageChanged((changes, areaName) => {
-    if (areaName === 'local' && changes.settingsSync) updateAllThemes(shadowRoot);
-    if (changes.settings) updateAllThemes(shadowRoot);
-  });
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => updateAllThemes(shadowRoot));
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => updateAllThemes(shadowRoot));
+  chrome.runtime.onMessage.addListener(message => { if (message.type === 'SETTINGS_CHANGED') updateAllThemes(shadowRoot); });
 }

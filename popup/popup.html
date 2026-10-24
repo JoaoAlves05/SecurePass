@@ -42,6 +42,8 @@
     </nav>
 
     <main class="content-area">
+      <section id="saveCandidates" aria-label="Pending save suggestions"></section>
+      <p id="vaultSyncStatus" role="status" hidden></p>
       <section id="view-tester" class="view active" role="tabpanel" aria-labelledby="tab-tester">
         <div class="panel">
           <div class="hero-section">
@@ -385,11 +387,17 @@
                 </div>
               </div>
               <div class="card-row slider-row">
-                <input type="range" id="clipboardRange" min="0" max="120" step="10" value="30" class="range-slider" />
+                <input type="range" id="clipboardRange" min="0" max="120" step="30" value="30" class="range-slider" />
               </div>
 
               <div class="divider"></div>
 
+              <div class="card-row"><div class="row-info">
+                <label for="hibpCacheRange" class="row-label">HIBP cache</label>
+                <span class="row-sub" id="hibpCacheLabel">24 hours</span>
+              </div></div>
+              <div class="card-row slider-row"><input id="hibpCacheRange" type="range" min="1" max="168" value="24" class="range-slider"></div>
+              <div class="divider"></div>
               <button id="changeMasterKeyBtn" class="card-action-btn">
                 <div class="btn-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -450,24 +458,9 @@
 
               <div class="divider"></div>
 
-              <label class="card-row clickable" for="trustedDeviceToggle" id="trustedDeviceRow">
-                <div class="row-info">
-                  <span class="row-label">Trusted Device Mode</span>
-                  <span class="row-sub">No master password on startup for non-PRF devices (higher local risk)</span>
-                </div>
-                <div class="toggle-switch">
-                  <input type="checkbox" id="trustedDeviceToggle" />
-                  <span class="slider"></span>
-                </div>
-              </label>
-              <div id="trustedDeviceWarning" class="alert-box warning hidden">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-                <span>Qualquer pessoa com acesso à sua conta de utilizador no SO conseguirá desbloquear o cofre.</span>
-              </div>
+              <p class="text-muted">Biometric unlock requires WebAuthn PRF. Unsupported authenticators use the master password; no device-local bypass key is stored.</p>
+              <button type="button" id="disableBiometric" class="secondary" hidden>Revoke biometric unlock</button>
+
             </div>
           </section>
 
@@ -573,7 +566,7 @@
                 </div>
                 <div class="btn-text">
                   <span class="btn-label">Clear Vault</span>
-                  <span class="btn-sub">Delete all data</span>
+                  <span class="btn-sub">Clear entries; keep recovery history</span>
                 </div>
                 <div class="btn-arrow">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -582,6 +575,22 @@
                 </div>
               </button>
             </div>
+          </section>
+
+          <section class="settings-section recovery-section">
+            <h3>Sync and recovery</h3>
+            <p id="syncStatus" role="status">Refresh to inspect remote versions.</p>
+            <button type="button" id="refreshSync">Refresh remote versions</button>
+            <select id="syncVersions" aria-label="Remote vault version"></select>
+            <button type="button" id="downloadSync">Use selected remote version</button>
+            <button type="button" id="mergeSync">Merge selected version with local</button>
+            <button type="button" id="retrySync">Retry pending Sync</button>
+            <button type="button" id="compactSync">Compact remote history</button>
+            <button type="button" id="exportRecovery">Export encrypted recovery snapshots</button>
+            <button type="button" id="clearSyncArchive">Clear exported Sync archive</button>
+            <button type="button" id="restoreRecovery">Restore a local snapshot</button>
+            <button type="button" id="wipeDevice">Erase this device and recovery history</button>
+            <p class="text-muted">Chrome Sync has a small capacity. Keep encrypted backups. Clipboard cleanup is best effort and only clears text still matching the last SecurePass copy.</p>
           </section>
 
           <!-- About -->

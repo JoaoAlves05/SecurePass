@@ -1,0 +1,126 @@
+{
+  "nodes": [
+    {
+      "id": "docs_screenshots_phase1_recovery_settings_screen",
+      "label": "Sync and recovery settings screen",
+      "file_type": "image",
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_screenshots_phase1_recovery_remote_version_selection",
+      "label": "Remote vault version selection",
+      "file_type": "concept",
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_screenshots_phase1_recovery_explicit_merge",
+      "label": "Explicit merge of selected remote version with local vault",
+      "file_type": "concept",
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_screenshots_phase1_recovery_sync_history_maintenance",
+      "label": "Pending Sync retry and remote history compaction",
+      "file_type": "concept",
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_screenshots_phase1_recovery_encrypted_recovery",
+      "label": "Encrypted recovery snapshot export and local restore",
+      "file_type": "concept",
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_screenshots_phase1_recovery_device_erasure",
+      "label": "Local device and recovery history erasure",
+      "file_type": "concept",
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "docs_screenshots_phase1_recovery_settings_screen",
+      "target": "docs_screenshots_phase1_recovery_remote_version_selection",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_screenshots_phase1_recovery_settings_screen",
+      "target": "docs_screenshots_phase1_recovery_explicit_merge",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_screenshots_phase1_recovery_settings_screen",
+      "target": "docs_screenshots_phase1_recovery_sync_history_maintenance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_screenshots_phase1_recovery_settings_screen",
+      "target": "docs_screenshots_phase1_recovery_encrypted_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_screenshots_phase1_recovery_settings_screen",
+      "target": "docs_screenshots_phase1_recovery_device_erasure",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/johnny/projects/SecurePass/docs/screenshots/phase1-recovery.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "coverage": {}
+}
