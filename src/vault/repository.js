@@ -42,5 +42,12 @@ export async function getSyncStatus() {
   const local = await readLocalVaultRecordRaw();
   const heads = await syncHeads();
   const state = (await getStorage('local', 'syncStatus')).syncStatus || {};
-  return { ...state, localRevision: local?.revision, heads: heads.map(r => ({ revision: r.revision || 'legacy', vaultId: r.vaultId, updatedAt: r.updatedAt, current: recordRevision(r) === recordRevision(local) })), enabled: (await loadSettings()).useSync };
+  const archive = (await getStorage('local', 'syncRecovery')).syncRecovery || [];
+  return {
+    ...state,
+    localRevision: local?.revision,
+    heads: heads.map(r => ({ revision: r.revision || 'legacy', vaultId: r.vaultId, updatedAt: r.updatedAt, current: recordRevision(r) === recordRevision(local) })),
+    enabled: (await loadSettings()).useSync,
+    recoveryArchiveCount: archive.length
+  };
 }

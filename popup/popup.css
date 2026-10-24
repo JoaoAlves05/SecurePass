@@ -767,15 +767,19 @@ body[data-theme='dark'] .generated-output-container {
   background: var(--bg-subtle);
   border-radius: var(--radius-full);
   outline: none;
+  box-shadow: none;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.range-slider:hover {
-  box-shadow: 0 0 0 3px var(--primary-soft);
+input[type='range'].range-slider {
+  height: 4px;
+  box-shadow: none;
 }
 
-.range-slider:focus {
+input[type='range'].range-slider:hover,
+input[type='range'].range-slider:focus {
   transform: none;
+  box-shadow: none;
 }
 
 .range-slider::-webkit-slider-thumb {
@@ -2938,19 +2942,106 @@ body[data-theme='dark'] .alert-box.warning {
   border-color: rgba(245, 158, 11, 0.3);
 }
 
-/* Recovery controls share the settings spacing and remain usable at popup width. */
-.recovery-section { display: flex; flex-direction: column; gap: 10px; }
-.recovery-section button, .recovery-section select { width: 100%; padding: 10px 12px; }
-.recovery-section p, #vaultSyncStatus { overflow-wrap: anywhere; }
+/* Sync and recovery settings use the same compact card and action hierarchy. */
+.settings-info,
+.settings-status {
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.settings-status {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.sync-controls,
+.recovery-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.settings-action:hover:not(:disabled) {
+  background: var(--bg-subtle);
+}
+
+.settings-action:focus-visible,
+.sync-version-field select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.settings-action:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.settings-action-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.settings-action-description {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.settings-action-danger .settings-action-title {
+  color: var(--danger);
+}
+
+.sync-version-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px;
+  font-size: 0.8rem;
+}
+
+.sync-version-field select {
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--glass-bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.sync-version-field select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.recovery-card > .settings-info {
+  padding-bottom: 8px;
+}
+
 #vaultSyncStatus { margin: 12px; padding: 10px; border: 1px solid var(--border); }
 #saveCandidates:empty { display: none; }
 
 .vault-actions .icon-btn { width: 40px; height: 40px; border-radius: 12px; }
 .vault-actions .danger, #wipeDevice { color: var(--danger); }
 .vault-notes { color: var(--text-muted); }
-.recovery-section button, .recovery-section select {
-  background: var(--glass-bg); color: var(--text); border: 1px solid var(--border);
-  border-radius: 12px; font: inherit; min-height: 40px;
-}
-.recovery-section button:hover { border-color: var(--primary); }
-.recovery-section button:focus-visible, .recovery-section select:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

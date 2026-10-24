@@ -384,6 +384,7 @@
                   <label for="clipboardRange" class="row-label">Clear Clipboard</label>
                   <span class="row-sub">Clear copied passwords after <span id="clipboardLabel"
                       class="highlight-text">30s</span></span>
+                  <span class="row-sub">Best effort: only clears text that still matches the last SecurePass copy.</span>
                 </div>
               </div>
               <div class="card-row slider-row">
@@ -485,6 +486,37 @@
                   <span class="slider"></span>
                 </div>
               </label>
+              <div class="settings-info">
+                Sync stores encrypted vault versions in Chrome Sync, which has limited capacity. Offline edits can create separate versions that must be resolved explicitly.
+              </div>
+              <div class="divider"></div>
+              <div class="sync-controls">
+                <p id="syncStatus" class="settings-status" role="status" aria-live="polite">Checking remote versions…</p>
+                <button type="button" id="refreshSync" class="settings-action">
+                  <span class="settings-action-title">Refresh remote versions</span>
+                  <span class="settings-action-description">Check Chrome Sync for available vault versions.</span>
+                </button>
+                <label class="sync-version-field" for="syncVersions">
+                  <span class="settings-action-title">Remote vault version</span>
+                  <select id="syncVersions" aria-label="Remote vault version" disabled></select>
+                </label>
+                <button type="button" id="downloadSync" class="settings-action" disabled>
+                  <span class="settings-action-title">Use selected remote version</span>
+                  <span class="settings-action-description">Replace this device’s vault with that encrypted version. A recovery copy is kept.</span>
+                </button>
+                <button type="button" id="mergeSync" class="settings-action" disabled>
+                  <span class="settings-action-title">Merge selected version with local</span>
+                  <span class="settings-action-description">Combine entries; conflicting copies are retained separately.</span>
+                </button>
+                <button type="button" id="retrySync" class="settings-action" disabled>
+                  <span class="settings-action-title">Retry pending Sync</span>
+                  <span class="settings-action-description">Retry publishing changes already saved on this device.</span>
+                </button>
+                <button type="button" id="compactSync" class="settings-action" disabled>
+                  <span class="settings-action-title">Compact remote history</span>
+                  <span class="settings-action-description">Remove older ancestor versions, keeping current versions and archiving remote copies locally.</span>
+                </button>
+              </div>
             </div>
           </section>
 
@@ -582,20 +614,32 @@
             </div>
           </section>
 
-          <section class="settings-section recovery-section">
-            <h3>Sync and recovery</h3>
-            <p id="syncStatus" role="status">Refresh to inspect remote versions.</p>
-            <button type="button" id="refreshSync">Refresh remote versions</button>
-            <select id="syncVersions" aria-label="Remote vault version"></select>
-            <button type="button" id="downloadSync">Use selected remote version</button>
-            <button type="button" id="mergeSync">Merge selected version with local</button>
-            <button type="button" id="retrySync">Retry pending Sync</button>
-            <button type="button" id="compactSync">Compact remote history</button>
-            <button type="button" id="exportRecovery">Export encrypted recovery snapshots</button>
-            <button type="button" id="clearSyncArchive">Clear exported Sync archive</button>
-            <button type="button" id="restoreRecovery">Restore a local snapshot</button>
-            <button type="button" id="wipeDevice">Erase this device and recovery history</button>
-            <p class="text-muted">Chrome Sync has a small capacity. Keep encrypted backups. Clipboard cleanup is best effort and only clears text still matching the last SecurePass copy.</p>
+          <section class="settings-section">
+            <div class="section-header">
+              <h3>Recovery</h3>
+            </div>
+            <div class="card recovery-card">
+              <p class="settings-info">Recovery snapshots are encrypted copies from earlier vault revisions. They are separate from a password-protected vault export in Data Management.</p>
+              <p id="recoveryStatus" class="settings-status" role="status" aria-live="polite">Checking local recovery…</p>
+              <div class="recovery-actions">
+                <button type="button" id="exportRecovery" class="settings-action">
+                  <span class="settings-action-title">Export recovery archive</span>
+                  <span class="settings-action-description">Download encrypted local snapshots and archived Sync versions.</span>
+                </button>
+                <button type="button" id="clearSyncArchive" class="settings-action" disabled>
+                  <span class="settings-action-title">Clear archived Sync versions</span>
+                  <span class="settings-action-description">Delete the extra local conflict archive. Your current vault and local snapshots remain.</span>
+                </button>
+                <button type="button" id="restoreRecovery" class="settings-action">
+                  <span class="settings-action-title">Restore a local snapshot</span>
+                  <span class="settings-action-description">Restore an earlier encrypted vault revision. This disables Sync on this device.</span>
+                </button>
+                <button type="button" id="wipeDevice" class="settings-action settings-action-danger">
+                  <span class="settings-action-title">Erase this device</span>
+                  <span class="settings-action-description">Delete this device’s vault, snapshots, biometric setup and preferences. Remote Sync copies remain.</span>
+                </button>
+              </div>
+            </div>
           </section>
 
           <!-- About -->

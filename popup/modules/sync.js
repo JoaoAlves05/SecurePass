@@ -6,15 +6,39 @@ import { promptForMasterPassword } from './vault.js';
 import { syncSettingsView } from './settings.js';
 
 const $ = id => document.getElementById(id);
+const countLabel = (count, singular, plural = `${singular}s`) => `${count} ${count === 1 ? singular : plural}`;
 async function checked(type, payload) {
   const response = await sendMessage(type, payload); if (!response.ok) throw new Error(response.error); return response;
 }
 async function refreshSync() {
   const { status } = await checked('SYNC_STATUS');
-  $('syncStatus').textContent = status.pending ? `Saved locally; Sync pending: ${status.error}` : `${status.heads.length} remote version(s). Conflicting versions require an explicit choice.`;
+  const recovery = await checked('RECOVERY_STATUS');
+  const currentHeads = status.heads.filter(head => head.current).length;
+  $('syncStatus').textContent = status.pending
+    ? `Sync is ${status.enabled ? 'on' : 'off'}. Changes are saved locally; publication is pending: ${status.error}`
+    : `Sync is ${status.enabled ? 'on' : 'off'}. ${countLabel(status.heads.length, 'remote version')}, ${currentHeads} matching this device.`;
   const select = $('syncVersions'); select.replaceChildren();
+  if (!status.heads.length) {
+    const option = document.createElement('option'); option.value = ''; option.textContent = 'No remote versions found'; select.append(option);
+  }
   for (const head of status.heads) {
     const option = document.createElement('option'); option.value = head.revision; option.textContent = `${head.updatedAt || 'Legacy'} — ${head.current ? 'current' : head.revision.slice(0, 8)}`; select.append(option);
+  }
+  const hasHeads = status.heads.length > 0;
+  select.disabled = !hasHeads;
+  $('downloadSync').disabled = !hasHeads;
+  $('mergeSync').disabled = !hasHeads;
+  $('retrySync').disabled = !status.pending;
+  $('compactSync').disabled = !status.enabled || !hasHeads;
+  $('clearSyncArchive').disabled = !status.recoveryArchiveCount;
+  $('restoreRecovery').disabled = !recovery.snapshots.length;
+  $('recoveryStatus').textContent = `${countLabel(recovery.snapshots.length, 'local recovery snapshot')}; ${countLabel(status.recoveryArchiveCount, 'archived Sync version')}.`;
+}
+async function refreshSyncView() {
+  try { await refreshSync(); }
+  catch (error) {
+    $('syncStatus').textContent = error.message;
+    showToast(error.message, 'error');
   }
 }
 export function attachSyncListeners() {
@@ -31,7 +55,7 @@ export function attachSyncListeners() {
     } catch (error) { showToast(error.message, 'error'); }
     finally { $('syncToggle').disabled = false; syncSettingsView(); }
   });
-  $('refreshSync').addEventListener('click', () => refreshSync().catch(error => showToast(error.message, 'error')));
+  $('refreshSync').addEventListener('click', refreshSyncView);
   $('retrySync').addEventListener('click', async () => { try { await checked('SYNC_RETRY'); await refreshSync(); showToast('Sync published.', 'success'); } catch (error) { showToast(error.message, 'error'); } });
   $('compactSync').addEventListener('click', async () => {
     if (!confirm('Remove remote ancestor generations? Current remote heads remain intact and are preserved in the local vault or its encrypted archive. Export recovery snapshots first.')) return;
@@ -55,4 +79,5 @@ export function attachSyncListeners() {
       await refreshState(); await refreshSync(); showToast('Remote version resolved. Unlock with its master password.', 'success');
     } catch (error) { showToast(error.message, 'error'); }
   });
+  refreshSyncView();
 }

@@ -123,11 +123,17 @@ try {
   const rangeHeight = await autoLock.evaluate(element => element.getBoundingClientRect().height);
   await autoLock.hover();
   assert.equal(await autoLock.evaluate(element => element.getBoundingClientRect().height), rangeHeight, 'Settings sliders keep a stable height on hover.');
+  assert.equal(await autoLock.evaluate(element => getComputedStyle(element).boxShadow), 'none', 'Light theme sliders do not show an outline on hover.');
   assert.equal(await popup.locator('#biometricSetupBtn').getAttribute('aria-expanded'), 'false');
   assert.equal(await popup.locator('#biometricSetupBtn').evaluate(element => element.tagName), 'BUTTON');
   assert.equal(await popup.locator('#biometricSetupBtn button').count(), 0, 'Biometric disclosure does not nest interactive controls.');
   assert.equal(await popup.locator('#disableBiometric').isVisible(), false, 'Revoke action is hidden until biometric unlock is enabled.');
   assert.equal(await popup.locator('#biometricRevokeHelp').isVisible(), false, 'Revoke explanation is hidden until biometric unlock is enabled.');
+  await popup.waitForFunction(() => document.querySelector('#recoveryStatus').textContent.includes('local recovery snapshot'));
+  assert.match(await popup.locator('#syncStatus').textContent(), /Sync is off\./);
+  assert.equal(await popup.locator('#retrySync').isDisabled(), true, 'Retry stays disabled when no publication is pending.');
+  assert.equal(await popup.locator('#compactSync').isDisabled(), true, 'Compaction stays disabled while Sync is off.');
+  assert.equal(await popup.locator('#clearSyncArchive').isDisabled(), true, 'Archive clearing stays disabled when the archive is empty.');
   await popup.locator('#biometricSetupBtn').click();
   assert.equal(await popup.locator('#biometricSetupBtn').getAttribute('aria-expanded'), 'true');
   assert.equal(await popup.locator('#biometricInlineAuth').getAttribute('aria-hidden'), 'false');
@@ -137,7 +143,7 @@ try {
   await popup.waitForFunction(() => getComputedStyle(document.querySelector('#biometricInlineAuth')).maxHeight === '0px');
   await popup.mouse.move(390, 5);
   await popup.screenshot({ path: fileURLToPath(new URL('../docs/screenshots/phase1-settings.png', import.meta.url)) });
-  await popup.locator('.recovery-section').scrollIntoViewIfNeeded();
+  await popup.locator('.recovery-card').scrollIntoViewIfNeeded();
   await popup.mouse.move(390, 5);
   await popup.screenshot({ path: fileURLToPath(new URL('../docs/screenshots/phase1-recovery.png', import.meta.url)) });
   // A virtual authenticator exercises the actual browser PRF and assertion serialization path.
