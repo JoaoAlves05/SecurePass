@@ -1,8 +1,10 @@
 import { base64ToBuffer, bufferToBase64 } from '../encoding.js';
 import { PRF_LABEL, fromBase64url } from './webauthn.js';
 
+const clientId = crypto.randomUUID();
+
 const request = async (type, payload = {}) => {
-  const response = await chrome.runtime.sendMessage({ type, ...payload });
+  const response = await chrome.runtime.sendMessage({ type, ...payload, clientId });
   if (!response?.ok) throw new Error(response?.error || 'Authentication failed.');
   return response;
 };
