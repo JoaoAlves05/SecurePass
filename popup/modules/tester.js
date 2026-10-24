@@ -111,6 +111,17 @@ export async function saveTestedToVault() {
 }
 
 export function attachTesterListeners() {
+  const togglePasswordBtn = document.getElementById('togglePassword');
+  if (togglePasswordBtn && passwordInput) {
+    togglePasswordBtn.addEventListener('click', () => {
+      const visible = passwordInput.type === 'password';
+      passwordInput.type = visible ? 'text' : 'password';
+      togglePasswordBtn.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+      togglePasswordBtn.setAttribute('title', visible ? 'Hide password' : 'Show password');
+      togglePasswordBtn.setAttribute('aria-pressed', String(visible));
+    });
+  }
+
   if (passwordInput) {
     passwordInput.addEventListener('input', event => {
       updateStrength(event.target.value);

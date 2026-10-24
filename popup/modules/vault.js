@@ -79,25 +79,34 @@ export function renderEntries() {
     const header = document.createElement('div');
     header.className = 'vault-item-header';
     const siteTitle = document.createElement('strong');
+    siteTitle.className = 'vault-site';
     siteTitle.textContent = entry.site;
     header.appendChild(siteTitle);
-
-    if (entry.username) {
-      const uname = document.createElement('span');
-      uname.className = 'text-muted';
-      uname.textContent = entry.username;
-      header.appendChild(uname);
-    }
     item.appendChild(header);
 
+    if (entry.username) {
+      const usernameRow = document.createElement('div');
+      usernameRow.className = 'vault-credential-row vault-username-row';
+      const userIcon = document.createElement('span');
+      userIcon.className = 'vault-field-icon';
+      userIcon.setAttribute('aria-hidden', 'true');
+      userIcon.innerHTML = ICONS.user;
+      const username = document.createElement('span');
+      username.className = 'vault-field-value';
+      username.textContent = entry.username;
+      usernameRow.append(userIcon, username);
+      item.appendChild(usernameRow);
+    }
+
     const passRow = document.createElement('div');
-    passRow.className = 'password-display';
+    passRow.className = 'password-display vault-credential-row';
 
     const passwordContainer = document.createElement('div');
     passwordContainer.className = 'password-value-container';
 
     const keyIcon = document.createElement('span');
-    keyIcon.className = 'key-icon';
+    keyIcon.className = 'key-icon vault-field-icon';
+    keyIcon.setAttribute('aria-hidden', 'true');
     keyIcon.innerHTML = ICONS.key;
 
     const passText = document.createElement('span');

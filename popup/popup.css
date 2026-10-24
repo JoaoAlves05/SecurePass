@@ -988,7 +988,32 @@ body[data-theme='dark'] .password-field-container {
 
 .input-actions {
   display: flex;
+  align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+}
+
+.input-actions .icon-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.input-actions .icon-btn:hover,
+.input-actions .icon-btn:focus-visible {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.input-actions .icon-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.input-actions .icon-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* Strength Indicator */
@@ -1406,14 +1431,13 @@ body[data-theme='dark'] .vault-item:hover {
 }
 
 .vault-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 2px;
+  display: block;
+  margin-bottom: 8px;
 }
 
 .vault-site {
+  display: block;
+  width: 100%;
   margin: 0;
   font-size: 1.05rem;
   font-weight: 600;
@@ -1441,6 +1465,58 @@ body[data-theme='dark'] .vault-item:hover {
   gap: 8px;
   margin-bottom: 6px;
   min-height: 24px;
+}
+
+.vault-credential-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 24px;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.vault-field-icon {
+  display: inline-flex;
+  flex: 0 0 16px;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-soft);
+}
+
+.vault-field-icon svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.vault-field-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.password-value-container {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.password-value {
+  flex: 1;
+  overflow: hidden;
+  letter-spacing: 0.1em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .vault-username,

@@ -54,8 +54,18 @@
             <div class="input-group">
               <input type="password" id="passwordInput" placeholder="Type a password..." autocomplete="off" />
               <div class="input-actions">
-                <button id="togglePassword" class="icon-btn" type="button" aria-label="Show password"></button>
-                <button id="copyTestPassword" class="icon-btn" type="button" aria-label="Copy password"></button>
+                <button id="togglePassword" class="icon-btn" type="button" aria-label="Show password" aria-pressed="false" title="Show password">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+                <button id="copyTestPassword" class="icon-btn" type="button" aria-label="Copy password" title="Copy password">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="8" y="8" width="12" height="12" rx="2"></rect>
+                    <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"></path>
+                  </svg>
+                </button>
               </div>
             </div>
 
