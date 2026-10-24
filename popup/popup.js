@@ -7,6 +7,7 @@ import { attachSettingsListeners, syncSettingsView } from './modules/settings.js
 import { renderEntries, handleEntrySubmit, handleUnlock, handleCreateMaster, changeMasterPassword, lockVault, resolveUnlockSetup } from './modules/vault.js';
 import { attachUIListeners, setView, openSettingsPanel, closeSettingsPanel, openModal, closeModal, detectActiveOrigin, openEntryModal, openMasterModal } from './modules/ui.js';
 import { attachBiometricListeners, syncBiometricView } from './modules/biometricSetup.js';
+import { authenticateBiometric } from '../src/biometric/client.js';
 import { attachDataListeners } from './modules/dataManagement.js';
 import { refreshCandidates } from './modules/candidates.js';
 import { attachSyncListeners } from './modules/sync.js';
@@ -44,6 +45,21 @@ async function initialise() {
     finally { submit.disabled = false; }
   });
   $('unlockSetupForm').addEventListener('submit', event => { event.preventDefault(); const pass = $('unlockSetupPassword').value; if (pass) { resolveUnlockSetup(pass); closeModal('unlockSetupModal'); } });
+  $('unlockWithBiometric').addEventListener('click', async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await authenticateBiometric();
+      await refreshState();
+      if (!state.vaultUnlocked) throw new Error('Biometric authentication did not unlock the vault.');
+      resolveUnlockSetup(true);
+      closeModal('unlockSetupModal');
+    } catch (error) {
+      showToast(error.name === 'NotAllowedError' ? 'Authentication cancelled. You can use your master password instead.' : error.message, error.name === 'NotAllowedError' ? 'warning' : 'error');
+    } finally {
+      button.disabled = false;
+    }
+  });
   syncGeneratorControls(); syncSettingsView();
   document.querySelector('.app-version').textContent = `v${chrome.runtime.getManifest().version}`;
   chrome.runtime.onMessage.addListener(message => {

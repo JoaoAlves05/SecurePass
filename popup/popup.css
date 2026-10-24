@@ -2443,6 +2443,11 @@ body[data-theme='dark'] .about-card {
   animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.unlock-biometric-option {
+  width: 100%;
+  margin-top: 12px;
+}
+
 @keyframes modalSlideIn {
   from {
     opacity: 0;

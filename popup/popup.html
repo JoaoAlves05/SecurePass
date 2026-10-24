@@ -497,7 +497,7 @@
                 </div>
               </label>
               <div class="settings-info">
-                Sync stores encrypted vault versions in Chrome Sync, which has limited capacity. Offline edits can create separate versions that must be resolved explicitly.
+                Sync stores encrypted vault versions in Chrome Sync, which has limited capacity. If publishing or resolving versions needs vault contents, SecurePass asks you to unlock here using biometrics when configured or your master password.
               </div>
               <div class="divider"></div>
               <div class="sync-controls">
@@ -838,6 +838,7 @@
             </div>
           </div>
         </div>
+        <button type="button" id="unlockWithBiometric" class="secondary compact-btn unlock-biometric-option" hidden>Use biometric unlock</button>
         <div class="modal-actions">
           <button type="button" data-close="unlockSetupModal" class="secondary compact-btn">Cancel</button>
           <button type="submit" class="primary compact-btn">Unlock</button>

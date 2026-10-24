@@ -2,13 +2,21 @@ import { state } from '../state.js';
 import { refreshState } from './vaultSession.js';
 import { sendMessage } from './messaging.js';
 import { showToast } from './toast.js';
-import { promptForMasterPassword } from './vault.js';
+import { ensureVaultAccessible, promptForMasterPassword } from './vault.js';
 import { syncSettingsView } from './settings.js';
 
 const $ = id => document.getElementById(id);
 const countLabel = (count, singular, plural = `${singular}s`) => `${count} ${count === 1 ? singular : plural}`;
 async function checked(type, payload) {
   const response = await sendMessage(type, payload); if (!response.ok) throw new Error(response.error); return response;
+}
+async function changeSyncMode(payload) {
+  try { return await checked('SET_SYNC_MODE_SAFE', payload); }
+  catch (error) {
+    if (payload.targetUseSync !== true || error.message !== 'Vault is locked') throw error;
+    if (!await ensureVaultAccessible('Unlock your vault to enable Chrome Sync.')) return null;
+    return checked('SET_SYNC_MODE_SAFE', payload);
+  }
 }
 async function refreshSync() {
   const { status } = await checked('SYNC_STATUS');
@@ -45,11 +53,13 @@ export function attachSyncListeners() {
   $('syncToggle').addEventListener('change', async () => {
     const targetUseSync = $('syncToggle').checked; $('syncToggle').disabled = true;
     try {
-      let response = await checked('SET_SYNC_MODE_SAFE', { targetUseSync });
+      let response = await changeSyncMode({ targetUseSync });
+      if (!response) return;
       if (response.requiresResolution) {
         const choice = prompt('Sync differs from this local vault.\n1: Keep local and archive the remote versions.\n2: Download the single remote version.\nCancel: review/merge versions below.');
         if (!['1', '2'].includes(choice)) throw new Error('Sync switch cancelled.');
-        response = await checked('SET_SYNC_MODE_SAFE', { targetUseSync, strategy: choice === '1' ? 'keep-local' : 'use-sync' });
+        response = await changeSyncMode({ targetUseSync, strategy: choice === '1' ? 'keep-local' : 'use-sync' });
+        if (!response) return;
       }
       state.settings = response.settings; await refreshState(); await refreshSync(); showToast('Storage mode changed. Unlock the selected vault again.', 'success');
     } catch (error) { showToast(error.message, 'error'); }
