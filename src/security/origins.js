@@ -13,7 +13,13 @@ export function senderOrigin(sender) {
   if (sender.id !== chrome.runtime.id || !sender.tab || !sender.documentId || sender.frameId !== 0) {
     throw new Error('This request requires an active top-level web document.');
   }
-  const origin = normalizeSite(sender.url);
+  if (typeof sender.url !== 'string') throw new Error('Enter a valid website.');
+  let url;
+  try { url = new URL(sender.url); } catch { throw new Error('Enter a valid website.'); }
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || !url.hostname) {
+    throw new Error('Only HTTP and HTTPS websites are supported.');
+  }
+  const origin = url.origin;
   if (sender.origin && sender.origin !== origin) throw new Error('Opaque or mismatched document origin.');
   return origin;
 }

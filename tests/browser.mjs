@@ -49,7 +49,7 @@ try {
   const saved = await send(popup, 'STORE_CREDENTIAL', { entry: original }); assert.equal(saved.ok, true, saved.error);
   await popup.reload(); await popup.locator('[data-view="vault"]').click(); await popup.waitForSelector('.vault-item');
   assert.equal((await send(popup, 'LIST_CREDENTIALS')).entries[0].password, original.password);
-  const site = await context.newPage(); await site.goto(origin); await site.waitForSelector('#securepass-extension-root');
+  const site = await context.newPage(); await site.goto(`${origin}/${'long-login-path-'.repeat(20)}?return=${'x'.repeat(300)}`); await site.waitForSelector('#securepass-extension-root');
   await site.waitForTimeout(400);
   await shadowClick(site, '.securepass-floating');
   const secureWindow = context.waitForEvent('page');
