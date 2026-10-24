@@ -28,7 +28,13 @@ async function shadowClick(page, selector) {
   const shadow = find(root); assert.ok(shadow, 'Content shadow root exists');
   const { nodeId } = await session.send('DOM.querySelector', { nodeId: shadow.nodeId, selector }); assert.ok(nodeId, selector);
   const { object } = await session.send('DOM.resolveNode', { nodeId });
-  await session.send('Runtime.callFunctionOn', { objectId: object.objectId, functionDeclaration: 'function() { this.click(); }' }); await session.detach();
+  await session.send('Runtime.callFunctionOn', { objectId: object.objectId, functionDeclaration: `function() {
+    this.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true, pointerType: 'mouse', isPrimary: true }));
+    if (!this.isConnected) throw new Error('Pointer down removed the clicked extension control.');
+    this.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, composed: true, pointerType: 'mouse', isPrimary: true }));
+    this.click();
+  }` });
+  await session.detach();
 }
 try {
   context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: true, args: [`--disable-extensions-except=${root}`, `--load-extension=${root}`, '--no-sandbox'], acceptDownloads: true });

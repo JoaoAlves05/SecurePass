@@ -3,6 +3,7 @@ import { request } from './messaging.js';
 import { setFieldValue, visibleField } from './fields.js';
 
 let shadowRoot;
+let shadowHost;
 let analyzer;
 const tracked = new Map();
 const pending = new Map();
@@ -10,6 +11,7 @@ const submitted = new WeakMap();
 
 export async function initAutofill(deps) {
   shadowRoot = deps.shadowRoot;
+  shadowHost = deps.shadowHost;
   analyzer = deps.analyzer;
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
     if (sender.id !== chrome.runtime.id) return;
@@ -93,7 +95,7 @@ export function attachButton(field) {
     const title = element('h3', 'SecurePass');
     panel.append(title, status);
     const close = () => { panel.remove(); document.removeEventListener('pointerdown', outside, true); entry.close = null; };
-    const outside = e => { if (!e.composedPath().includes(panel) && !e.composedPath().includes(button)) close(); };
+    const outside = e => { if (!e.composedPath().includes(shadowHost)) close(); };
     entry.close = close;
     document.addEventListener('pointerdown', outside, true);
     const context = analyzer.analyzeFormContext(field);
