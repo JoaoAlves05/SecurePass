@@ -144,6 +144,7 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 }
 
 .settings-section .section-header {
+  display: none;
   margin: 0 0 4px;
   text-align: left;
 }
@@ -156,7 +157,6 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   letter-spacing: -0.02em;
 }
 
-.settings-section .section-header p,
 .settings-group-heading p {
   margin: 0;
   color: var(--text-muted);
@@ -549,6 +549,7 @@ body:has(.settings-panel[aria-hidden='false']) {
     display: none;
   }
 
+  .management-mode .settings-section .section-header,
   .management-mode .settings-section .section-header h3 {
     display: block;
   }
