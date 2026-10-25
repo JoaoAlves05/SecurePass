@@ -129,8 +129,7 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   overflow-y: auto;
 }
 
-.settings-content-wrapper,
-.settings-feedback {
+.settings-content-wrapper {
   width: 100%;
   max-width: 760px;
   margin: 0 auto;
@@ -473,12 +472,21 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   color: var(--danger);
 }
 
+.settings-footer {
+  flex-shrink: 0;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 20px 20px;
+}
+
 .settings-about {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-top: 8px;
   color: var(--text-muted);
   font-size: 12px;
 }
@@ -489,7 +497,6 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 }
 
 .settings-feedback {
-  padding-top: 0;
   color: var(--text-muted);
   font-size: 12px;
 }
@@ -527,6 +534,12 @@ body:has(.settings-panel[aria-hidden='false']) {
   .management-mode .settings-layout {
     display: grid;
     grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .management-mode .settings-footer {
+    grid-column: 1 / -1;
+    max-width: none;
   }
 
   .management-mode .settings-navigation {

@@ -12,6 +12,7 @@ This user-approved revision supersedes the tabs described in [SETTINGS_FOUR_AREA
 - Navigation uses native links and normal Tab/Enter activation. Entering a detail page focuses its visible title; returning focuses its category. Browser Back/Forward, reload, and Open in tab retain the selected destination. `#settings` identifies the compact list. Historical preferences/appearance/data/recovery/sync/danger fragments resolve to the corresponding current sections.
 - The main tool selection remains unchanged while navigating Settings. Ordinary preference saves still use the existing revision-checked background flow. No cryptographic, storage, message capability, permission or transport contracts were changed.
 - The reproduced cache-row defect is fixed: its status and Clear cache button share space or wrap without shrinking the status to one character per line.
+- Version, GitHub and the live preference-save/operation status share one Settings footer. It follows the category list on the home page and stays visible on detail pages and in the wide management layout. The version and project link are no longer part of Appearance.
 
 ## Executed verification
 
@@ -24,7 +25,7 @@ This user-approved revision supersedes the tabs described in [SETTINGS_FOUR_AREA
 - Impeccable detector: nine whole-popup warnings, matching the previously reviewed contrast/small-text and incumbent font/palette/glow/copy signals. Several examples belong to Tester/other surfaces. These do not establish Settings accessibility conformance; the established visual identity was preserved.
 - Screenshots were inspected after rendering. The unrelated vault screenshot was preserved.
 
-Current visual evidence: [popup category list](screenshots/settings-popup-home.png), [popup Security](screenshots/settings-popup.png), [popup Appearance](screenshots/settings-popup-appearance.png), [light sidebar](screenshots/settings-management-light.png), [dark sidebar](screenshots/settings-management-dark.png), [dark Appearance](screenshots/settings-appearance-dark.png), [recovery](screenshots/phase1-recovery.png), and [erasure confirmation](screenshots/settings-erasure-review.png).
+Updated shared-footer captures: [popup category list](screenshots/settings-popup-home.png), [popup Security](screenshots/settings-popup.png), and [light sidebar](screenshots/settings-management-light.png). Earlier navigation captures: [popup Appearance](screenshots/settings-popup-appearance.png), [dark sidebar](screenshots/settings-management-dark.png), [dark Appearance](screenshots/settings-appearance-dark.png), [recovery](screenshots/phase1-recovery.png), and [erasure confirmation](screenshots/settings-erasure-review.png).
 
 ## Manual review and limits
 
