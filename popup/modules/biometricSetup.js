@@ -14,7 +14,8 @@ export async function syncBiometricView() {
   $('disableBiometric').hidden = !enabled;
   $('biometricRevokeHelp').hidden = !enabled;
   $('biometricBtnLabel').textContent = enabled ? 'Replace biometric authenticator' : 'Set up biometric unlock';
-  $('biometricBtnSub').textContent = status.requiresReconfiguration
+  $('biometricSetupBtn').disabled = state.vaultInitialized === false;
+  $('biometricBtnSub').textContent = state.vaultInitialized === false ? 'Create or import a vault to enable biometric unlock.' : status.requiresReconfiguration
     ? 'Previous setup was removed. Set up a compatible authenticator again.'
     : 'Use a compatible fingerprint, face, PIN or security key';
 }

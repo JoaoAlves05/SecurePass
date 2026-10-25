@@ -18,7 +18,7 @@ function manageFocus() {
 }
 export function setView(id) {
   document.querySelectorAll('.view').forEach(el => el.classList.toggle('active', el.id === `view-${id}`));
-  document.querySelectorAll('.nav-item').forEach(el => {
+  document.querySelectorAll('.nav-item[data-view]').forEach(el => {
     const selected = el.dataset.view === id; el.classList.toggle('active', selected); el.setAttribute('aria-selected', String(selected));
     if (selected) requestAnimationFrame(() => { $('navIndicator').style.width = `${el.offsetWidth}px`; $('navIndicator').style.transform = `translateX(${el.offsetLeft - 4}px)`; });
   });
@@ -26,8 +26,9 @@ export function setView(id) {
 export function openSettingsPanel() {
   settingsTrigger = $('openSettings'); $('settingsPanel').classList.add('visible'); $('settingsPanel').setAttribute('aria-hidden', 'false'); manageFocus();
   if (document.body.classList.contains('management-mode')) {
-    [...document.querySelectorAll('.settings-navigation [aria-current], #settingsSectionSelect')].find(el => el.getClientRects().length)?.focus();
+    document.querySelector('.settings-tabs [aria-selected="true"]')?.focus();
   } else $('closeSettings').focus();
+  document.dispatchEvent(new CustomEvent('settings-opened'));
 }
 export function closeSettingsPanel() {
   if (document.body.classList.contains('management-mode')) return;
@@ -72,7 +73,7 @@ export function openMasterModal() {
 export function attachUIListeners() {
   document.addEventListener('vault-ui-locked', () => { for (const id of ['entryModal', 'masterModal', 'unlockSetupModal']) closeModal(id); });
   $('settingsPanel').inert = true;
-  document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+  document.querySelectorAll('.nav-item[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   $('openSettings').addEventListener('click', openSettingsPanel); $('closeSettings').addEventListener('click', closeSettingsPanel);
   document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => closeModal(button.dataset.close)));
   $('modalBackdrop').addEventListener('click', () => { for (const id of ['entryModal', 'masterModal', 'unlockSetupModal']) closeModal(id); });
@@ -92,7 +93,7 @@ export function attachUIListeners() {
     const active = modal || ($('settingsPanel').classList.contains('visible') ? $('settingsPanel') : null);
     if (event.key === 'Escape') { if (modal) closeModal(modal.id); else closeSettingsPanel(); }
     if (event.key === 'Tab' && active) {
-      const items = [...active.querySelectorAll('button, input, textarea, select, summary, a[href], [tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length && !el.closest('[hidden], [inert]'));
+      const items = [...active.querySelectorAll('button, input, textarea, select, summary, a[href], [tabindex="0"]')].filter(el => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length && !el.closest('[hidden], [inert]'));
       if (!items.length) return;
       if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items.at(-1).focus(); }
       else if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0].focus(); }

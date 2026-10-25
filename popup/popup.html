@@ -305,121 +305,86 @@
 
   <div id="settingsPanel" class="settings-panel" aria-hidden="true" aria-labelledby="settingsTitle">
     <div class="settings-surface">
-      <header class="settings-header-sticky">
-        <div class="header-content">
-          <button id="closeSettings" class="icon-btn back-btn" type="button" aria-label="Back">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-          </button>
-          <h2 id="settingsTitle">Settings</h2>
-          <button id="openManagement" type="button" class="secondary compact-btn">Open in tab <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" /></svg></button>
-        </div>
+      <header class="settings-header">
+        <button id="closeSettings" class="icon-btn" type="button" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
+        </button>
+        <h2 id="settingsTitle">Settings</h2>
+        <button id="openManagement" class="settings-open-tab" type="button" aria-label="Open settings in a tab">Open in tab
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" /></svg>
+        </button>
       </header>
+      <nav class="settings-tabs main-nav" role="tablist" aria-label="Settings sections">
+        <div id="settingsNavIndicator" class="nav-indicator" aria-hidden="true"></div>
+        <button id="settings-tab-general" class="nav-item active" type="button" role="tab" aria-selected="true" aria-controls="generalSection" data-settings-section="generalSection">General</button>
+        <button id="settings-tab-security" class="nav-item" type="button" role="tab" aria-selected="false" aria-controls="securitySection" data-settings-section="securitySection" tabindex="-1">Security</button>
+        <button id="settings-tab-backups" class="nav-item" type="button" role="tab" aria-selected="false" aria-controls="backupsSection" data-settings-section="backupsSection" tabindex="-1">Backups</button>
+        <button id="settings-tab-advanced" class="nav-item" type="button" role="tab" aria-selected="false" aria-controls="advancedSection" data-settings-section="advancedSection" tabindex="-1">Advanced</button>
+      </nav>
       <div class="settings-scroll-container">
-        <div class="settings-layout">
-          <aside class="settings-sidebar" aria-label="Vault and settings navigation">
-            <section id="managementOverview" class="management-overview" aria-label="This device">
-              <h3>This device</h3>
-              <p id="managementVaultState" role="status">Checking this device…</p>
-              <div class="management-button-row"><button id="managementVaultAction" class="primary" type="button">Open vault</button><button id="managementBackupAction" class="secondary" type="button">Export backup</button></div>
-              <p id="managementActivity" role="status" aria-live="polite"></p>
-            </section>
-            <nav class="settings-navigation" aria-label="Settings sections">
-              <a href="#securitySection" aria-current="page">Security</a>
-              <a href="#preferencesSection">Appearance</a>
-              <a href="#dataSection">Backups</a>
-              <a href="#syncSection">Sync</a>
-              <a href="#recoverySection">Recovery</a>
-              <a href="#dangerSection">Device data</a>
-            </nav>
-            <div class="settings-mobile-navigation">
-              <label for="settingsSectionSelect">Settings section</label>
-              <select id="settingsSectionSelect">
-                <option value="securitySection">Security</option>
-                <option value="preferencesSection">Appearance</option>
-                <option value="dataSection">Backups</option>
-                <option value="syncSection">Sync</option>
-                <option value="recoverySection">Recovery</option>
-                <option value="dangerSection">Device data</option>
-              </select>
-            </div>
-          <section id="aboutSection" class="settings-about">
-            <div class="about-card">
-              <div class="app-info">
-                <div class="app-logo-small">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
-                </div>
-                <div class="app-details">
-                  <span class="app-name">SecurePass</span>
-                  <span class="app-version"></span>
-                </div>
-              </div>
-              <a href="https://github.com/JoaoAlves05/SecurePass" target="_blank" rel="noopener noreferrer" class="github-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path
-                    d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
-                  </path>
-                </svg>
-                <span>GitHub</span>
-              </a>
-            </div>
-          </section>
-          </aside>
-          <div class="settings-main">
-            <p id="settingsSaveStatus" class="settings-save-status" role="status" aria-live="polite">Preferences save automatically</p>
-            <div class="settings-content-wrapper">
-          <section id="securitySection" class="settings-section">
-            <div class="section-header"><h3 tabindex="-1">Security</h3><p>Control how your vault locks and how you unlock it.</p></div>
+        <div class="settings-content-wrapper">
+          <section id="generalSection" class="settings-section" role="tabpanel" aria-labelledby="settings-tab-general">
+            <div class="section-header"><h3>General</h3><p>Choose how SecurePass looks.</p></div>
             <div class="card">
-              <div class="card-row">
-                <div class="row-info">
-                  <label for="autoLockRange" class="row-label">Auto-lock vault</label>
-                  <span class="row-sub">Lock after <span id="autoLockLabel" class="highlight-text">15 min</span> of
-                    inactivity</span>
+              <div class="settings-preference theme-row">
+                <span class="row-label">Theme</span>
+                <div class="theme-toggle-group" role="radiogroup" aria-label="Theme">
+                  <label class="theme-option" title="System Default">
+                    <input type="radio" name="appearanceTheme" value="system" aria-label="System" />
+                    <span class="theme-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                      </svg>
+                    <span>System</span></span>
+                  </label>
+                  <label class="theme-option" title="Light Mode">
+                    <input type="radio" name="appearanceTheme" value="light" aria-label="Light" />
+                    <span class="theme-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                      </svg>
+                    <span>Light</span></span>
+                  </label>
+                  <label class="theme-option" title="Dark Mode">
+                    <input type="radio" name="appearanceTheme" value="dark" aria-label="Dark" />
+                    <span class="theme-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                      </svg>
+                    <span>Dark</span></span>
+                  </label>
                 </div>
               </div>
-              <div class="card-row slider-row">
-                <input type="range" aria-describedby="autoLockLabel" id="autoLockRange" min="1" max="60" step="1" value="15" class="range-slider" />
+              <button id="resetSettings" class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Reset preferences</span><span class="settings-action-description">Restore theme, generator and timeout defaults. Your vault is kept.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+            </div>
+            <footer class="settings-about"><span>SecurePass <span class="app-version"></span></span><a href="https://github.com/JoaoAlves05/SecurePass" target="_blank" rel="noopener noreferrer">GitHub</a></footer>
+          </section>
+          <section id="securitySection" class="settings-section" role="tabpanel" aria-labelledby="settings-tab-security" hidden>
+            <div class="section-header"><h3>Security</h3><p>Control how your vault locks and unlocks.</p></div>
+            <div class="card">
+              <div class="settings-preference">
+                <div class="settings-preference-heading"><label for="autoLockRange" class="row-label">Auto-lock vault</label><output id="autoLockLabel" for="autoLockRange" class="settings-value">15 minutes</output></div>
+                <p class="row-sub">Lock after this much inactivity.</p>
+                <input id="autoLockRange" type="range" min="1" max="60" step="1" value="15" class="range-slider" aria-describedby="autoLockLabel" />
               </div>
-
-              <div class="divider"></div>
-
-              <div class="card-row">
-                <div class="row-info">
-                  <label for="clipboardRange" class="row-label">Clear copied passwords</label>
-                  <span class="row-sub"><span id="clipboardLabel"
-                      class="highlight-text">After 30 seconds</span></span>
-                  <span class="row-sub">Only clears text that still matches your last SecurePass copy. Timing is best effort.</span>
-                </div>
+              <div class="settings-preference">
+                <div class="settings-preference-heading"><label for="clipboardRange" class="row-label">Clear copied passwords</label><output id="clipboardLabel" for="clipboardRange" class="settings-value">After 30 seconds</output></div>
+                <p class="row-sub">Best effort. Only clears text that still matches your last SecurePass copy.</p>
+                <input id="clipboardRange" type="range" min="0" max="120" step="30" value="30" class="range-slider" aria-describedby="clipboardLabel" />
               </div>
-              <div class="card-row slider-row">
-                <input type="range" aria-describedby="clipboardLabel" id="clipboardRange" min="0" max="120" step="30" value="30" class="range-slider" />
-              </div>
-
-              <div class="divider"></div>
-
-              <button id="changeMasterKeyBtn" class="card-action-btn">
-                <div class="btn-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
-                </div>
-                <div class="btn-text">
-                  <span class="btn-label">Change master password</span>
-                  <span class="btn-sub">Update your vault password</span>
-                </div>
-                <div class="btn-arrow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </div>
-              </button>
-
-              <div class="divider"></div>
-
+              <button id="changeMasterKeyBtn" disabled class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Change master password</span><span class="settings-action-description">Authenticate and choose a new password for your vault.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+            </div>
+            <div class="card settings-biometric">
               <div id="biometricSetting">
                 <button id="biometricSetupBtn" class="card-action-btn" type="button" aria-expanded="false" aria-controls="biometricInlineAuth">
                   <span class="btn-icon" aria-hidden="true">
@@ -459,222 +424,48 @@
                   </div>
                 </div>
               </div>
-
-              <div class="divider"></div>
-
-              <details class="settings-details biometric-help"><summary>About biometric unlock</summary><p class="settings-info">Biometric unlock uses a device authenticator (such as a fingerprint, face, PIN, or security key) that supports WebAuthn PRF. Your master password always remains available. SecurePass does not store a device-local bypass key.</p></details>
-              <div class="biometric-revoke">
-                <p id="biometricRevokeHelp" class="text-muted" hidden>This only removes biometric access from this device; it does not change your vault or master password.</p>
-                <button type="button" id="disableBiometric" class="secondary" hidden>Remove biometric unlock from this device</button>
-              </div>
-
+              <details class="settings-details"><summary>About biometric unlock</summary><p class="settings-info">Use a device authenticator with WebAuthn PRF support, such as a compatible fingerprint, face, PIN or security key. Your master password remains available. SecurePass does not store a device-local bypass key.</p></details>
+              <div class="biometric-revoke"><p id="biometricRevokeHelp" class="row-sub" hidden>Removes biometric access from this device. Your vault and master password stay the same.</p><button id="disableBiometric" class="secondary compact-btn" type="button" hidden>Remove biometric unlock</button></div>
             </div>
-            <details class="settings-details">
-              <summary>Breach-check cache</summary>
-              <p class="settings-info">Keep downloaded Have I Been Pwned hash ranges to speed up repeated checks. Clearing this cache does not change your vault.</p>
-              <div class="card-row"><div class="row-info">
-                <label for="hibpCacheRange" class="row-label">Breach-check cache</label>
-                <span class="row-sub" id="hibpCacheLabel">24 hours</span>
-              </div></div>
-              <div class="card-row slider-row"><input id="hibpCacheRange" type="range" aria-describedby="hibpCacheLabel" min="1" max="168" value="24" class="range-slider"></div>
-              <div class="card-row"><span id="hibpCacheUsage" class="row-sub">Cache usage</span><button id="clearHibpCache" class="secondary compact-btn" type="button">Clear cache</button></div>
-            </details>
           </section>
-
-          <section id="preferencesSection" class="settings-section" hidden>
-            <div class="section-header"><h3 tabindex="-1">Appearance</h3><p>Choose a theme and manage your preferences.</p></div>
+          <section id="backupsSection" class="settings-section" role="tabpanel" aria-labelledby="settings-tab-backups" hidden>
+            <div class="section-header"><h3>Backups &amp; recovery</h3><p>Keep a copy, import a backup or restore an earlier version.</p></div>
+            <div id="backupEmptyState" class="settings-empty-state" hidden><p>No vault yet. Create one here, or import a backup below.</p><button id="createLocalVault" class="secondary compact-btn" type="button">Create local vault</button></div>
             <div class="card">
-              <div class="card-row theme-row">
-                <div class="row-info">
-                  <span class="row-label">Theme</span>
-                  <span class="row-sub">Choose your preferred look</span>
-                </div>
-                <div class="theme-toggle-group" role="radiogroup" aria-label="Theme">
-                  <label class="theme-option" title="System Default">
-                    <input type="radio" name="appearanceTheme" value="system" aria-label="System" />
-                    <span class="theme-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                        <line x1="8" y1="21" x2="16" y2="21"></line>
-                        <line x1="12" y1="17" x2="12" y2="21"></line>
-                      </svg>
-                    <span>System</span></span>
-                  </label>
-                  <label class="theme-option" title="Light Mode">
-                    <input type="radio" name="appearanceTheme" value="light" aria-label="Light" />
-                    <span class="theme-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                      </svg>
-                    <span>Light</span></span>
-                  </label>
-                  <label class="theme-option" title="Dark Mode">
-                    <input type="radio" name="appearanceTheme" value="dark" aria-label="Dark" />
-                    <span class="theme-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                      </svg>
-                    <span>Dark</span></span>
-                  </label>
-                </div>
-              </div>
-              <button id="resetSettings" class="card-action-btn">
-                <div class="btn-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                    <path d="M3 3v5h5"></path>
-                  </svg>
-                </div>
-                <div class="btn-text">
-                  <span class="btn-label">Reset preferences</span>
-                  <span class="btn-sub">Restore theme, generator and timeout defaults. Your vault is kept.</span>
-                </div>
-                <div class="btn-arrow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </div>
-              </button>
+              <button id="exportVault" disabled class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Export backup</span><span class="settings-action-description">Download an encrypted copy with a separate backup password.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+              <button id="importVaultBtn" class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Import backup</span><span class="settings-action-description">Review a file and restore or combine its entries.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+              <input id="importVaultFile" type="file" accept=".json" class="hidden" />
             </div>
+            <div class="settings-group-heading"><h4>Earlier versions</h4><p class="row-sub">Encrypted copies saved before changes. Each keeps its historical master password.</p></div>
+            <p id="recoveryStatus" class="settings-status" role="status" aria-live="polite">Checking saved versions…</p>
+            <div id="snapshotList" class="snapshot-list" aria-label="Earlier vault versions"></div>
           </section>
-
-          <section id="dataSection" class="settings-section" hidden>
-            <div class="section-header"><h3 tabindex="-1">Backups</h3><p>Keep a portable copy of your vault, or bring one back.</p></div>
-            <div class="card">
-
-              <button id="exportVault" class="card-action-btn">
-                <div class="btn-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                </div>
-                <div class="btn-text">
-                  <span class="btn-label">Export backup</span>
-                  <span class="btn-sub">Download an encrypted file protected by a backup password</span>
-                </div>
-                <div class="btn-arrow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </div>
-              </button>
-
-              <div class="divider"></div>
-
-              <button id="importVaultBtn" class="card-action-btn">
-                <div class="btn-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
-                </div>
-                <div class="btn-text">
-                  <span class="btn-label">Import backup</span>
-                  <span class="btn-sub">Review a backup, or restore into a new vault</span>
-                </div>
-                <div class="btn-arrow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </div>
-              </button>
-              <input type="file" id="importVaultFile" accept=".json" class="hidden" />
-            </div>
-          </section>
-
-          <section id="syncSection" class="settings-section" hidden>
-            <div class="section-header"><h3 tabindex="-1">Sync</h3><p>Manage copies of your vault across devices.</p></div>
-            <div class="card sync-summary">
-              <div class="provider-heading"><div><strong>Google Drive</strong><p>Optional cloud connection</p></div><span class="status-pill">Unavailable</span></div>
-              <p class="settings-info">Google Drive sync is not available yet. Your vault works locally and no Google account is connected.</p>
-              <button class="secondary" type="button" disabled aria-describedby="driveSetupHelp">Connect Google Drive</button>
-              <p id="driveSetupHelp" class="settings-info">Local backups and recovery are available now.</p>
-            </div>
+          <section id="advancedSection" class="settings-section" role="tabpanel" aria-labelledby="settings-tab-advanced" hidden>
+            <div class="section-header"><h3>Advanced</h3><p>Compatibility, maintenance and local data.</p></div>
+            <div class="settings-group-heading"><h4>Chrome Sync compatibility</h4><p class="row-sub">For existing Chrome Sync installations. Unlock is requested when an operation needs it.</p></div>
             <div class="card legacy-card">
-              <p id="syncStatus" class="settings-status" role="status" aria-live="polite">Checking local sync state…</p>
-              <button type="button" id="refreshSync" class="settings-action"><span class="settings-action-title">Check existing Chrome Sync copies</span><span class="settings-action-description">Explicitly inspect old remote versions, including when automatic Sync is off.</span></button>
+              <p id="syncStatus" class="settings-status" role="status" aria-live="polite">Checking Sync state…</p>
+              <button id="refreshSync" class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Find existing Chrome Sync copies</span><span class="settings-action-description">Inspect old remote versions, including when automatic publication is off.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
               <div id="remoteVersionReview" class="remote-review" hidden>
-                <label class="sync-version-field" for="syncVersions">Choose an existing version<select id="syncVersions" disabled></select></label>
-                <div class="management-button-row"><button type="button" id="downloadSync" class="secondary" disabled>Restore on this device</button><button type="button" id="mergeSync" class="secondary" disabled>Combine with local vault</button></div>
-                <p class="settings-info">Restoring turns Sync off and leaves remote copies unchanged. Combining keeps the local vault’s master password.</p>
+                <label class="sync-version-field" for="syncVersions">Existing version<select id="syncVersions" disabled></select></label>
+                <div class="management-button-row"><button id="downloadSync" class="secondary compact-btn" type="button" disabled>Restore on this device</button><button id="mergeSync" class="secondary compact-btn" type="button" disabled>Combine with local vault</button></div>
+                <p class="settings-info">Restoring turns Sync off and keeps remote copies. Combining keeps the local master password.</p>
               </div>
-              <details id="legacySyncDetails"><summary>Advanced · legacy Chrome Sync</summary>
-                <p class="settings-info">Limited-capacity legacy transport. SecurePass asks you to unlock here before publishing when vault contents are needed. Export a backup before changing storage.</p>
-                <label class="card-row clickable" for="syncToggle"><span class="row-info"><span class="row-label">Legacy automatic publication</span><span class="row-sub">Use only for existing Chrome Sync installations</span></span><span class="toggle-switch"><input type="checkbox" id="syncToggle"><span class="slider"></span></span></label>
-                <p id="syncCapacity" class="settings-info"></p>
-                <div class="management-button-row"><button type="button" id="retrySync" class="secondary" disabled>Retry pending upload</button><button type="button" id="compactSync" class="secondary" disabled>Clean old remote history</button></div>
-              </details>
+              <label class="card-row clickable" for="syncToggle"><span class="row-info"><span class="row-label">Legacy automatic publication</span><span class="row-sub">Limited capacity. Export a backup before enabling.</span></span><span class="toggle-switch"><input id="syncToggle" type="checkbox"><span class="slider"></span></span></label>
+              <p id="syncCapacity" class="settings-info"></p>
+              <div id="syncMaintenance" class="management-button-row" hidden><button id="retrySync" class="secondary compact-btn" type="button" disabled hidden>Retry pending upload</button><button id="compactSync" class="secondary compact-btn" type="button" disabled hidden>Clean old remote history</button></div>
+              <button id="clearSyncArchive" disabled hidden class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Clear archived Sync copies</span><span class="settings-action-description">Delete the extra local conflict archive. Other versions are kept.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+            </div>
+            <div class="settings-group-heading"><h4>Breach-check cache</h4><p class="row-sub">Downloaded hash ranges speed up repeated breach checks. Clearing them does not change your vault.</p></div>
+            <div class="card"><div class="card-row"><span id="hibpCacheUsage" class="row-sub" role="status">Checking cache…</span><button id="clearHibpCache" class="secondary compact-btn" type="button" disabled>Clear cache</button></div></div>
+            <div class="settings-group-heading"><h4>Delete data</h4><p class="row-sub">Review the scope of each action before confirming.</p></div>
+            <div class="card settings-danger">
+              <button id="clearVault" disabled class="settings-action settings-action-danger" type="button"><span class="settings-action-copy"><span class="settings-action-title">Clear vault entries</span><span class="settings-action-description">Remove current entries and keep recovery history. Active Sync may publish the deletion.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+              <button id="wipeDevice" class="settings-action settings-action-danger" type="button"><span class="settings-action-copy"><span class="settings-action-title">Delete local SecurePass data</span><span class="settings-action-description">Remove this device’s vault, history, biometric setup and preferences. Remote copies are kept.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
             </div>
           </section>
-
-          <section id="recoverySection" class="settings-section" hidden>
-            <div class="section-header"><h3 tabindex="-1">Recovery</h3><p>Return to an earlier version saved on this device.</p></div>
-            <div class="card recovery-card">
-              <p class="settings-info">Snapshots are earlier encrypted versions of your vault. To keep a portable copy of your current vault, use Backups.</p>
-              <p id="recoveryStatus" class="settings-status" role="status" aria-live="polite">Checking local recovery…</p>
-              <div id="snapshotList" class="snapshot-list" aria-label="Local recovery snapshots"></div>
-              <div class="recovery-actions">
-                <button type="button" id="exportRecovery" class="settings-action">
-                  <span class="settings-action-title">Export a recovery snapshot</span>
-                  <span class="settings-action-description">Choose an encrypted snapshot and download an individually restorable file.</span>
-                </button>
-                <button type="button" id="clearSyncArchive" class="settings-action" disabled>
-                  <span class="settings-action-title">Clear archived Sync versions</span>
-                  <span class="settings-action-description">Delete the extra local conflict archive. Your current vault and local snapshots remain.</span>
-                </button>
-                <button type="button" id="restoreRecovery" class="settings-action">
-                  <span class="settings-action-title">Restore a local snapshot</span>
-                  <span class="settings-action-description">Restore an earlier encrypted vault revision. This disables Sync on this device.</span>
-                </button>
-
-              </div>
-            </div>
-          </section>
-          <section id="dangerSection" class="settings-section danger-section" hidden>
-            <div class="section-header"><h3 tabindex="-1">Device data</h3><p>Remove entries or erase SecurePass on this device. Review each action before confirming.</p></div>
-            <div id="dangerActions" class="card">
-              <button id="clearVault" class="card-action-btn danger">
-                <div class="btn-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
-                    <path d="M10 11v6"></path>
-                    <path d="M14 11v6"></path>
-                    <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                </div>
-                <div class="btn-text">
-                  <span class="btn-label">Clear vault entries</span>
-                  <span class="btn-sub">Clear entries; keep recovery history</span>
-                </div>
-                <div class="btn-arrow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </div>
-              </button>
-                <button type="button" id="wipeDevice" class="settings-action settings-action-danger">
-                  <span class="settings-action-title">Erase this device</span>
-                  <span class="settings-action-description">Delete this device’s vault, snapshots, biometric setup and preferences. Remote Sync copies remain.</span>
-                </button>
-            </div>
-          </section>
-            </div>
-          </div>
         </div>
+        <div class="settings-feedback"><p id="settingsSaveStatus" role="status" aria-live="polite">Preferences save automatically</p><p id="managementActivity" role="status" aria-live="polite"></p></div>
       </div>
     </div>
   </div>

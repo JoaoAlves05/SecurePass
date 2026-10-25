@@ -76,7 +76,6 @@ async function initialise() {
     if (message.type === 'VAULT_LOCKED') clearSensitiveUI();
   });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshState().catch(() => clearSensitiveUI()); });
-  document.addEventListener('vault-ui-state', () => { $('managementVaultState').textContent = state.vaultInitialized === false ? 'No vault yet. Create one or import a backup.' : `Saved locally · ${state.vaultUnlocked ? 'Unlocked' : 'Locked'}`; });
   let refreshing = false;
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && (changes.settings || changes.syncStatus || changes.syncRecovery) && !refreshing) {

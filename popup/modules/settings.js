@@ -12,9 +12,8 @@ function setSaveStatus(message, status = '') {
 }
 function updateRangeLabel(id, value) {
   const text = id === 'autoLockRange' ? `${value} ${value === 1 ? 'minute' : 'minutes'}`
-    : id === 'hibpCacheRange' ? `${value} ${value === 1 ? 'hour' : 'hours'}`
     : value ? `${value} seconds` : 'Never';
-  $(id === 'autoLockRange' ? 'autoLockLabel' : id === 'hibpCacheRange' ? 'hibpCacheLabel' : 'clipboardLabel').textContent = id === 'clipboardRange' && value ? `After ${text}` : text;
+  $(id === 'autoLockRange' ? 'autoLockLabel' : 'clipboardLabel').textContent = id === 'clipboardRange' && value ? `After ${text}` : text;
   $(id).setAttribute('aria-valuetext', text);
 }
 export function initialiseSettings(response) {
@@ -51,17 +50,22 @@ export function syncSettingsView() {
   $('autoLockRange').value = state.settings.vaultTimeout; updateRangeLabel('autoLockRange', state.settings.vaultTimeout);
   $('clipboardRange').value = state.settings.clipboardTimeout; updateRangeLabel('clipboardRange', state.settings.clipboardTimeout);
   $('syncToggle').checked = state.settings.useSync;
-  $('hibpCacheRange').value = state.settings.hibpCacheTtlHours; updateRangeLabel('hibpCacheRange', state.settings.hibpCacheTtlHours);
 }
 export function attachSettingsListeners() {
-  const refreshCache = async () => { const result = await sendMessage('HIBP_CACHE_STATUS'); if (result.ok) $('hibpCacheUsage').textContent = `${result.entries} cached ranges · ${result.bytes.toLocaleString()} bytes`; };
+  const refreshCache = async () => {
+    const result = await sendMessage('HIBP_CACHE_STATUS');
+    $('hibpCacheUsage').textContent = result.ok ? result.entries ? `${result.entries} cached ranges · ${result.bytes.toLocaleString()} bytes` : 'No cached checks' : 'Cache status unavailable';
+    $('clearHibpCache').disabled = !result.ok || !result.entries;
+  };
   $('clearHibpCache').addEventListener('click', async () => { const result = await sendMessage('HIBP_CLEAR_CACHE'); showToast(result.ok ? 'HIBP cache cleared.' : result.error, result.ok ? 'success' : 'error'); await refreshCache(); });
   refreshCache();
+  document.addEventListener('settings-section-changed', event => { if (event.detail.id === 'advancedSection') refreshCache(); });
+  document.addEventListener('management-refresh', refreshCache);
   document.querySelectorAll('input[name="appearanceTheme"]').forEach(input => input.addEventListener('change', () => {
     if (!input.checked) return;
     state.settings.theme = input.value; applyTheme(input.value); scheduleSettingsSave();
   }));
-  for (const [id, key] of [['autoLockRange', 'vaultTimeout'], ['clipboardRange', 'clipboardTimeout'], ['hibpCacheRange', 'hibpCacheTtlHours']]) {
+  for (const [id, key] of [['autoLockRange', 'vaultTimeout'], ['clipboardRange', 'clipboardTimeout']]) {
     $(id).addEventListener('input', () => {
       const value = Number($(id).value);
       updateRangeLabel(id, value);

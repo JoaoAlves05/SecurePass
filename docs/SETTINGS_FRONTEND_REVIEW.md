@@ -2,6 +2,8 @@
 
 2026-10-25 · SecurePass 0.2.0 · `feature/settings-frontend-cleanup`
 
+Historical six-category increment. The subsequent user-approved [four-area revision](SETTINGS_FOUR_AREAS.md) supersedes its layout/navigation descriptions below. Linked screenshot paths are current fixtures and have been updated by the later revision.
+
 The user requested a design review followed by frontend corrections to make Settings cleaner, more intuitive and practical. This pass refines the existing extension interface and local workflows; the proposed Drive protocol remains outside this increment.
 
 ## Review evidence

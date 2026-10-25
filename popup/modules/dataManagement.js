@@ -76,23 +76,31 @@ export function attachDataListeners() {
     const result = await requestOperation({ title: 'Clear current entries', description: `All current entries will be removed. ${state.settings.useSync ? 'This deletion will also be published to legacy Chrome Sync.' : 'Sync is off; remote copies are unchanged.'} Encrypted recovery history remains.`, fields: [password()], confirmLabel: 'Clear entries', danger: true, submit: values => checked('CLEAR_VAULT_ENTRIES', { passphrase: values.password, expectedRevision: status.revision }) });
     if (result) showToast('Entries cleared; recovery history retained.', 'success');
   }));
-  $('restoreRecovery').addEventListener('click', () => runManagement(async () => {
-    const { snapshots } = await checked('RECOVERY_STATUS');
-    if (!snapshots.length) throw new Error('No local snapshots available.');
-    const choice = await requestOperation({ title: 'Choose a local snapshot', description: 'Restore an earlier version on this device. Your current vault will be preserved in recovery history.', fields: [{ name: 'id', label: 'Snapshot', options: snapshots.map(item => ({ value: item.id, label: snapshotLabel(item) })) }], confirmLabel: 'Review restore' });
-    if (!choice) return;
-    const status = await accessibleDestination(); if (!status) return;
-    const result = await requestOperation({ title: 'Restore snapshot locally', description: 'Sync will be turned off. Remote copies remain unchanged. Enter the master password used by this snapshot.', fields: [password()], confirmLabel: 'Restore locally', submit: values => checked('RESTORE_RECOVERY', { id: choice.id, passphrase: values.password, expectedRevision: status.revision || null }) });
-    if (result) showToast('Snapshot restored locally. Sync is off.', 'success');
-  }));
-  $('exportRecovery').addEventListener('click', () => runManagement(async () => {
-    const { snapshots } = await checked('RECOVERY_ARCHIVE_STATUS');
-    if (!snapshots.length) throw new Error('No recovery snapshots available.');
-    const choice = await requestOperation({ title: 'Export a recovery snapshot', description: 'This file keeps its historical master password. Export your current vault separately for a portable backup.', fields: [{ name: 'id', label: 'Snapshot', options: snapshots.map(item => ({ value: item.id, label: `${item.source} · ${snapshotLabel(item)}` })) }], confirmLabel: 'Export snapshot' });
-    if (!choice) return;
-    const result = await checked('EXPORT_RECOVERY_SNAPSHOT', { id: choice.id });
-    downloadJSON(result.data, `securepass-snapshot-${choice.id.slice(0, 8)}.json`); showToast('Snapshot download requested.', 'success');
-  }));
+  $('snapshotList').addEventListener('click', event => {
+    const button = event.target.closest('button[data-snapshot-action]');
+    if (!button || !$('snapshotList').contains(button)) return;
+    const { snapshotId: id, snapshotAction: action } = button.dataset;
+    runManagement(async () => {
+      const { snapshots } = await checked('RECOVERY_ARCHIVE_STATUS');
+      const selected = snapshots.find(item => item.id === id);
+      if (!selected) throw new Error('This version is no longer available. Review the updated history.');
+      if (action === 'export') {
+        const result = await checked('EXPORT_RECOVERY_SNAPSHOT', { id });
+        downloadJSON(result.data, `securepass-snapshot-${id.slice(0, 8)}.json`);
+        showToast('Encrypted version download requested.', 'success');
+        return;
+      }
+      if (action !== 'restore') return;
+      if (selected.source !== 'Local') {
+        const result = await checked('EXPORT_RECOVERY_SNAPSHOT', { id });
+        await restoreRecord(result.data.snapshots[0]);
+        return;
+      }
+      const status = await accessibleDestination(); if (!status) return;
+      const result = await requestOperation({ title: 'Restore snapshot locally', description: 'Your current vault is kept in recovery history. Sync turns off; remote copies remain. Enter the master password used by this version.', fields: [password()], confirmLabel: 'Restore locally', submit: values => checked('RESTORE_RECOVERY', { id, passphrase: values.password, expectedRevision: status.revision || null }) });
+      if (result) showToast('Snapshot restored locally. Sync is off.', 'success');
+    });
+  });
   $('wipeDevice').addEventListener('click', () => runManagement(async () => {
     const result = await requestOperation({ title: 'Erase only this device', description: 'Deletes the local vault, snapshots, biometric setup and preferences. Remote copies remain. If you cannot unlock damaged or forgotten data, choose erase without unlocking and type ERASE THIS DEVICE.', fields: [{ name: 'mode', label: 'Verification', options: [{ value: 'password', label: 'Verify current master password' }, { value: 'force', label: 'Erase without unlocking (irreversible)' }] }, { ...password(), required: false }, { name: 'confirmation', label: 'Type ERASE THIS DEVICE for erasure without unlocking', required: false }], confirmLabel: 'Erase this device', danger: true, submit: values => checked('WIPE_DEVICE', { passphrase: values.password, force: values.mode === 'force', confirmation: values.confirmation }) });
     if (result) location.reload();

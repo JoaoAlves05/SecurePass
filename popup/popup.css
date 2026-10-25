@@ -125,7 +125,8 @@ body[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.4);
 }
 
-.app-container {
+.app-container,
+.settings-surface {
   display: flex;
   flex-direction: column;
   height: 100vh;

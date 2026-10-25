@@ -8,7 +8,7 @@ const $ = id => document.getElementById(id);
 let lastRemote = null;
 const master = { name: 'password', label: 'Master password for the selected remote vault', type: 'password' };
 export async function refreshSyncView(inspectRemote = false) {
-  const [sync, recovery] = await Promise.allSettled([checked('SYNC_STATUS', { inspectRemote }), checked('RECOVERY_STATUS')]);
+  const [sync, recovery] = await Promise.allSettled([checked('SYNC_STATUS', { inspectRemote }), checked('RECOVERY_ARCHIVE_STATUS')]);
   if (sync.status === 'fulfilled') {
     const status = sync.value.status;
     if (status.remoteInspected) lastRemote = status;
@@ -17,6 +17,10 @@ export async function refreshSyncView(inspectRemote = false) {
     $('retrySync').disabled = !status.enabled || !status.pending;
     $('compactSync').disabled = !status.enabled || !status.heads.length || Boolean(status.issues.length);
     $('clearSyncArchive').disabled = !status.recoveryArchiveCount;
+    $('clearSyncArchive').hidden = !status.recoveryArchiveCount;
+    $('retrySync').hidden = !status.enabled || !status.pending;
+    $('compactSync').hidden = $('compactSync').disabled;
+    $('syncMaintenance').hidden = $('retrySync').hidden && $('compactSync').hidden;
     $('syncCapacity').textContent = status.bytesUsed === undefined ? 'Check existing copies to inspect legacy storage usage.' : `${status.bytesUsed.toLocaleString()} bytes in ${status.itemCount} legacy items. Another complete version needs additional space.`;
     const heads = lastRemote?.heads || []; const select = $('syncVersions'); const previous = select.value;
     select.replaceChildren();
@@ -29,15 +33,32 @@ export async function refreshSyncView(inspectRemote = false) {
     $('downloadSync').disabled = !heads.length; $('mergeSync').disabled = !heads.length;
   } else $('syncStatus').textContent = `Could not check Sync: ${sync.reason.message}. Local recovery remains available.`;
   if (recovery.status === 'fulfilled') {
-    const snapshots = recovery.value.snapshots;
-    $('recoveryStatus').textContent = `${snapshots.length} local recovery snapshot${snapshots.length === 1 ? '' : 's'}. Each snapshot keeps its historical password.`;
-    $('restoreRecovery').disabled = !snapshots.length;
-    const list = $('snapshotList'); list.replaceChildren();
-    for (const item of snapshots) {
-      const row = document.createElement('div'); row.className = 'snapshot-item';
-      const title = document.createElement('strong'); title.textContent = item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'Legacy snapshot';
-      row.append(title, document.createTextNode(`Version ${item.id.slice(0, 8)} · encrypted`)); list.append(row);
+    const snapshots = [];
+    for (const item of recovery.value.snapshots) {
+      if (!snapshots.some(snapshot => snapshot.id === item.id)) snapshots.push(item);
     }
+    $('recoveryStatus').textContent = snapshots.length
+      ? `${snapshots.length} saved version${snapshots.length === 1 ? '' : 's'}. Restoring a version turns Sync off on this device.`
+      : 'No earlier versions yet. They appear here after your vault changes.';
+    const list = $('snapshotList');
+    const focused = list.contains(document.activeElement) ? { id: document.activeElement.dataset.snapshotId, action: document.activeElement.dataset.snapshotAction } : null;
+    list.replaceChildren();
+    for (const item of snapshots) {
+      const row = document.createElement('div'); row.className = 'snapshot-item card';
+      const title = document.createElement('strong'); title.textContent = item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'Legacy snapshot';
+      const description = document.createElement('p'); description.className = 'row-sub';
+      description.textContent = `${item.source === 'Local' ? 'Local version' : 'Archived Chrome Sync copy'} · ${item.id.slice(0, 8)} · encrypted`;
+      const actions = document.createElement('div'); actions.className = 'snapshot-actions';
+      for (const [action, label] of [['restore', 'Restore'], ['export', 'Export']]) {
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'secondary compact-btn';
+        button.textContent = label; button.dataset.snapshotId = item.id; button.dataset.snapshotAction = action;
+        button.setAttribute('aria-label', `${label} version ${item.id.slice(0, 8)}`); actions.append(button);
+        if (focused?.id === item.id && focused.action === action) button.dataset.restoreFocus = 'true';
+      }
+      row.append(title, description, actions); list.append(row);
+    }
+    const restoreFocus = list.querySelector('[data-restore-focus]');
+    if (restoreFocus) { restoreFocus.removeAttribute('data-restore-focus'); restoreFocus.focus({ preventScroll: true }); }
   } else $('recoveryStatus').textContent = `Could not read local history: ${recovery.reason.message}`;
 }
 async function changeMode(payload) {

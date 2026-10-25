@@ -2,7 +2,11 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-## Settings frontend refinement — 2026-10-25
+## Current four-area Settings revision — 2026-10-25
+
+The [four-area revision](SETTINGS_FOUR_AREAS.md) reuses the extension's existing styling, removes the device overview/section combobox and supplies direct General/Security/Backups/Advanced tabs. Validation passed: 57 Node tests, 73 checked modules, the general browser/virtual-PRF suite and expanded settings journeys including light/dark popup/full-tab layouts, real backup/version downloads, local/archive recovery, reset/cache/entry/archive cleanup, master-password rotation and local erasure. These are disposable automated scenarios; underlying protocol and hardware acceptance limits remain.
+
+## Previous Settings frontend refinement — 2026-10-25
 
 The [frontend review and evidence](SETTINGS_FRONTEND_REVIEW.md) records the category-based settings navigation, accessible theme/range controls, save feedback, popup/tab layouts and focus corrections. Validation: 57 Node tests, 73 checked modules, the settings browser journeys and the general browser/virtual-PRF suite passed. Screenshots cover the revised light/dark management page and popup. This frontend increment does not close the underlying transport/protocol acceptance gates.
 

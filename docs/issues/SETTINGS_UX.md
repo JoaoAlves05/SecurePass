@@ -17,3 +17,7 @@ Design screens against SC01–SC58, implement verifiable local/preferences/backu
 ## Frontend refinement follow-up — 2026-10-25
 
 The user requested an Impeccable design review and implementation of a cleaner, more intuitive settings interface. This follow-up is on `feature/settings-frontend-cleanup`; its review, changes, checks and screenshots are recorded in [SETTINGS_FRONTEND_REVIEW.md](../SETTINGS_FRONTEND_REVIEW.md). It reorganizes existing frontend controls and preserves the local/legacy safety boundaries and explicit Drive unavailability. The original issue and release gates are not closed by this visual increment.
+
+## Approved four-area revision — 2026-10-25
+
+The user approved implementation directly on `main`, followed by a focused commit and push for practical review. Reuse the extension's existing visual language, remove the separate header surface and device/unlock/export overview, and replace the section combobox/sidebar with four always-visible tabs: General, Security, Backups, Advanced. Keep common controls directly accessible, move version actions onto their rows, and preserve working authentication, recovery, legacy Sync and deletion flows. Validate browser states and responsive light/dark layouts before publishing the commit.
