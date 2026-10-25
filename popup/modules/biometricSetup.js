@@ -15,8 +15,8 @@ export async function syncBiometricView() {
   $('biometricRevokeHelp').hidden = !enabled;
   $('biometricBtnLabel').textContent = enabled ? 'Replace biometric authenticator' : 'Set up biometric unlock';
   $('biometricBtnSub').textContent = status.requiresReconfiguration
-    ? 'Previous setup was revoked; set up a PRF-capable authenticator again'
-    : 'Use your device authenticator with PRF support';
+    ? 'Previous setup was removed. Set up a compatible authenticator again.'
+    : 'Use a compatible fingerprint, face, PIN or security key';
 }
 export function attachBiometricListeners() {
   document.addEventListener('vault-ui-state', () => syncBiometricView().catch(() => {}));

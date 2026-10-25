@@ -2,6 +2,10 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Settings frontend refinement — 2026-10-25
+
+The [frontend review and evidence](SETTINGS_FRONTEND_REVIEW.md) records the category-based settings navigation, accessible theme/range controls, save feedback, popup/tab layouts and focus corrections. Validation: 57 Node tests, 73 checked modules, the settings browser journeys and the general browser/virtual-PRF suite passed. Screenshots cover the revised light/dark management page and popup. This frontend increment does not close the underlying transport/protocol acceptance gates.
+
 ## Current settings/data increment — 2026-10-25
 
 The [implementation evidence](SETTINGS_UX_IMPLEMENTATION.md) records 57 passing Node tests, 72 checked modules, the new management/backup/recovery browser journeys and the existing browser/virtual-PRF and emulated Sync suites. The [design](SETTINGS_UX_DESIGN.md) maps all 58 scenarios; design coverage is not runtime acceptance. Drive OAuth/protocol, recovery kit, physical hardware and independent review remain gates.

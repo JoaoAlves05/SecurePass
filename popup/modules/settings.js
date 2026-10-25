@@ -6,6 +6,17 @@ import { DEFAULT_SETTINGS } from '../../src/settings.js';
 import { requestOperation } from './operationDialog.js';
 let saving = Promise.resolve(); let lastQueued; let sequence = 0;
 const $ = id => document.getElementById(id);
+function setSaveStatus(message, status = '') {
+  $('settingsSaveStatus').textContent = message;
+  $('settingsSaveStatus').dataset.state = status;
+}
+function updateRangeLabel(id, value) {
+  const text = id === 'autoLockRange' ? `${value} ${value === 1 ? 'minute' : 'minutes'}`
+    : id === 'hibpCacheRange' ? `${value} ${value === 1 ? 'hour' : 'hours'}`
+    : value ? `${value} seconds` : 'Never';
+  $(id === 'autoLockRange' ? 'autoLockLabel' : id === 'hibpCacheRange' ? 'hibpCacheLabel' : 'clipboardLabel').textContent = id === 'clipboardRange' && value ? `After ${text}` : text;
+  $(id).setAttribute('aria-valuetext', text);
+}
 export function initialiseSettings(response) {
   state.settings = response.settings; state.settingsRevision = response.revision; lastQueued = structuredClone(response.settings);
 }
@@ -14,6 +25,7 @@ export function scheduleSettingsSave() {
   for (const key of Object.keys(DEFAULT_SETTINGS)) if (key !== 'useSync' && snapshot[key] !== lastQueued?.[key]) patch[key] = snapshot[key];
   lastQueued = snapshot; if (!Object.keys(patch).length) return saving;
   const ticket = ++sequence;
+  setSaveStatus('Saving preferences…');
   saving = saving.catch(() => {}).then(async () => {
     const current = await sendMessage('LOAD_SETTINGS');
     if (!current.ok) throw new Error(current.error);
@@ -25,17 +37,21 @@ export function scheduleSettingsSave() {
         initialiseSettings(actual); applyTheme(state.settings.theme); syncSettingsView();
         const { syncGeneratorControls } = await import('./generator.js'); syncGeneratorControls();
       }
+      setSaveStatus(response.ok ? 'Preferences saved' : 'Could not save preferences. Please try again.', response.ok ? '' : 'error');
     }
-  }).catch(error => showToast(error.message, 'error'));
+  }).catch(error => {
+    showToast(error.message, 'error');
+    if (ticket === sequence) setSaveStatus('Could not save preferences. Please try again.', 'error');
+  });
   return saving;
 }
 export function syncSettingsView() {
   if (!state.settings) return;
   document.querySelectorAll('input[name="appearanceTheme"]').forEach(input => { input.checked = input.value === state.settings.theme; });
-  $('autoLockRange').value = state.settings.vaultTimeout; $('autoLockLabel').textContent = `${state.settings.vaultTimeout} min`;
-  $('clipboardRange').value = state.settings.clipboardTimeout; $('clipboardLabel').textContent = state.settings.clipboardTimeout ? `${state.settings.clipboardTimeout}s (best effort)` : 'Never';
+  $('autoLockRange').value = state.settings.vaultTimeout; updateRangeLabel('autoLockRange', state.settings.vaultTimeout);
+  $('clipboardRange').value = state.settings.clipboardTimeout; updateRangeLabel('clipboardRange', state.settings.clipboardTimeout);
   $('syncToggle').checked = state.settings.useSync;
-  $('hibpCacheRange').value = state.settings.hibpCacheTtlHours; $('hibpCacheLabel').textContent = `${state.settings.hibpCacheTtlHours} hours`;
+  $('hibpCacheRange').value = state.settings.hibpCacheTtlHours; updateRangeLabel('hibpCacheRange', state.settings.hibpCacheTtlHours);
 }
 export function attachSettingsListeners() {
   const refreshCache = async () => { const result = await sendMessage('HIBP_CACHE_STATUS'); if (result.ok) $('hibpCacheUsage').textContent = `${result.entries} cached ranges · ${result.bytes.toLocaleString()} bytes`; };
@@ -48,7 +64,7 @@ export function attachSettingsListeners() {
   for (const [id, key] of [['autoLockRange', 'vaultTimeout'], ['clipboardRange', 'clipboardTimeout'], ['hibpCacheRange', 'hibpCacheTtlHours']]) {
     $(id).addEventListener('input', () => {
       const value = Number($(id).value);
-      $(id === 'autoLockRange' ? 'autoLockLabel' : id === 'hibpCacheRange' ? 'hibpCacheLabel' : 'clipboardLabel').textContent = id === 'clipboardRange' && !value ? 'Never' : `${value}${id === 'autoLockRange' ? ' min' : id === 'hibpCacheRange' ? ' hours' : 's (best effort)'}`;
+      updateRangeLabel(id, value);
     });
     $(id).addEventListener('change', () => {
       const value = Number($(id).value); state.settings[key] = key === 'clipboardTimeout' && value > 0 ? Math.max(30, value) : value;

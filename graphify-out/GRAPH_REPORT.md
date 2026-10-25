@@ -1,66 +1,64 @@
 # Graph Report - SecurePass  (2026-10-25)
 
 ## Corpus Check
-- 100 files · ~60,757 words
+- 104 files · ~62,379 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 5 file(s) not represented in the graph (top: (none) 3, .css 2)
 
 ## Summary
-- 922 nodes · 2238 edges · 58 communities (33 shown, 25 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.85)
-- Token cost: host-agent semantic usage is not exposed; zero placeholders are not measured cost.
+- 955 nodes · 2357 edges · 57 communities (33 shown, 24 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 29 edges (avg confidence: 0.88)
+- Token cost: semantic extraction usage unavailable (collaboration tools do not expose token counts); numeric extraction zeros are schema placeholders, not measured usage.
 
 ## Graph Freshness
-- Built from commit: `e97f4c65`
+- Built from commit: `aee4249b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Criptografia e armazenamento
 - Autorização e pedidos autofill
-- Documentação de Sync e dados
-- Revisão funcional histórica
-- Arquitetura documentada
-- dataManagement.js
-- Edição do cofre
-- Ferramentas de desenvolvimento
-- Edição do cofre
-- Manifesto da extensão
+- popup.js
 - Constantes e registos
 - Autofill na página
-- Autenticação WebAuthn
-- Avaliação de palavras-passe
-- Interface do popup
-- Funcionalidades documentadas
-- Documentação de Sync e dados
-- Settings UX implementation and evidence
-- Avaliação de palavras-passe
-- Navegação e diálogos
-- Modelo de segurança
-- Settings UX — journeys, screens and acceptance map
-- Validação e aceitação
-- Implementação e migração
-- Regras do repositório
-- Ferramentas de desenvolvimento
-- Confirmação de autofill
+- dataManagement.js
+- Edição do cofre
+- modules/settings.js
 - Ferramentas de desenvolvimento
 - Ferramentas de desenvolvimento
 - settings-browser.mjs
-- Captura de configurações
 - Ferramentas de desenvolvimento
-- Captura de recuperação
-- Ferramentas de desenvolvimento
-- Captura do cofre
-- Settings e percursos de dados
-- Settings e percursos de dados
-- Settings e percursos de dados
+- Avaliação de palavras-passe
 - Operações do clipboard
-- Settings e percursos de dados
-- modules/settings.js
-- ref_node_fs
-- Documento offscreen
-- Implementação e migração
 - Análise de formulários
+- Edição do cofre
+- Ferramentas de desenvolvimento
+- Autorização e pedidos autofill
+- Manifesto da extensão
+- Ferramentas de desenvolvimento
+- Ferramentas de desenvolvimento
+- Ferramentas de desenvolvimento
+- Funcionalidades documentadas
+- Documentação de Sync e dados
+- Settings UX implementation and evidence
+- Documentação de Sync e dados
+- Modelo de segurança
+- Settings UX — journeys, screens and acceptance map
+- Interface do popup
+- Implementação e migração
+- Regras do repositório
+- Revisão funcional histórica
+- Confirmação de autofill
+- Evidência visual das definições
+- Captura do cofre
+- Evidência visual das definições
+- Evidência visual das definições
+- Evidência visual das definições
+- Evidência visual das definições
+- Evidência visual das definições
+- Evidência visual das definições
+- Three local recovery snapshots
+- Arquitetura documentada
+- Documento offscreen
 - Ícone 128 pixels
 - Ícone 16 pixels
 - Ícone 32 pixels
@@ -71,23 +69,23 @@
 2. `Current architecture with implemented local and legacy increment` - 47 edges
 3. `getStorage()` - 46 edges
 4. `Historical review of commit 5aed51c` - 44 edges
-5. `Proposed P6 migration and acceptance` - 42 edges
-6. `removeStorage()` - 41 edges
-7. `Original SD review with later local increment notice` - 41 edges
-8. `setStorage()` - 33 edges
-9. `showToast()` - 31 edges
-10. `loadSettings()` - 29 edges
+5. `showToast()` - 42 edges
+6. `Proposed P6 migration and acceptance` - 42 edges
+7. `removeStorage()` - 41 edges
+8. `Original SD review with later local increment notice` - 41 edges
+9. `initialise()` - 36 edges
+10. `setStorage()` - 33 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `Scope` --semantically_similar_to--> `Disabled Drive connection with truthful prerequisites`  [INFERRED] [semantically similar]
+  docs/issues/SETTINGS_UX.md → popup/popup.html
 - `Extension-owned secure confirmation page` --semantically_similar_to--> `Origin and document bound autofill`  [INFERRED] [semantically similar]
   auth/auth.html → ARCHITECTURE.md
-- `initialise()` --indirect_call--> `changeMasterPassword()`  [INFERRED]
-  popup/popup.js → src/cryptoVault.js
-- `attachGeneratorListeners()` --calls--> `copyToClipboard()`  [EXTRACTED]
-  popup/modules/generator.js → src/utils/clipboard.js
-- `renderEntries()` --calls--> `copyToClipboard()`  [EXTRACTED]
-  popup/modules/vault.js → src/utils/clipboard.js
-- `attachBiometricListeners()` --calls--> `authenticateBiometric()`  [EXTRACTED]
+- `HTML category ownership and dedicated settings styles` --conceptually_related_to--> `Settings and data surface with management entry`  [INFERRED]
+  docs/SETTINGS_FRONTEND_REVIEW.md → popup/popup.html
+- `ready` --calls--> `removeStorage()`  [EXTRACTED]
+  background/serviceWorker.js → src/utils/storage.js
+- `attachBiometricListeners()` --calls--> `enrollBiometric()`  [EXTRACTED]
   popup/modules/biometricSetup.js → src/biometric/client.js
 
 ## Import Cycles
@@ -95,161 +93,167 @@
 
 ## Hyperedges (group relationships)
 - **Trusted autofill disclosure boundary** — architecture_capability_policy, architecture_autofill_confirmation, architecture_storage_restriction [EXTRACTED 1.00]
-- **Disposable browser validation boundaries** — docs_validation_chromium, docs_validation_virtual_prf, docs_validation_two_profile_sync [EXTRACTED 1.00]
+- **Settings refinement addresses review findings through navigation layout and controls** — docs_settings_frontend_review_priority_findings, docs_settings_frontend_review_category_navigation, docs_settings_frontend_review_simplified_layout, docs_settings_frontend_review_accessible_controls, docs_settings_frontend_review_focus_and_disclosure [EXTRACTED 1.00]
+- **Six selected Settings categories** — popup_popup_navigation, popup_popup_mobile_navigation, popup_popup_security, popup_popup_appearance, popup_popup_data_management, popup_popup_sync, popup_popup_recovery, popup_popup_danger_zone [EXTRACTED 1.00]
+- **Disposable browser checks with virtual PRF and emulated Sync** — docs_validation_chromium, docs_validation_virtual_prf, docs_validation_two_profile_sync [EXTRACTED 1.00]
 
-## Communities (58 total, 25 thin omitted)
+## Communities (57 total, 24 thin omitted)
 
 ### Community 0 - "Criptografia e armazenamento"
-Cohesion: 0.06
-Nodes (122): DECODER, decryptBackupPayload(), deriveBackupKey(), ENCODER, encryptBackupPayload(), isEncryptedBackupEnvelope(), copyInBackground(), ensureOffscreen() (+114 more)
+Cohesion: 0.09
+Nodes (86): decryptBackupPayload(), deriveBackupKey(), encryptBackupPayload(), isEncryptedBackupEnvelope(), changeMasterPassword(), clearVaultEntries(), deleteCredential(), importVaultData() (+78 more)
 
 ### Community 1 - "Autorização e pedidos autofill"
+Cohesion: 0.13
+Nodes (38): clearCandidates(), dismissCandidate(), listCandidates(), proposeCandidate(), reviewCandidate(), assertDocument(), cancelRequest(), clearRequests() (+30 more)
+
+### Community 10 - "popup.js"
+Cohesion: 0.32
+Nodes (11): resolveUnlockSetup(), attachSettingsNavigation(), initToast(), attachUIListeners(), closeModal(), closeSettingsPanel(), manageFocus(), openMasterModal() (+3 more)
+
+### Community 12 - "Constantes e registos"
+Cohesion: 0.11
+Nodes (21): format(), isArrayBufferLike(), isPrimitive(), isSensitiveString(), redactValue(), safeSerialize(), _serialize(), ALARM_NAME (+13 more)
+
+### Community 13 - "Autofill na página"
+Cohesion: 0.18
+Nodes (16): attachButton(), element(), initAutofill(), showSaveSuggestion(), setFieldValue(), visibleField(), request(), initThemeSync() (+8 more)
+
+### Community 14 - "dataManagement.js"
+Cohesion: 0.28
+Nodes (19): accessibleDestination(), attachDataListeners(), downloadJSON(), importFile(), password(), restoreRecord(), snapshotLabel(), attachManagementListeners() (+11 more)
+
+### Community 16 - "Edição do cofre"
+Cohesion: 0.32
+Nodes (20): attachBiometricListeners(), syncBiometricView(), refreshCandidates(), sendMessage(), showToast(), changeMasterPassword(), deleteCredential(), handleCreateMaster() (+12 more)
+
+### Community 23 - "modules/settings.js"
+Cohesion: 0.32
+Nodes (11): attachSettingsListeners(), initialiseSettings(), scheduleSettingsSave(), setSaveStatus(), syncSettingsView(), updateRangeLabel(), applyTheme(), resolveTheme() (+3 more)
+
+### Community 28 - "Ferramentas de desenvolvimento"
+Cohesion: 0.20
+Nodes (5): shadowClick(), find(), errors, root, server
+
+### Community 29 - "Ferramentas de desenvolvimento"
+Cohesion: 0.20
+Nodes (8): files(), visit(), done, graph, js, manifest, pkg, root
+
+### Community 34 - "Ferramentas de desenvolvimento"
+Cohesion: 0.25
+Nodes (3): contexts, profiles, root
+
+### Community 4 - "Avaliação de palavras-passe"
+Cohesion: 0.07
+Nodes (40): attachGeneratorListeners(), handleGenerate(), saveGeneratedToVault(), setLoading(), syncGeneratorControls(), attachTesterListeners(), mapScoreToColor(), saveTestedToVault() (+32 more)
+
+### Community 48 - "Operações do clipboard"
+Cohesion: 0.47
+Nodes (4): legacyClipboard(), read(), write(), serial
+
+### Community 7 - "Edição do cofre"
+Cohesion: 0.07
+Nodes (27): setUnlockResolver(), clearRevealTimer(), createVaultIconButton(), promptForMasterPassword(), biometricUnlockContainer, confirmMasterInput, confirmNextMasterInput, createMasterSection (+19 more)
+
+### Community 8 - "Ferramentas de desenvolvimento"
 Cohesion: 0.09
-Nodes (58): handlers, ready, clearCandidates(), dismissCandidate(), listCandidates(), proposeCandidate(), reviewCandidate(), assertDocument() (+50 more)
+Nodes (35): copyInBackground(), ensureOffscreen(), checkPassword(), clearHibpCache(), hibpCacheStatus(), range(), generatePassword(), randomIndex() (+27 more)
+
+### Community 9 - "Autorização e pedidos autofill"
+Cohesion: 0.08
+Nodes (56): complete(), refresh(), send(), showError(), assert(), authenticateBiometric(), enrollBiometric(), request() (+48 more)
+
+### Community 11 - "Manifesto da extensão"
+Cohesion: 0.08
+Nodes (23): action, default_popup, default_title, background, service_worker, type, content_scripts, content_security_policy (+15 more)
+
+### Community 32 - "Ferramentas de desenvolvimento"
+Cohesion: 0.25
+Nodes (8): devDependencies, fake-indexeddb@^6.2.4, playwright@1.56.1, name, private, type, version, playwright
+
+### Community 37 - "Ferramentas de desenvolvimento"
+Cohesion: 0.29
+Nodes (7): scripts, check, package, test, test:browser, test:settings-browser, test:sync-browser
+
+### Community 19 - "Settings UX implementation and evidence"
+Cohesion: 0.15
+Nodes (6): Delivered behavior, Executed checks, Remaining release gates, Review artifacts, Scenario coverage boundary, Settings UX implementation and evidence
 
 ### Community 2 - "Documentação de Sync e dados"
 Cohesion: 0.05
 Nodes (8): Comprehensive recommended v2 settings Sync devices and data plan, Chrome Identity, Chrome Storage, Drive appDataFolder, Drive errors, OWASP Cryptographic Storage, Web Crypto AES-GCM parameters, MV3 service worker lifecycle
 
-### Community 5 - "dataManagement.js"
-Cohesion: 0.19
-Nodes (25): accessibleDestination(), attachDataListeners(), downloadJSON(), importFile(), password(), restoreRecord(), snapshotLabel(), attachManagementListeners() (+17 more)
-
-### Community 6 - "Edição do cofre"
-Cohesion: 0.07
-Nodes (27): resolveUnlockSetup(), setUnlockResolver(), biometricUnlockContainer, clearRevealTimer(), confirmMasterInput, confirmNextMasterInput, createMasterSection, createVaultIconButton() (+19 more)
-
-### Community 7 - "Ferramentas de desenvolvimento"
-Cohesion: 0.16
-Nodes (16): fake-indexeddb, assertion(), b64(), client(), der(), registration(), request(), sender (+8 more)
-
-### Community 8 - "Edição do cofre"
-Cohesion: 0.27
-Nodes (21): attachBiometricListeners(), syncBiometricView(), refreshCandidates(), sendMessage(), showToast(), changeMasterPassword(), deleteCredential(), ensureVaultAccessible() (+13 more)
-
-### Community 9 - "Manifesto da extensão"
-Cohesion: 0.08
-Nodes (23): action, default_popup, default_title, background, service_worker, type, content_scripts, content_security_policy (+15 more)
-
-### Community 10 - "Constantes e registos"
-Cohesion: 0.11
-Nodes (21): ALARM_NAME, BIOMETRIC_SESSION_PASSPHRASE_KEY, CHUNK_SIZE, CLIPBOARD_ALARM_NAME, DB_STORE_NAME, DB_VERSION, LOG_ENABLED, META_KEY (+13 more)
-
-### Community 11 - "Autofill na página"
-Cohesion: 0.18
-Nodes (16): attachButton(), entry, element(), initAutofill(), pending, showSaveSuggestion(), submitted, tracked (+8 more)
-
-### Community 12 - "Autenticação WebAuthn"
-Cohesion: 0.20
-Nodes (18): complete(), refresh(), requestId, send(), showError(), assert(), authenticateBiometric(), clientId (+10 more)
-
-### Community 13 - "Avaliação de palavras-passe"
-Cohesion: 0.13
-Nodes (19): attachTesterListeners(), copyTestPasswordBtn, crackTimeEl, entropyEl, hibpButton, hibpStatus, mapScoreToColor(), passwordInput (+11 more)
-
-### Community 14 - "Interface do popup"
-Cohesion: 0.10
-Nodes (16): System light and dark theme controls, Local PRF enrollment and local wrapper removal controls, Ownership-aware clipboard timeout explanation, Backup import export reset and clear controls, Labelled credential editor dialog, Password generator tab and constraint controls, Explicit breach request and manageable HIBP cache, Current new and confirmation master password dialog (+8 more)
-
-### Community 18 - "Settings UX implementation and evidence"
-Cohesion: 0.15
-Nodes (6): Delivered behavior, Executed checks, Remaining release gates, Review artifacts, Scenario coverage boundary, Settings UX implementation and evidence
-
-### Community 19 - "Avaliação de palavras-passe"
-Cohesion: 0.12
-Nodes (16): avoidSimilar, copyGeneratedBtn, generateButton, generatedResult, generatorStatus, handleGenerate(), includeLower, includeNumbers (+8 more)
-
-### Community 20 - "Navegação e diálogos"
-Cohesion: 0.35
-Nodes (14): attachGeneratorListeners(), saveGeneratedToVault(), saveTestedToVault(), attachUIListeners(), closeModal(), closeSettingsPanel(), detectActiveOrigin(), manageFocus() (+6 more)
-
-### Community 22 - "Settings UX — journeys, screens and acceptance map"
+### Community 21 - "Settings UX — journeys, screens and acceptance map"
 Cohesion: 0.17
 Nodes (7): Delivery evidence, Information architecture, Interaction rules, Journey state machine, SC01–SC58 traceability, Screen sketches, Settings UX — journeys, screens and acceptance map
 
-### Community 26 - "Ferramentas de desenvolvimento"
-Cohesion: 0.20
-Nodes (8): done, files(), graph, js, manifest, pkg, root, visit()
+### Community 22 - "Interface do popup"
+Cohesion: 0.05
+Nodes (51): Ownership-aware clipboard timeout explanation, Settings frontend review and refinement, Frontend refinement checks and acceptance boundary, Frontend regression evidence and manual limits, Password generator tab and constraint controls, Reset preferences while retaining vault, Independent Impeccable review evidence, Security settings category (+43 more)
 
-### Community 27 - "Confirmação de autofill"
+### Community 31 - "Confirmação de autofill"
 Cohesion: 0.22
 Nodes (7): Explicit account selection section, Authenticator unlock button, Cancel confirmation button, Extension-owned secure confirmation page, Confirm save or update button, auth.js module bootstrap, Master password unlock form
 
-### Community 28 - "Ferramentas de desenvolvimento"
-Cohesion: 0.25
-Nodes (8): devDependencies, fake-indexeddb@^6.2.4, playwright@1.56.1, name, private, type, version, playwright
-
-### Community 29 - "Ferramentas de desenvolvimento"
-Cohesion: 0.22
-Nodes (5): errors, root, server, shadowClick(), find()
-
-### Community 31 - "Captura de configurações"
-Cohesion: 0.32
-Nodes (8): WebAuthn PRF biometric unlock, Chrome Sync encrypted vault, Master password fallback, No device-local bypass key, Refresh remote versions, Biometric and Sync settings screenshot, Unlock after storage mode change, Unlock to publish or resolve versions
-
-### Community 32 - "Ferramentas de desenvolvimento"
-Cohesion: 0.25
-Nodes (3): contexts, profiles, root
-
-### Community 33 - "Captura de recuperação"
-Cohesion: 0.29
-Nodes (7): Clear archived Sync versions, Erase this device, Export recovery archive, Encrypted recovery snapshots, Restore a local snapshot, Recovery settings screenshot, Unlock after storage mode change
-
-### Community 34 - "Ferramentas de desenvolvimento"
-Cohesion: 0.29
-Nodes (7): scripts, check, package, test, test:browser, test:settings-browser, test:sync-browser
-
-### Community 37 - "Captura do cofre"
+### Community 40 - "Evidência visual das definições"
 Cohesion: 0.33
-Nodes (6): Copy edit and delete controls, Credential cards, Generator Tester Vault tabs, Unlocked vault screenshot, Settings navigation, Search add and lock controls
+Nodes (6): Biometric unlock setup row and collapsed About biometric unlock disclosure, Change master password navigation row, Clear copied passwords: After 30 seconds slider and best-effort copy-matching text, Green toast: Legacy Sync mode updated. Unlock the active vault again., Open in tab header action, Settings popup screenshot
 
-### Community 38 - "Settings e percursos de dados"
+### Community 41 - "Captura do cofre"
 Cohesion: 0.33
-Nodes (6): Export Vault encrypted JSON and Import Vault review or restore controls, Google Drive setup pending; connection button disabled and no account connected, Dark Settings & data management screenshot, Sync off with Check existing Chrome Sync copies and existing-version controls, Snapshot restored locally; Sync is off toast, Local unlocked vault summary with Lock vault and disabled Export backup
+Nodes (6): Settings navigation, Copy edit and delete controls, Generator Tester Vault tabs, Credential cards, Search add and lock controls, Unlocked vault screenshot
 
-### Community 39 - "Settings e percursos de dados"
+### Community 42 - "Evidência visual das definições"
 Cohesion: 0.33
-Nodes (6): Google Drive setup pending: connection awaits Google authorization and device security; no Google account connected, Existing Chrome Sync copies: explicit inspection of old remote versions while automatic Sync is off, Backup actions: encrypted JSON export with separate backup password; import to review or restore into a new vault, Notification: snapshot restored locally; Sync is off, Local vault summary: saved on this device, unlocked, Lock vault and Export backup actions, Light settings and data screen: vault summary above two columns for Sync and Backups & Data
+Nodes (6): Preferences save automatically notice, This device panel with saved locally and unlocked labels, Settings sidebar with Appearance selected, Reset preferences row describing theme, generator and timeout defaults, Appearance settings screenshot in dark theme, Theme cards: System, Light, and selected Dark
 
-### Community 40 - "Settings e percursos de dados"
+### Community 43 - "Evidência visual das definições"
 Cohesion: 0.33
-Nodes (6): Google Drive Setup pending with no account connected and partially visible disabled connection control, Settings & data compact popup overview, Your vault, under your control: saved on this device and unlocked, Open management control in popup header, Sync, Backups, Recovery and Security navigation, Lock vault and Export backup controls
+Nodes (6): Confirmation contains wrong with ERASE THIS DEVICE validation message, Cancel and red Erase this device buttons, Copy states local data deletion and remote copies remain, Visible master password field and show password control, Verification selector showing erase without unlocking (irreversible), Erase only this device dialog
 
-### Community 41 - "Operações do clipboard"
-Cohesion: 0.47
-Nodes (4): legacyClipboard(), read(), serial, write()
+### Community 44 - "Evidência visual das definições"
+Cohesion: 0.33
+Nodes (6): Auto-lock vault slider displaying 16 minutes, Clear copied passwords slider displaying After 30 seconds and best-effort copy-matching note, This device status with Lock vault and Export backup actions, Sidebar categories with Security selected, Change master password and set up biometric unlock rows with About biometric unlock disclosure, Dark settings security screen
 
-### Community 42 - "Settings e percursos de dados"
-Cohesion: 0.50
-Nodes (5): Erase only this device: centered dark confirmation dialog with Cancel and Erase this device actions, Verification selects Erase without unlocking (irreversible), requiring typed ERASE THIS DEVICE confirmation, Dialog states deletion of local vault, snapshots, biometric setup and preferences; remote copies remain, Settings management screen remains dimmed and blurred behind the erasure dialog, Typed confirmation is wrong; inline red error requests ERASE THIS DEVICE to erase local data without unlocking
+### Community 45 - "Evidência visual das definições"
+Cohesion: 0.33
+Nodes (6): Preferences save automatically notice, Local unlocked device summary with Lock vault and Export backup controls, Settings navigation with Security selected, Master-password and biometric unlock actions with collapsed information sections, Auto-lock 16 minutes and copied-password clearing 30 seconds sliders, Light settings management screenshot
 
-### Community 43 - "modules/settings.js"
-Cohesion: 0.70
-Nodes (4): applyTheme(), resolveTheme(), systemPrefersDark(), watchSystemTheme()
+### Community 46 - "Evidência visual das definições"
+Cohesion: 0.33
+Nodes (6): This device: Saved locally · Unlocked, Lock vault and Export backup, Reset preferences: restore theme, generator and timeout defaults; vault is kept, Settings section selector displaying Appearance, System theme highlighted as selected, Theme choices: System, Light and Dark, Settings popup showing the Appearance section
 
-### Community 46 - "Implementação e migração"
-Cohesion: 0.83
-Nodes (3): Acceptance, Local issue — Settings, Sync and Data Management journeys, Scope
+### Community 47 - "Evidência visual das definições"
+Cohesion: 0.33
+Nodes (6): Auto-lock vault: 15 minutes of inactivity, Clear copied passwords: After 30 seconds, This device: Saved locally · Unlocked, Security settings section selector, Settings popup view, Lock vault and Export backup actions
+
+### Community 49 - "Three local recovery snapshots"
+Cohesion: 0.40
+Nodes (5): Legacy Sync notice overlay, Export a recovery snapshot section, Recovery settings screenshot, Three local recovery snapshots, Snapshot explanation
 
 ## Knowledge Gaps
-- **70 isolated node(s):** `Explicit account selection section`, `Authenticator unlock button`, `Cancel confirmation button`, `Confirm save or update button`, `auth.js module bootstrap` (+65 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 438 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **86 isolated node(s):** `Chrome Identity`, `Chrome Storage`, `Drive appDataFolder`, `Drive errors`, `OWASP Cryptographic Storage` (+81 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 437 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Comprehensive recommended v2 settings Sync devices and data plan` connect `Documentação de Sync e dados` to `Revisão funcional histórica`, `Arquitetura documentada`, `Documentação de Sync e dados`, `Documentação de Sync e dados`, `Funcionalidades documentadas`, `Documentação de Sync e dados`, `Documentação de Sync e dados`, `Settings UX implementation and evidence`, `Settings UX — journeys, screens and acceptance map`, `Validação e aceitação`, `Implementação e migração`, `Regras do repositório`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
-- **What connects `Explicit account selection section`, `Authenticator unlock button`, `Cancel confirmation button` to the rest of the system?**
-  _70 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `Comprehensive recommended v2 settings Sync devices and data plan` connect `Documentação de Sync e dados` to `Revisão funcional histórica`, `Arquitetura documentada`, `Documentação de Sync e dados`, `Documentação de Sync e dados`, `Funcionalidades documentadas`, `Documentação de Sync e dados`, `Documentação de Sync e dados`, `Settings UX implementation and evidence`, `Settings UX — journeys, screens and acceptance map`, `Interface do popup`, `Implementação e migração`, `Regras do repositório`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **What connects `Chrome Identity`, `Chrome Storage`, `Drive appDataFolder` to the rest of the system?**
+  _86 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Criptografia e armazenamento` be split into smaller, more focused modules?**
-  _Cohesion score 0.061164187924751305 - nodes in this community are weakly interconnected._
-- **Why does `Current architecture with implemented local and legacy increment` connect `Arquitetura documentada` to `Documentação de Sync e dados`, `Revisão funcional histórica`, `Documento offscreen`, `Funcionalidades documentadas`, `Documentação de Sync e dados`, `Settings UX implementation and evidence`, `Settings UX — journeys, screens and acceptance map`, `Regras do repositório`, `Confirmação de autofill`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+  _Cohesion score 0.09110035766884073 - nodes in this community are weakly interconnected._
+- **Why does `Current architecture with implemented local and legacy increment` connect `Arquitetura documentada` to `Documentação de Sync e dados`, `Revisão funcional histórica`, `Funcionalidades documentadas`, `Documentação de Sync e dados`, `Documento offscreen`, `Settings UX implementation and evidence`, `Settings UX — journeys, screens and acceptance map`, `Regras do repositório`, `Confirmação de autofill`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Should `Autorização e pedidos autofill` be split into smaller, more focused modules?**
-  _Cohesion score 0.08864767073722297 - nodes in this community are weakly interconnected._
-- **Why does `Historical review of commit 5aed51c` connect `Revisão funcional histórica` to `Documentação de Sync e dados`, `Arquitetura documentada`, `Funcionalidades documentadas`, `Documentação de Sync e dados`, `Implementação e migração`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Should `Documentação de Sync e dados` be split into smaller, more focused modules?**
-  _Cohesion score 0.047619047619047616 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.13067552602436322 - nodes in this community are weakly interconnected._
+- **Why does `Dated validation evidence and missing acceptance` connect `Interface do popup` to `Documentação de Sync e dados`, `Funcionalidades documentadas`, `Documentação de Sync e dados`, `Documentação de Sync e dados`, `Settings UX implementation and evidence`, `Modelo de segurança`, `Settings UX — journeys, screens and acceptance map`, `Implementação e migração`, `Regras do repositório`?**
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Should `Constantes e registos` be split into smaller, more focused modules?**
+  _Cohesion score 0.10507246376811594 - nodes in this community are weakly interconnected._
+## Current Working Tree Refresh
+- Seven changed code files and four HTML/document files plus eight screenshots refreshed incrementally.
+- Final `graphify update .` confirmed the code snapshot and removed one obsolete unowned ghost reference; all saved semantic nodes remained.
+- Exact refreshed source hashes are recorded in graph.json. CSS remains an unclassified navigation gap.

@@ -13,3 +13,7 @@ Design screens against SC01–SC58, implement verifiable local/preferences/backu
 - Management works in a tab and the popup; destructive actions explain scope and require appropriate confirmation.
 - Existing credentials and snapshots remain recoverable; wrong passwords do not mutate data.
 - Checks, screenshots and remaining limitations are recorded before handoff.
+
+## Frontend refinement follow-up — 2026-10-25
+
+The user requested an Impeccable design review and implementation of a cleaner, more intuitive settings interface. This follow-up is on `feature/settings-frontend-cleanup`; its review, changes, checks and screenshots are recorded in [SETTINGS_FRONTEND_REVIEW.md](../SETTINGS_FRONTEND_REVIEW.md). It reorganizes existing frontend controls and preserves the local/legacy safety boundaries and explicit Drive unavailability. The original issue and release gates are not closed by this visual increment.

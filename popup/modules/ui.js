@@ -5,6 +5,7 @@ import { resolveUnlockSetup } from './modalResolver.js';
 
 const $ = id => document.getElementById(id);
 let previousFocus;
+let settingsTrigger;
 function manageFocus() {
   const modals = ['entryModal', 'masterModal', 'unlockSetupModal'].map($).filter(el => !el.classList.contains('hidden'));
   const settings = $('settingsPanel').classList.contains('visible');
@@ -23,11 +24,17 @@ export function setView(id) {
   });
 }
 export function openSettingsPanel() {
-  previousFocus = document.activeElement; $('settingsPanel').classList.add('visible'); $('settingsPanel').setAttribute('aria-hidden', 'false'); manageFocus(); $('closeSettings').focus();
+  settingsTrigger = $('openSettings'); $('settingsPanel').classList.add('visible'); $('settingsPanel').setAttribute('aria-hidden', 'false'); manageFocus();
+  if (document.body.classList.contains('management-mode')) {
+    [...document.querySelectorAll('.settings-navigation [aria-current], #settingsSectionSelect')].find(el => el.getClientRects().length)?.focus();
+  } else $('closeSettings').focus();
 }
 export function closeSettingsPanel() {
   if (document.body.classList.contains('management-mode')) return;
   $('settingsPanel').classList.remove('visible'); $('settingsPanel').setAttribute('aria-hidden', 'true'); manageFocus();
+  requestAnimationFrame(() => {
+    if ($('settingsPanel').getAttribute('aria-hidden') === 'true' && settingsTrigger?.isConnected) settingsTrigger.focus();
+  });
 }
 export function openModal(id) {
   previousFocus = document.activeElement;
@@ -85,7 +92,7 @@ export function attachUIListeners() {
     const active = modal || ($('settingsPanel').classList.contains('visible') ? $('settingsPanel') : null);
     if (event.key === 'Escape') { if (modal) closeModal(modal.id); else closeSettingsPanel(); }
     if (event.key === 'Tab' && active) {
-      const items = [...active.querySelectorAll('button, input, textarea, select, a[href], [tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length && !el.closest('[hidden]'));
+      const items = [...active.querySelectorAll('button, input, textarea, select, summary, a[href], [tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length && !el.closest('[hidden], [inert]'));
       if (!items.length) return;
       if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items.at(-1).focus(); }
       else if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0].focus(); }
