@@ -9,6 +9,7 @@ function manageFocus() {
   const modals = ['entryModal', 'masterModal', 'unlockSetupModal'].map($).filter(el => !el.classList.contains('hidden'));
   const settings = $('settingsPanel').classList.contains('visible');
   const active = modals.at(-1) || (settings ? $('settingsPanel') : null);
+  document.querySelector('.app-container')?.toggleAttribute('inert', Boolean(active));
   document.querySelector('main')?.toggleAttribute('inert', Boolean(active));
   for (const modal of ['entryModal', 'masterModal', 'unlockSetupModal'].map($)) modal.inert = Boolean(active && modal !== active);
   $('settingsPanel').inert = Boolean(modals.length) || !settings;
@@ -25,6 +26,7 @@ export function openSettingsPanel() {
   previousFocus = document.activeElement; $('settingsPanel').classList.add('visible'); $('settingsPanel').setAttribute('aria-hidden', 'false'); manageFocus(); $('closeSettings').focus();
 }
 export function closeSettingsPanel() {
+  if (document.body.classList.contains('management-mode')) return;
   $('settingsPanel').classList.remove('visible'); $('settingsPanel').setAttribute('aria-hidden', 'true'); manageFocus();
 }
 export function openModal(id) {
@@ -78,6 +80,7 @@ export function attachUIListeners() {
     const expanded = button.getAttribute('aria-expanded') === 'true'; button.setAttribute('aria-expanded', String(!expanded)); $(button.dataset.toggleTarget).hidden = expanded;
   }));
   document.addEventListener('keydown', event => {
+    if ($('operationDialog')?.open) return;
     const modal = ['unlockSetupModal', 'masterModal', 'entryModal'].map($).find(el => !el.classList.contains('hidden'));
     const active = modal || ($('settingsPanel').classList.contains('visible') ? $('settingsPanel') : null);
     if (event.key === 'Escape') { if (modal) closeModal(modal.id); else closeSettingsPanel(); }

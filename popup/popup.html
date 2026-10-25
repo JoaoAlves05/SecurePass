@@ -312,15 +312,27 @@
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
-          <h2>Settings</h2>
+          <h2>Settings &amp; data</h2>
+          <button id="openManagement" type="button" class="secondary compact-btn">Open management ↗</button>
         </div>
       </header>
 
       <div class="settings-scroll-container">
         <div class="settings-content-wrapper">
 
+          <section id="managementOverview" class="management-overview">
+            <span class="eyebrow">YOUR SECUREPASS</span>
+            <h3>Your vault, under your control.</h3>
+            <p id="managementVaultState" role="status">Checking this device…</p>
+            <div class="management-button-row"><button id="managementVaultAction" class="primary" type="button">Open vault</button><button id="managementBackupAction" class="secondary" type="button">Export backup</button></div>
+            <nav class="management-links" aria-label="Settings sections">
+              <a href="#syncSection">Sync</a><a href="#dataSection">Backups</a><a href="#recoverySection">Recovery</a><a href="#securitySection">Security</a>
+            </nav>
+            <p id="managementActivity" class="settings-status" role="status" aria-live="polite"></p>
+          </section>
+
           <!-- Appearance -->
-          <section class="settings-section">
+          <section id="preferencesSection" class="settings-section">
             <div class="section-header">
               <h3>Appearance</h3>
             </div>
@@ -371,7 +383,7 @@
           </section>
 
           <!-- Security -->
-          <section class="settings-section">
+          <section id="securitySection" class="settings-section">
             <div class="section-header">
               <h3>Security</h3>
             </div>
@@ -408,6 +420,7 @@
                 <span class="row-sub" id="hibpCacheLabel">24 hours</span>
               </div></div>
               <div class="card-row slider-row"><input id="hibpCacheRange" type="range" min="1" max="168" value="24" class="range-slider"></div>
+              <div class="card-row"><span id="hibpCacheUsage" class="row-sub">Cache usage</span><button id="clearHibpCache" class="secondary compact-btn" type="button">Clear cache</button></div>
               <div class="divider"></div>
               <button id="changeMasterKeyBtn" class="card-action-btn">
                 <div class="btn-icon">
@@ -480,60 +493,35 @@
             </div>
           </section>
 
-          <!-- Sync -->
-          <section class="settings-section">
-            <div class="section-header">
-              <h3>Sync</h3>
+          <section id="syncSection" class="settings-section">
+            <div class="section-header"><h3>Sync</h3><span class="section-caption">Your devices</span></div>
+            <div class="card sync-summary">
+              <div class="provider-heading"><span class="provider-symbol" aria-hidden="true">↗</span><div><strong>Google Drive</strong><p>End-to-end encrypted sync</p></div><span class="status-pill">Setup pending</span></div>
+              <p class="settings-info">Your vault works locally. Drive connection will be available after Google authorization and device security are configured. No Google account is connected.</p>
+              <button class="secondary" type="button" disabled aria-describedby="driveSetupHelp">Connect Google Drive</button>
+              <p id="driveSetupHelp" class="settings-info">Local backups and recovery are available now.</p>
             </div>
-            <div class="card">
-              <label class="card-row clickable" for="syncToggle">
-                <div class="row-info">
-                  <span class="row-label">Chrome Sync</span>
-                  <span class="row-sub">Sync encrypted vault across devices</span>
-                </div>
-                <div class="toggle-switch">
-                  <input type="checkbox" id="syncToggle" />
-                  <span class="slider"></span>
-                </div>
-              </label>
-              <div class="settings-info">
-                Sync stores encrypted vault versions in Chrome Sync, which has limited capacity. If publishing or resolving versions needs vault contents, SecurePass asks you to unlock here using biometrics when configured or your master password.
+            <div class="card legacy-card">
+              <p id="syncStatus" class="settings-status" role="status" aria-live="polite">Checking local sync state…</p>
+              <button type="button" id="refreshSync" class="settings-action"><span class="settings-action-title">Check existing Chrome Sync copies</span><span class="settings-action-description">Explicitly inspect old remote versions, including when automatic Sync is off.</span></button>
+              <div id="remoteVersionReview" class="remote-review" hidden>
+                <label class="sync-version-field" for="syncVersions">Choose an existing version<select id="syncVersions" disabled></select></label>
+                <div class="management-button-row"><button type="button" id="downloadSync" class="secondary" disabled>Restore on this device</button><button type="button" id="mergeSync" class="secondary" disabled>Combine with local vault</button></div>
+                <p class="settings-info">Restoring turns Sync off and leaves remote copies unchanged. Combining keeps the local vault’s master password.</p>
               </div>
-              <div class="divider"></div>
-              <div class="sync-controls">
-                <p id="syncStatus" class="settings-status" role="status" aria-live="polite">Checking remote versions…</p>
-                <button type="button" id="refreshSync" class="settings-action">
-                  <span class="settings-action-title">Refresh remote versions</span>
-                  <span class="settings-action-description">Check Chrome Sync for available vault versions.</span>
-                </button>
-                <label class="sync-version-field" for="syncVersions">
-                  <span class="settings-action-title">Remote vault version</span>
-                  <select id="syncVersions" aria-label="Remote vault version" disabled></select>
-                </label>
-                <button type="button" id="downloadSync" class="settings-action" disabled>
-                  <span class="settings-action-title">Use selected remote version</span>
-                  <span class="settings-action-description">Replace this device’s vault with that encrypted version. A recovery copy is kept.</span>
-                </button>
-                <button type="button" id="mergeSync" class="settings-action" disabled>
-                  <span class="settings-action-title">Merge selected version with local</span>
-                  <span class="settings-action-description">Combine entries; conflicting copies are retained separately.</span>
-                </button>
-                <button type="button" id="retrySync" class="settings-action" disabled>
-                  <span class="settings-action-title">Retry pending Sync</span>
-                  <span class="settings-action-description">Retry publishing changes already saved on this device.</span>
-                </button>
-                <button type="button" id="compactSync" class="settings-action" disabled>
-                  <span class="settings-action-title">Compact remote history</span>
-                  <span class="settings-action-description">Remove older ancestor versions, keeping current versions and archiving remote copies locally.</span>
-                </button>
-              </div>
+              <details id="legacySyncDetails"><summary>Advanced · legacy Chrome Sync</summary>
+                <p class="settings-info">Limited-capacity legacy transport. SecurePass asks you to unlock here before publishing when vault contents are needed. Export a backup before changing storage.</p>
+                <label class="card-row clickable" for="syncToggle"><span class="row-info"><span class="row-label">Legacy automatic publication</span><span class="row-sub">Use only for existing Chrome Sync installations</span></span><span class="toggle-switch"><input type="checkbox" id="syncToggle"><span class="slider"></span></span></label>
+                <p id="syncCapacity" class="settings-info"></p>
+                <div class="management-button-row"><button type="button" id="retrySync" class="secondary" disabled>Retry pending upload</button><button type="button" id="compactSync" class="secondary" disabled>Clean old remote history</button></div>
+              </details>
             </div>
           </section>
 
           <!-- Data Management -->
-          <section class="settings-section">
+          <section id="dataSection" class="settings-section">
             <div class="section-header">
-              <h3>Data Management</h3>
+              <h3>Backups &amp; data</h3>
             </div>
             <div class="card">
               <button id="resetSettings" class="card-action-btn">
@@ -568,7 +556,7 @@
                 </div>
                 <div class="btn-text">
                   <span class="btn-label">Export Vault</span>
-                  <span class="btn-sub">Download as JSON</span>
+                  <span class="btn-sub">Encrypted JSON with a separate backup password</span>
                 </div>
                 <div class="btn-arrow">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -589,7 +577,7 @@
                 </div>
                 <div class="btn-text">
                   <span class="btn-label">Import Vault</span>
-                  <span class="btn-sub">Restore from JSON</span>
+                  <span class="btn-sub">Review a backup, or restore into a new vault</span>
                 </div>
                 <div class="btn-arrow">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -624,17 +612,18 @@
             </div>
           </section>
 
-          <section class="settings-section">
+          <section id="recoverySection" class="settings-section">
             <div class="section-header">
               <h3>Recovery</h3>
             </div>
             <div class="card recovery-card">
               <p class="settings-info">Recovery snapshots are encrypted copies from earlier vault revisions. They are separate from a password-protected vault export in Data Management.</p>
               <p id="recoveryStatus" class="settings-status" role="status" aria-live="polite">Checking local recovery…</p>
+              <div id="snapshotList" class="snapshot-list" aria-label="Local recovery snapshots"></div>
               <div class="recovery-actions">
                 <button type="button" id="exportRecovery" class="settings-action">
-                  <span class="settings-action-title">Export recovery archive</span>
-                  <span class="settings-action-description">Download encrypted local snapshots and archived Sync versions.</span>
+                  <span class="settings-action-title">Export a recovery snapshot</span>
+                  <span class="settings-action-description">Choose an encrypted snapshot and download an individually restorable file.</span>
                 </button>
                 <button type="button" id="clearSyncArchive" class="settings-action" disabled>
                   <span class="settings-action-title">Clear archived Sync versions</span>
@@ -652,8 +641,13 @@
             </div>
           </section>
 
+          <section id="dangerSection" class="settings-section danger-section">
+            <div class="section-header"><h3>Danger zone</h3><span class="section-caption">Review the scope before confirming</span></div>
+            <div id="dangerActions" class="card"></div>
+          </section>
+
           <!-- About -->
-          <section class="settings-section">
+          <section id="aboutSection" class="settings-section">
             <div class="about-card">
               <div class="app-info">
                 <div class="app-logo-small">
@@ -847,6 +841,13 @@
     </form>
   </div>
 
+  <dialog id="operationDialog" class="operation-dialog" aria-labelledby="operationTitle" aria-describedby="operationDescription">
+    <form>
+      <span class="eyebrow">SECUREPASS</span><h2 id="operationTitle"></h2><p id="operationDescription"></p>
+      <div id="operationFields"></div><p id="operationError" class="operation-error" role="alert" tabindex="-1" hidden></p>
+      <div class="operation-actions"><button id="operationCancel" type="button" class="secondary">Cancel</button><button id="operationConfirm" type="submit" class="primary">Continue</button></div>
+    </form>
+  </dialog>
   <script type="module" src="popup.js"></script>
 </body>
 

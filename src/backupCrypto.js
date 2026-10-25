@@ -7,7 +7,7 @@ const DECODER = new TextDecoder();
 
 const BACKUP_ENCRYPTED_KIND = 'securepass-encrypted-backup';
 const BACKUP_ENCRYPTED_VERSION = 1;
-const BACKUP_PBKDF2_ITERATIONS = 450000;
+const BACKUP_PBKDF2_ITERATIONS = 600000;
 
 
 

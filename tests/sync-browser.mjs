@@ -29,7 +29,7 @@ try {
   const a = await profile(); const b = await profile();
   await send(a, 'INITIALIZE_VAULT', { passphrase }); await send(a, 'STORE_CREDENTIAL', { entry: entry('shared') });
   await send(a, 'SET_SYNC_MODE_SAFE', { targetUseSync: true });
-  await transport(a, b); await send(b, 'SET_SYNC_MODE_SAFE', { targetUseSync: true });
+  await transport(a, b); await send(b, 'SET_SYNC_MODE_SAFE', { targetUseSync: true, passphrase });
   await send(a, 'UNLOCK_VAULT', { passphrase }); await send(b, 'UNLOCK_VAULT', { passphrase });
   await send(a, 'STORE_CREDENTIAL', { entry: entry('offline-a') }); await send(b, 'STORE_CREDENTIAL', { entry: entry('offline-b') });
   await transport(a, b); await transport(b, a);
@@ -41,7 +41,7 @@ try {
   await send(a, 'UNLOCK_VAULT', { passphrase });
   const ids = (await send(a, 'LIST_CREDENTIALS')).entries.map(e => e.id);
   for (const id of ['shared', 'offline-a', 'offline-b']) assert.ok(ids.includes(id));
-  await transport(a, b); await send(b, 'SET_SYNC_MODE_SAFE', { targetUseSync: true, strategy: 'use-sync' }); await send(b, 'UNLOCK_VAULT', { passphrase });
+  await transport(a, b); await send(b, 'SET_SYNC_MODE_SAFE', { targetUseSync: true, strategy: 'use-sync', passphrase }); await send(b, 'UNLOCK_VAULT', { passphrase });
   assert.deepEqual((await send(b, 'LIST_CREDENTIALS')).entries.map(e => e.id).sort(), ids.sort());
   await send(a, 'SYNC_COMPACT'); assert.equal((await send(a, 'SYNC_STATUS')).status.heads.length, 1);
   console.log('Two-profile Sync checks passed: first download, offline branches, conflict prevention, lossless merge, re-download and safe compaction (emulated transport).');

@@ -2,6 +2,7 @@
 let timer;
 let serial = Promise.resolve();
 let generation = 0;
+let ownedValue = null;
 const enqueue = task => {
   const next = serial.then(task, task);
   serial = next.catch(() => {});
@@ -30,16 +31,23 @@ async function read() {
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (message?.target !== 'offscreen' || sender.id !== chrome.runtime.id || sender.tab || sender.url !== chrome.runtime.getURL('background/serviceWorker.js')) return;
   enqueue(async () => {
+    if (message.type === 'CLEAR_OWNED') {
+      clearTimeout(timer); generation++;
+      if (ownedValue !== null && await read() === ownedValue) await write('');
+      ownedValue = null;
+      return { ok: true };
+    }
     if (message.type !== 'COPY' || typeof message.value !== 'string' || message.value.length > 1024) throw new Error('Invalid clipboard request.');
     clearTimeout(timer); generation++;
-    await write(message.value);
+    await write(message.value); ownedValue = message.value;
     if (message.timeout > 0) {
       const expected = message.value;
       const ownGeneration = generation;
       timer = setTimeout(() => enqueue(async () => {
         if (ownGeneration !== generation) return;
         // Only clear a matching copy; never erase content subsequently copied by the user.
-        if (await read() === expected) await write('');
+        try { if (await read() === expected) await write(''); }
+        finally { if (ownGeneration === generation) ownedValue = null; }
       }).catch(() => {}), message.timeout * 1000);
     }
     return { ok: true };

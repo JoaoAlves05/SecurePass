@@ -1,5 +1,5 @@
 import { base64ToBuffer, bufferToBase64 } from '../encoding.js';
-import { validateImportData } from '../validation.js';
+import { validateImportData, validateVaultEntries } from '../validation.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
@@ -58,6 +58,7 @@ export function validateRecord(record) {
 }
 
 export async function createRecord(entries, passphrase, identity = {}) {
+  entries = validateVaultEntries(entries);
   const bytes = newKey();
   const record = {
     kind: 'securepass-vault', version: 2, vaultId: identity.vaultId || crypto.randomUUID(),
@@ -90,7 +91,8 @@ export async function decryptWithKey(record, bytes) {
 }
 
 export async function encryptEntries(previous, entries, bytes, parents = [previous.revision, ...previous.parents]) {
-  parents = [...new Set(parents)].slice(0, 256);
+  entries = validateVaultEntries(entries);
+  parents = [...new Set(parents)].slice(0, 160);
   const record = { ...previous, revision: crypto.randomUUID(), parents: [...new Set(parents)], updatedAt: new Date().toISOString() };
   record.data = await seal({ entries }, await aesKey(bytes), dataContext(record));
   return record;

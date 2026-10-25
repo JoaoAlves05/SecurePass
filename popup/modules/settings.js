@@ -3,20 +3,30 @@ import { sendMessage } from './messaging.js';
 import { showToast } from './toast.js';
 import { applyTheme } from './theme.js';
 import { DEFAULT_SETTINGS } from '../../src/settings.js';
-
-let saving = Promise.resolve();
+import { requestOperation } from './operationDialog.js';
+let saving = Promise.resolve(); let lastQueued; let sequence = 0;
 const $ = id => document.getElementById(id);
+export function initialiseSettings(response) {
+  state.settings = response.settings; state.settingsRevision = response.revision; lastQueued = structuredClone(response.settings);
+}
 export function scheduleSettingsSave() {
-  const snapshot = structuredClone(state.settings);
-  saving = saving.then(async () => {
-    const response = await sendMessage('SAVE_SETTINGS', { settings: snapshot });
-    if (!response.ok) {
-      const current = await sendMessage('LOAD_SETTINGS');
-      if (current.ok) state.settings = current.settings;
-      syncSettingsView(); showToast(response.error, 'error');
-      return;
+  const snapshot = structuredClone(state.settings); const patch = {};
+  for (const key of Object.keys(DEFAULT_SETTINGS)) if (key !== 'useSync' && snapshot[key] !== lastQueued?.[key]) patch[key] = snapshot[key];
+  lastQueued = snapshot; if (!Object.keys(patch).length) return saving;
+  const ticket = ++sequence;
+  saving = saving.catch(() => {}).then(async () => {
+    const current = await sendMessage('LOAD_SETTINGS');
+    if (!current.ok) throw new Error(current.error);
+    const response = await sendMessage('SAVE_SETTINGS', { patch, expectedRevision: current.revision });
+    if (!response.ok) showToast(response.error, 'error');
+    if (ticket === sequence) {
+      const actual = response.ok ? response : await sendMessage('LOAD_SETTINGS');
+      if (actual.ok) {
+        initialiseSettings(actual); applyTheme(state.settings.theme); syncSettingsView();
+        const { syncGeneratorControls } = await import('./generator.js'); syncGeneratorControls();
+      }
     }
-  });
+  }).catch(error => showToast(error.message, 'error'));
   return saving;
 }
 export function syncSettingsView() {
@@ -28,22 +38,28 @@ export function syncSettingsView() {
   $('hibpCacheRange').value = state.settings.hibpCacheTtlHours; $('hibpCacheLabel').textContent = `${state.settings.hibpCacheTtlHours} hours`;
 }
 export function attachSettingsListeners() {
+  const refreshCache = async () => { const result = await sendMessage('HIBP_CACHE_STATUS'); if (result.ok) $('hibpCacheUsage').textContent = `${result.entries} cached ranges · ${result.bytes.toLocaleString()} bytes`; };
+  $('clearHibpCache').addEventListener('click', async () => { const result = await sendMessage('HIBP_CLEAR_CACHE'); showToast(result.ok ? 'HIBP cache cleared.' : result.error, result.ok ? 'success' : 'error'); await refreshCache(); });
+  refreshCache();
   document.querySelectorAll('input[name="appearanceTheme"]').forEach(input => input.addEventListener('change', () => {
     if (!input.checked) return;
     state.settings.theme = input.value; applyTheme(input.value); scheduleSettingsSave();
   }));
   for (const [id, key] of [['autoLockRange', 'vaultTimeout'], ['clipboardRange', 'clipboardTimeout'], ['hibpCacheRange', 'hibpCacheTtlHours']]) {
-    $(id).addEventListener('input', () => { $(id === 'autoLockRange' ? 'autoLockLabel' : id === 'hibpCacheRange' ? 'hibpCacheLabel' : 'clipboardLabel').textContent = `${$(id).value}${id === 'autoLockRange' ? ' min' : id === 'hibpCacheRange' ? ' hours' : 's (best effort)'}`; });
-    $(id).addEventListener('change', () => {
+    $(id).addEventListener('input', () => {
       const value = Number($(id).value);
-      state.settings[key] = key === 'clipboardTimeout' && value > 0 ? Math.max(30, value) : value;
+      $(id === 'autoLockRange' ? 'autoLockLabel' : id === 'hibpCacheRange' ? 'hibpCacheLabel' : 'clipboardLabel').textContent = id === 'clipboardRange' && !value ? 'Never' : `${value}${id === 'autoLockRange' ? ' min' : id === 'hibpCacheRange' ? ' hours' : 's (best effort)'}`;
+    });
+    $(id).addEventListener('change', () => {
+      const value = Number($(id).value); state.settings[key] = key === 'clipboardTimeout' && value > 0 ? Math.max(30, value) : value;
       scheduleSettingsSave(); syncSettingsView();
     });
   }
   $('resetSettings').addEventListener('click', async () => {
-    if (!confirm('Reset preferences? Vault data and the current Sync mode are preserved.')) return;
-    state.settings = { ...DEFAULT_SETTINGS, useSync: state.settings.useSync };
-    await scheduleSettingsSave(); applyTheme(state.settings.theme); syncSettingsView();
-    const { syncGeneratorControls } = await import('./generator.js'); syncGeneratorControls();
+    try {
+      const result = await requestOperation({ title: 'Reset preferences', description: 'Restore appearance, generator and timeout defaults. Vault data, snapshots and the current Sync mode are preserved.', confirmLabel: 'Reset preferences' });
+      if (!result) return;
+      state.settings = { ...DEFAULT_SETTINGS, useSync: state.settings.useSync }; await scheduleSettingsSave();
+    } catch (error) { showToast(error.message, 'error'); }
   });
 }

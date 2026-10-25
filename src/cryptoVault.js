@@ -1,11 +1,12 @@
 // Public vault service. Only background handlers call mutations; UI and content use messages.
-import { getStorage, setStorage, removeStorage, readLocalVaultRecordRaw, writeLocalVaultRecordRaw, readRecoveryRecords, recordRevision } from './utils/storage.js';
+import { getStorage, setStorage, removeStorage, readLocalVaultRecordRaw, writeLocalVaultRecordRaw, readRecoveryRecords, recordRevision, snapshotId } from './utils/storage.js';
 import { validateEntry, validateImportData, validateMaster, MAX_ENTRIES, MAX_VAULT_BYTES } from './validation.js';
 import { createRecord, decryptRecord, decryptWithKey, encryptEntries, validateRecord } from './vault/crypto.js';
 import { withVaultOperation as operation } from './vault/queue.js';
-import { loadRecord, commitRecord, assertCurrent } from './vault/repository.js';
+import { loadRecord, commitRecord, assertCurrent, getSyncStatus as readSyncStatus } from './vault/repository.js';
 import * as session from './vault/session.js';
-import { loadSettings, saveSettings } from './settings.js';
+import { loadSettings } from './settings.js';
+import { commitLocalRecovery } from './vault/recovery.js';
 
 
 export const lockVault = session.revokeSession;
@@ -16,7 +17,7 @@ export { getSyncStatus, changeSyncMode, resolveSyncGeneration, retrySync, compac
 
 export async function vaultStatus() {
   const record = await loadRecord();
-  const sync = (await getStorage('local', 'syncStatus')).syncStatus;
+  const sync = await readSyncStatus();
   return { initialized: Boolean(record), unlocked: record ? await session.sessionStatus(record) : false, revision: record?.revision, syncPending: Boolean((await loadSettings()).useSync && sync?.pending), syncError: sync?.error };
 }
 
@@ -118,6 +119,16 @@ export function deleteCredential(id) {
   }, epoch));
 }
 
+export function clearVaultEntries(passphrase, expectedRevision) {
+  return operation(async epoch => {
+    const state = await requireVault();
+    if (expectedRevision !== undefined && state.record.revision !== expectedRevision) throw new Error('Vault changed. Review the deletion again.');
+    await decryptRecord(state.record, validateMaster(passphrase));
+    session.assertGeneration(epoch);
+    await mutate(() => [], epoch);
+  });
+}
+
 export function overwriteVaultEntries(entries) {
   return operation(epoch => mutate(() => validateImportData({ entries }).entries, epoch));
 }
@@ -179,22 +190,20 @@ export function unlockWithBiometricKey(bytes, vaultId, keyEpoch, expectedEpoch, 
 }
 
 export async function recoveryStatus() {
-  return (await readRecoveryRecords()).map((record, index) => ({ index, revision: record.revision, updatedAt: record.updatedAt, legacy: !record.version }));
+  return Promise.all((await readRecoveryRecords()).map(async (record, index) => ({ index, id: await snapshotId(record), revision: record.revision, updatedAt: record.updatedAt, legacy: !record.version })));
 }
 
-export function restoreRecovery(index, passphrase) {
+export function restoreRecovery(identity, passphrase, expectedRevision) {
   return operation(async epoch => {
     const records = await readRecoveryRecords();
-    if (!Number.isInteger(index) || !records[index]) throw new Error('Recovery snapshot not found.');
-    const recovered = await decryptRecord(records[index], validateMaster(passphrase));
-    const current = await loadRecord();
-    const next = await createRecord(recovered.entries, passphrase, { vaultId: records[index].vaultId });
-    session.assertGeneration(epoch);
-    // Restoring starts locally; syncing this history requires explicit conflict resolution.
-    const settings = await loadSettings();
-    await saveSettings({ ...settings, useSync: false }, { allowSyncChange: true });
-    await writeLocalVaultRecordRaw(next.record, recordRevision(current));
-    await removeStorage('local', 'securepassBiometric');
-    await session.activate(next.record, recovered.entries, next.bytes, epoch);
+    // Numeric legacy callers remain supported; the UI exclusively uses stable IDs.
+    const record = Number.isInteger(identity) ? records[identity] : (await Promise.all(records.map(async record => ({ record, id: await snapshotId(record) })))).find(item => item.id === identity)?.record;
+    if (!record) throw new Error('Recovery snapshot not found. Refresh and select again.');
+    const recovered = await decryptRecord(record, validateMaster(passphrase));
+    const current = await readLocalVaultRecordRaw();
+    if (expectedRevision !== undefined && recordRevision(current) !== expectedRevision) throw new Error('Vault changed. Review the restore again.');
+    if (current) await session.current(current);
+    const next = await createRecord(recovered.entries, passphrase, { vaultId: record.vaultId });
+    await commitLocalRecovery(next, recovered.entries, current, epoch);
   });
 }

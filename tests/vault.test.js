@@ -89,7 +89,7 @@ test('Sync switch invalidates old cache and requires explicit divergence resolut
   await vault.initializeVault(PASS); await vault.storeCredential(entry('local'));
   const remote = await crypt.createRecord([entry('remote')], 'Different remote master 123!'); await sync.publishGeneration(remote.record);
   assert.equal((await vault.changeSyncMode(true)).requiresResolution, true);
-  await vault.changeSyncMode(true, 'use-sync'); assert.equal((await vault.vaultStatus()).unlocked, false);
+  await vault.changeSyncMode(true, 'use-sync', 'Different remote master 123!'); assert.equal((await vault.vaultStatus()).unlocked, false);
   await vault.unlockVault('Different remote master 123!'); assert.equal((await vault.listCredentials())[0].id, 'remote');
 });
 test('Sync errors after local commit are marked pending and data survives', async () => {
@@ -128,7 +128,7 @@ test('merging remote conflicts preserves both distinct versions of the same ID',
   const remote = await crypt.createRecord([{ ...entry('same'), site: 'https://bank.example', password: 'remote-value' }], 'Remote fictional master 123!');
   await sync.publishGeneration(remote.record);
   await vault.resolveSyncGeneration(remote.record.revision, 'Remote fictional master 123!', true);
-  await vault.unlockVault('Remote fictional master 123!');
+  await vault.unlockVault(PASS);
   const entries = await vault.listCredentials(); assert.equal(entries.length, 2); assert.equal(new Set(entries.map(e => e.id)).size, 2);
   assert.deepEqual(new Set(entries.map(e => e.password)), new Set(['local-value', 'remote-value']));
 });
@@ -136,7 +136,8 @@ test('merging remote conflicts preserves both distinct versions of the same ID',
 test('a fresh profile can select and unlock the first remote Sync vault', async () => {
   const remote = await crypt.createRecord([{ ...entry('remote-first'), site: 'https://bank.example' }], PASS); await sync.publishGeneration(remote.record);
   assert.equal(await storage.readLocalVaultRecordRaw(), null);
-  assert.equal((await vault.changeSyncMode(true)).requiresResolution, false);
+  await assert.rejects(vault.changeSyncMode(true), /master password/);
+  assert.equal((await vault.changeSyncMode(true, 'use-sync', PASS)).requiresResolution, false);
   await vault.unlockVault(PASS); assert.equal((await vault.listCredentials())[0].id, 'remote-first');
 });
 
@@ -162,6 +163,7 @@ test('compaction follows transitive ancestry without resurrecting old heads', as
   // A bounded history can carry only the immediate parent. The published parent retains its ancestry.
   const head = await crypt.encryptEntries(middle, [], bytes, [middle.revision]); await sync.publishGeneration(head);
   await storage.writeLocalVaultRecordRaw(head, record.revision);
+  await settings.saveSettings({ ...settings.DEFAULT_SETTINGS, useSync: true }, { allowSyncChange: true });
   await vault.compactSync();
   assert.deepEqual((await sync.syncHeads()).map(r => r.revision), [head.revision]);
   assert.equal(areas.sync[`sp2:head:${record.revision}`], undefined);

@@ -2,7 +2,7 @@ import { normalizeSite } from './security/origins.js';
 
 export const MAX_LENGTHS = { site: 255, username: 255, password: 1024, notes: 4096, id: 64 };
 export const BACKUP_VERSION = 1;
-export const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
+export const MAX_IMPORT_BYTES = 16 * 1024 * 1024;
 export const MAX_ENTRIES = 5000;
 export const MAX_VAULT_BYTES = 3 * 1024 * 1024;
 
@@ -20,8 +20,14 @@ export function validateString(value, maxLength, fieldName, required = false) {
 
 export function validateMaster(value, creating = false) {
   const pass = validateString(value, 1024, 'master password', true);
-  if (creating && pass.length < 12) throw new Error('Use at least 12 characters for the master password.');
+  if (creating && [...pass].length < 16) throw new Error('Use at least 16 characters for a new master password.');
   return pass;
+}
+
+export function validateBackupPassword(value, creating = false) {
+  const password = validateString(value, 1024, 'backup password', true);
+  if (creating && [...password].length < 12) throw new Error('Use at least 12 characters for the backup password.');
+  return password;
 }
 
 function date(value, fallback) {
@@ -64,6 +70,12 @@ export function validateImportData(data) {
     return { username: '', notes: '', ...item };
   });
   return { entries: clean, version: BACKUP_VERSION };
+}
+
+export function validateVaultEntries(entries) {
+  const clean = validateImportData({ entries }).entries;
+  if (new TextEncoder().encode(JSON.stringify({ entries: clean })).length > MAX_VAULT_BYTES) throw new Error('Vault capacity reached (5,000 entries or 3 MiB).');
+  return clean;
 }
 
 export function validateConstraints(input = {}) {

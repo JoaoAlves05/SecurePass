@@ -107,7 +107,7 @@ export async function readLocalVaultRecordRaw() {
   });
 }
 
-export async function writeLocalVaultRecordRaw(record, expectedRevision) {
+export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendingSync = false } = {}) {
   const db = await getDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DB_STORE_NAME, 'readwrite');
@@ -126,6 +126,8 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision) {
         recovery.onsuccess = () => store.put([previous, ...(recovery.result || [])].slice(0, 5), 'recovery');
       }
       store.put(record, VAULT_KEY);
+      if (pendingSync) store.put({ revision: record.revision, vaultId: record.vaultId }, 'syncOutbox');
+      else store.delete('syncOutbox');
     };
     tx.oncomplete = () => { db.close(); resolve(); };
     tx.onerror = tx.onabort = () => { db.close(); reject(failure || tx.error || new Error('Vault write aborted.')); };
@@ -155,4 +157,29 @@ export async function readLegacySyncRecord() {
     json += part;
   }
   return JSON.parse(json);
+}
+
+export async function readSyncOutbox() {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE_NAME, 'readonly');
+    const request = tx.objectStore(DB_STORE_NAME).get('syncOutbox');
+    tx.oncomplete = () => { db.close(); resolve(request.result || null); };
+    tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || new Error('Outbox read failed.')); };
+  });
+}
+export async function acknowledgeSync(revision) {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE_NAME, 'readwrite'); const store = tx.objectStore(DB_STORE_NAME);
+    const request = store.get('syncOutbox');
+    request.onsuccess = () => { if (request.result?.revision === revision) store.delete('syncOutbox'); };
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || new Error('Outbox acknowledgement failed.')); };
+  });
+}
+export async function snapshotId(record) {
+  if (record.revision) return record.revision;
+  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(recordRevision(record)));
+  return `legacy-${Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('')}`;
 }

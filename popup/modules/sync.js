@@ -1,93 +1,94 @@
 import { state } from '../state.js';
-import { refreshState } from './vaultSession.js';
-import { sendMessage } from './messaging.js';
-import { showToast } from './toast.js';
-import { ensureVaultAccessible, promptForMasterPassword } from './vault.js';
+import { ensureVaultAccessible } from './vault.js';
 import { syncSettingsView } from './settings.js';
-
+import { showToast } from './toast.js';
+import { requestOperation } from './operationDialog.js';
+import { checked, runManagement } from './management.js';
 const $ = id => document.getElementById(id);
-const countLabel = (count, singular, plural = `${singular}s`) => `${count} ${count === 1 ? singular : plural}`;
-async function checked(type, payload) {
-  const response = await sendMessage(type, payload); if (!response.ok) throw new Error(response.error); return response;
+let lastRemote = null;
+const master = { name: 'password', label: 'Master password for the selected remote vault', type: 'password' };
+export async function refreshSyncView(inspectRemote = false) {
+  const [sync, recovery] = await Promise.allSettled([checked('SYNC_STATUS', { inspectRemote }), checked('RECOVERY_STATUS')]);
+  if (sync.status === 'fulfilled') {
+    const status = sync.value.status;
+    if (status.remoteInspected) lastRemote = status;
+    $('syncToggle').checked = status.enabled;
+    $('syncStatus').textContent = `Sync is ${status.enabled ? 'on' : 'off'}. ${status.pending ? `Saved locally; upload pending. ${status.error || ''}` : status.enabled ? 'Legacy Chrome Sync is enabled.' : 'Your vault stays on this device. No automatic remote communication.'}${status.issues.length ? ` ${status.issues.length} remote version(s) need attention; valid copies remain listed.` : ''}${status.restorePending ? ' A local recovery operation needs reconciliation; publication is paused.' : ''}`;
+    $('retrySync').disabled = !status.enabled || !status.pending;
+    $('compactSync').disabled = !status.enabled || !status.heads.length || Boolean(status.issues.length);
+    $('clearSyncArchive').disabled = !status.recoveryArchiveCount;
+    $('syncCapacity').textContent = status.bytesUsed === undefined ? 'Check existing copies to inspect legacy storage usage.' : `${status.bytesUsed.toLocaleString()} bytes in ${status.itemCount} legacy items. Another complete version needs additional space.`;
+    const heads = lastRemote?.heads || []; const select = $('syncVersions'); const previous = select.value;
+    select.replaceChildren();
+    for (const head of heads) {
+      const option = document.createElement('option'); option.value = head.revision;
+      option.textContent = `${head.updatedAt ? new Date(head.updatedAt).toLocaleString() : 'Legacy vault'} · ${head.revision.slice(0, 8)}${head.current ? ' · this device' : ''}`; select.append(option);
+    }
+    if (heads.some(head => head.revision === previous)) select.value = previous;
+    select.disabled = !heads.length; $('remoteVersionReview').hidden = !heads.length;
+    $('downloadSync').disabled = !heads.length; $('mergeSync').disabled = !heads.length;
+  } else $('syncStatus').textContent = `Could not check Sync: ${sync.reason.message}. Local recovery remains available.`;
+  if (recovery.status === 'fulfilled') {
+    const snapshots = recovery.value.snapshots;
+    $('recoveryStatus').textContent = `${snapshots.length} local recovery snapshot${snapshots.length === 1 ? '' : 's'}. Each snapshot keeps its historical password.`;
+    $('restoreRecovery').disabled = !snapshots.length;
+    const list = $('snapshotList'); list.replaceChildren();
+    for (const item of snapshots) {
+      const row = document.createElement('div'); row.className = 'snapshot-item';
+      const title = document.createElement('strong'); title.textContent = item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'Legacy snapshot';
+      row.append(title, document.createTextNode(`Version ${item.id.slice(0, 8)} · encrypted`)); list.append(row);
+    }
+  } else $('recoveryStatus').textContent = `Could not read local history: ${recovery.reason.message}`;
 }
-async function changeSyncMode(payload) {
+async function changeMode(payload) {
   try { return await checked('SET_SYNC_MODE_SAFE', payload); }
   catch (error) {
     if (payload.targetUseSync !== true || error.message !== 'Vault is locked') throw error;
-    if (!await ensureVaultAccessible('Unlock your vault to enable Chrome Sync.')) return null;
+    if (!await ensureVaultAccessible('Unlock your vault to enable legacy Chrome Sync.')) return null;
     return checked('SET_SYNC_MODE_SAFE', payload);
   }
 }
-async function refreshSync() {
-  const { status } = await checked('SYNC_STATUS');
-  const recovery = await checked('RECOVERY_STATUS');
-  const currentHeads = status.heads.filter(head => head.current).length;
-  $('syncStatus').textContent = status.pending
-    ? `Sync is ${status.enabled ? 'on' : 'off'}. Changes are saved locally; publication is pending: ${status.error}`
-    : `Sync is ${status.enabled ? 'on' : 'off'}. ${countLabel(status.heads.length, 'remote version')}, ${currentHeads} matching this device.`;
-  const select = $('syncVersions'); select.replaceChildren();
-  if (!status.heads.length) {
-    const option = document.createElement('option'); option.value = ''; option.textContent = 'No remote versions found'; select.append(option);
-  }
-  for (const head of status.heads) {
-    const option = document.createElement('option'); option.value = head.revision; option.textContent = `${head.updatedAt || 'Legacy'} — ${head.current ? 'current' : head.revision.slice(0, 8)}`; select.append(option);
-  }
-  const hasHeads = status.heads.length > 0;
-  select.disabled = !hasHeads;
-  $('downloadSync').disabled = !hasHeads;
-  $('mergeSync').disabled = !hasHeads;
-  $('retrySync').disabled = !status.pending;
-  $('compactSync').disabled = !status.enabled || !hasHeads;
-  $('clearSyncArchive').disabled = !status.recoveryArchiveCount;
-  $('restoreRecovery').disabled = !recovery.snapshots.length;
-  $('recoveryStatus').textContent = `${countLabel(recovery.snapshots.length, 'local recovery snapshot')}; ${countLabel(status.recoveryArchiveCount, 'archived Sync version')}.`;
-}
-async function refreshSyncView() {
-  try { await refreshSync(); }
-  catch (error) {
-    $('syncStatus').textContent = error.message;
-    showToast(error.message, 'error');
-  }
-}
 export function attachSyncListeners() {
-  $('syncToggle').addEventListener('change', async () => {
+  document.addEventListener('management-refresh', () => refreshSyncView().catch(error => showToast(error.message, 'error')));
+  $('refreshSync').addEventListener('click', () => runManagement(async () => { await refreshSyncView(true); }));
+  $('syncToggle').addEventListener('change', () => {
     const targetUseSync = $('syncToggle').checked; $('syncToggle').disabled = true;
-    try {
-      let response = await changeSyncMode({ targetUseSync });
-      if (!response) return;
-      if (response.requiresResolution) {
-        const choice = prompt('Sync differs from this local vault.\n1: Keep local and archive the remote versions.\n2: Download the single remote version.\nCancel: review/merge versions below.');
-        if (!['1', '2'].includes(choice)) throw new Error('Sync switch cancelled.');
-        response = await changeSyncMode({ targetUseSync, strategy: choice === '1' ? 'keep-local' : 'use-sync' });
-        if (!response) return;
+    runManagement(async () => {
+      const { status } = await checked('VAULT_STATUS');
+      let result;
+      if (targetUseSync && !status.initialized) {
+        await refreshSyncView(true);
+        if (!lastRemote?.heads.length) throw new Error('Create a local vault or restore a backup first.');
+        const head = lastRemote.heads.find(item => item.revision === $('syncVersions').value);
+        result = await requestOperation({ title: 'Connect an existing legacy vault', description: 'Enter the password that opens the selected vault. A wrong password will not create or replace any data.', fields: [master], confirmLabel: 'Connect vault', submit: values => changeMode({ targetUseSync: true, strategy: 'use-sync', passphrase: values.password, revision: head.revision, expectedRevision: null }) });
+      } else result = await changeMode({ targetUseSync, expectedRevision: status.revision });
+      if (result?.requiresResolution) {
+        const choice = await requestOperation({ title: 'Choose which vault to use', description: 'Local and remote copies differ. Review individual versions to combine them safely. Keeping the local copy will archive and retire all current remote versions.', fields: [{ name: 'strategy', label: 'Next step', options: [{ value: 'review', label: 'Review individual versions' }, { value: 'keep-local', label: 'Keep local and archive remote versions' }, { value: 'use-sync', label: 'Use the single remote version' }] }], confirmLabel: 'Continue' });
+        if (!choice) return;
+        if (choice.strategy === 'review') { await refreshSyncView(true); return; }
+        if (choice.strategy === 'use-sync') result = await requestOperation({ title: 'Unlock the remote vault', description: 'This changes the active local vault. Its previous encrypted copy is kept in recovery history.', fields: [master], confirmLabel: 'Use remote vault', submit: values => changeMode({ targetUseSync, strategy: 'use-sync', passphrase: values.password, expectedRevision: status.revision }) });
+        else result = await changeMode({ targetUseSync, strategy: 'keep-local', expectedRevision: status.revision });
       }
-      state.settings = response.settings; await refreshState(); await refreshSync(); showToast('Storage mode changed. Unlock the selected vault again.', 'success');
-    } catch (error) { showToast(error.message, 'error'); }
-    finally { $('syncToggle').disabled = false; syncSettingsView(); }
+      if (result?.settings) { state.settings = result.settings; syncSettingsView(); showToast('Legacy Sync mode updated. Unlock the active vault again.', 'success'); }
+    }).finally(() => { $('syncToggle').disabled = false; syncSettingsView(); });
   });
-  $('refreshSync').addEventListener('click', refreshSyncView);
-  $('retrySync').addEventListener('click', async () => { try { await checked('SYNC_RETRY'); await refreshSync(); showToast('Sync published.', 'success'); } catch (error) { showToast(error.message, 'error'); } });
-  $('compactSync').addEventListener('click', async () => {
-    if (!confirm('Remove remote ancestor generations? Current remote heads remain intact and are preserved in the local vault or its encrypted archive. Export recovery snapshots first.')) return;
-    try { await checked('SYNC_COMPACT'); await refreshSync(); showToast('Remote ancestor history compacted.', 'success'); } catch (error) { showToast(error.message, 'error'); }
-  });
-  $('clearSyncArchive').addEventListener('click', async () => {
-    if (!confirm('Delete the local encrypted Sync recovery archive? Export recovery snapshots first. The live vault and its five local snapshots are preserved.')) return;
-    try {
-      const passphrase = await promptForMasterPassword('Re-enter the current master password to clear the exported archive.');
-      if (passphrase === null) return;
-      await checked('SYNC_CLEAR_ARCHIVE', { passphrase }); showToast('Sync recovery archive cleared.', 'success');
-    } catch (error) { showToast(error.message, 'error'); }
-  });
-  for (const [id, merge] of [['downloadSync', false], ['mergeSync', true]]) $(id).addEventListener('click', async () => {
-    try {
-      if (!$('syncVersions').value) throw new Error('Refresh and choose a remote version.');
-      if (!confirm(merge ? 'Merge the selected remote version with the unlocked local vault? Conflicting IDs are preserved as separate entries. The remote master password will protect the result.' : 'Replace the local vault with the selected remote version? Encrypted recovery copies are retained.')) return;
-      const passphrase = await promptForMasterPassword('Enter the master password for the selected remote version.');
-      if (passphrase === null) return;
-      await checked('SYNC_RESOLVE', { revision: $('syncVersions').value, passphrase, merge });
-      await refreshState(); await refreshSync(); showToast('Remote version resolved. Unlock with its master password.', 'success');
-    } catch (error) { showToast(error.message, 'error'); }
-  });
-  refreshSyncView();
+  $('retrySync').addEventListener('click', () => runManagement(async () => { await checked('SYNC_RETRY'); showToast('Current revision published to legacy storage.', 'success'); }));
+  $('compactSync').addEventListener('click', () => runManagement(async () => {
+    const result = await requestOperation({ title: 'Clean old remote history', description: 'Removes only published ancestor generations. Active versions and uploads in progress remain. Export recovery copies first. This may not free enough space for another version.', confirmLabel: 'Clean old history', danger: true, submit: () => checked('SYNC_COMPACT') });
+    if (result) showToast(`Removed ${result.removed} old storage items.`, 'success');
+  }));
+  $('clearSyncArchive').addEventListener('click', () => runManagement(async () => {
+    const result = await requestOperation({ title: 'Clear archived Sync copies', description: 'Deletes only the extra local conflict archive. Current vault, local snapshots and remote copies remain. Export the snapshots you need first.', fields: [{ ...master, label: 'Current local master password' }], confirmLabel: 'Clear local archive', danger: true, submit: values => checked('SYNC_CLEAR_ARCHIVE', { passphrase: values.password }) });
+    if (result) showToast('Local conflict archive cleared.', 'success');
+  }));
+  for (const [id, merge] of [['downloadSync', false], ['mergeSync', true]]) $(id).addEventListener('click', () => runManagement(async () => {
+    const revision = $('syncVersions').value;
+    if (!revision) throw new Error('Check existing versions and select one first.');
+    let { status } = await checked('VAULT_STATUS');
+    if (status.initialized && !await ensureVaultAccessible('Unlock the destination vault before changing its contents.')) return;
+    status = (await checked('VAULT_STATUS')).status;
+    const result = await requestOperation({ title: merge ? 'Combine into the local vault' : 'Restore this version locally', description: merge ? 'The selected remote entries will be combined with the unlocked local vault. Conflicting copies are kept separately. The local master password stays the same; other remote versions are not resolved.' : 'The current local vault is kept in recovery history. Sync turns off. Remote copies are not changed. Use the selected version’s master password.', fields: [master], confirmLabel: merge ? 'Combine entries' : 'Restore locally', submit: values => checked('SYNC_RESOLVE', { revision, passphrase: values.password, merge, expectedRevision: status.revision || null }) });
+    if (result) showToast(merge ? 'Combined entries. Unlock with the local master password.' : 'Restored locally. Sync is off.', 'success');
+  }));
+  refreshSyncView().catch(error => showToast(error.message, 'error'));
 }

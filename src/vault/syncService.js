@@ -1,7 +1,7 @@
 import { getStorage, setStorage, removeStorage, readLocalVaultRecordRaw, writeLocalVaultRecordRaw, recordRevision } from '../utils/storage.js';
 import { loadSettings, saveSettings } from '../settings.js';
-import { loadRecord, getSyncStatus, assertCurrent } from './repository.js';
-import { syncHeads, publishGeneration } from './sync.js';
+import { loadRecord, getSyncStatus, assertCurrent, commitRecord, publishLocalRecord } from './repository.js';
+import { syncHeads } from './sync.js';
 import { createRecord, decryptRecord, encryptEntries } from './crypto.js';
 import { withVaultOperation as operation } from './queue.js';
 import * as session from './session.js';
@@ -11,31 +11,36 @@ const lockVault = session.revokeSession;
 async function requireVault() { return session.current(await loadRecord()); }
 export { getSyncStatus };
 
-export function changeSyncMode(target, strategy) {
+export function changeSyncMode(target, strategy, passphrase, options = {}) {
   return operation(async epoch => {
     if (!target) {
       await saveSettings({ ...(await loadSettings()), useSync: false }, { allowSyncChange: true });
       await lockVault();
       return { requiresResolution: false };
     }
-    const local = await loadRecord();
+    const local = await readLocalVaultRecordRaw();
+    if (options.expectedRevision !== undefined && recordRevision(local) !== options.expectedRevision) throw new Error('Local vault changed. Review the storage choice again.');
     const heads = await syncHeads();
     const divergent = heads.filter(r => recordRevision(r) !== recordRevision(local) && !local?.parents?.includes(r.revision));
     if (local && divergent.length && !strategy) return { requiresResolution: true };
     if (strategy && !['keep-local', 'use-sync'].includes(strategy)) throw new Error('Invalid Sync resolution.');
     if (strategy === 'use-sync' || (!local && heads.length)) {
       if (heads.length !== 1) throw new Error('Choose a specific Sync generation in the recovery panel.');
+      if (options.revision && (heads[0].revision || 'legacy') !== options.revision) throw new Error('Remote version changed. Refresh and choose again.');
+      if (!passphrase) throw new Error('Enter the master password for the selected remote vault first.');
+      await decryptRecord(heads[0], validateMaster(passphrase));
+      session.assertGeneration(epoch);
       await writeLocalVaultRecordRaw(heads[0], recordRevision(local));
     } else if (local) {
       const state = await requireVault();
       if (heads.some(r => !r.version)) throw new Error('Legacy remote vault: download and unlock it before merging.');
-      const parents = [...new Set([local.revision, ...heads.map(r => r.revision), ...local.parents, ...heads.flatMap(r => r.parents)])].slice(0, 256);
+      const parents = [...new Set([local.revision, ...heads.map(r => r.revision), ...local.parents, ...heads.flatMap(r => r.parents)])].slice(0, 160);
       const record = await encryptEntries(local, state.entries, state.bytes, parents);
       session.assertGeneration(epoch);
       // All differing remote heads remain recoverable locally before resolving the branch.
       for (const head of heads) if (head.revision !== local.revision) await archiveRemote(head);
-      await publishGeneration(record);
-      await writeLocalVaultRecordRaw(record, local.revision);
+      await saveSettings({ ...(await loadSettings()), useSync: true }, { allowSyncChange: true });
+      await commitRecord(record, local.revision);
     }
     await saveSettings({ ...(await loadSettings()), useSync: true }, { allowSyncChange: true });
     await lockVault();
@@ -52,50 +57,59 @@ async function archiveRemote(record) {
   }
 }
 
-export function resolveSyncGeneration(revision, passphrase, merge = false) {
+export function resolveSyncGeneration(revision, passphrase, merge = false, expectedRevision) {
   return operation(async epoch => {
     const heads = await syncHeads();
     const chosen = heads.find(r => (r.revision || 'legacy') === revision);
-    if (!chosen) throw new Error('Sync generation no longer available. Refresh the list.');
+    if (!chosen) throw new Error('Remote version no longer available. Refresh and choose again.');
     const remote = await decryptRecord(chosen, validateMaster(passphrase));
-    const local = await loadRecord();
-    let entries = remote.entries;
-    if (merge && local) {
-      const state = await requireVault();
-      const map = new Map(state.entries.map(e => [e.id, e]));
-      for (const item of entries) {
-        const previous = map.get(item.id);
-        if (previous && JSON.stringify(previous) !== JSON.stringify(item)) {
-          const id = crypto.randomUUID();
-          map.set(id, { ...item, id, notes: `${item.notes}\nRecovered conflicting Sync copy` });
-        } else map.set(item.id, item);
-      }
-      entries = [...map.values()];
-    }
-    for (const head of heads) await archiveRemote(head);
-    const versioned = heads.filter(r => r.version === 2);
-    const parents = [...new Set([...versioned.map(r => r.revision), ...versioned.flatMap(r => r.parents)])].slice(0, 256);
-    const next = await createRecord(entries, passphrase, { vaultId: chosen.vaultId, parents });
+    const local = await readLocalVaultRecordRaw();
+    if (expectedRevision !== undefined && recordRevision(local) !== expectedRevision) throw new Error('Local vault changed. Review the selected version again.');
     session.assertGeneration(epoch);
-    await publishGeneration(next.record);
-    await writeLocalVaultRecordRaw(next.record, recordRevision(local));
-    await removeStorage('local', 'securepassBiometric');
+    if (!merge) {
+      // A download is a local recovery operation, never an implicit remote publication.
+      const next = await createRecord(remote.entries, passphrase, { vaultId: chosen.vaultId });
+      session.assertGeneration(epoch);
+      await setStorage('local', { localRestorePending: { revision: next.record.revision } });
+      await writeLocalVaultRecordRaw(next.record, recordRevision(local));
+      await saveSettings({ ...(await loadSettings()), useSync: false }, { allowSyncChange: true });
+      await removeStorage('local', ['securepassBiometric', 'localRestorePending']);
+    } else {
+      if (!local) throw new Error('Create or unlock the destination vault before merging.');
+      const state = await requireVault();
+      const entries = [...state.entries]; const byId = new Map(entries.map(e => [e.id, e]));
+      for (const item of remote.entries) {
+        const previous = byId.get(item.id);
+        if (entries.some(entry => ['site', 'username', 'password', 'notes'].every(key => (entry[key] || '') === (item[key] || '')))) continue;
+        const copy = previous ? { ...item, id: crypto.randomUUID() } : item;
+        entries.push(copy); byId.set(copy.id, copy);
+      }
+      const parents = [...new Set([local.revision, chosen.revision, ...(local.parents || []), ...(chosen.parents || [])].filter(Boolean))].slice(0, 160);
+      const next = await encryptEntries(local, entries, state.bytes, parents);
+      session.assertGeneration(epoch);
+      await archiveRemote(chosen);
+      // Keep the destination key/password; only the selected head is resolved.
+      await commitRecord(next, recordRevision(local));
+    }
     await lockVault();
+    return { settings: await loadSettings() };
   });
 }
-
 export function retrySync() {
   return operation(async () => {
+    if (!(await loadSettings()).useSync) throw new Error('Sync is off. No remote changes were made.');
     const record = await loadRecord();
     if (!record) throw new Error('Vault not initialized.');
     await assertCurrent(record);
-    await publishGeneration(record);
-    await setStorage('local', { syncStatus: { pending: false } });
+    await publishLocalRecord(record);
+    const status = await getSyncStatus();
+    if (status.pending) throw new Error(status.error || 'Publication is still pending.');
   });
 }
 
 export function compactSync() {
   return operation(async () => {
+    if (!(await loadSettings()).useSync) throw new Error('Sync is off. No remote changes were made.');
     const all = await getStorage('sync', null);
     const heads = await syncHeads(all);
     const local = await readLocalVaultRecordRaw();

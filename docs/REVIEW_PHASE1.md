@@ -1,6 +1,6 @@
 # SecurePass — revisão de funcionamento e preparação da primeira versão
 
-Nota: este documento preserva os problemas da revisão inicial. O estado das correções está em [IMPLEMENTATION.md](IMPLEMENTATION.md).
+Nota editorial de 25/10/2026: este documento preserva a revisão histórica do commit `5aed51c`; os pareceres e reproduções abaixo referem-se a essa versão. A implementação posterior está descrita em [IMPLEMENTATION.md](IMPLEMENTATION.md). Os problemas atuais de settings, Sync e Data Management estão em [REVIEW_SETTINGS_SYNC_DATA.md](REVIEW_SETTINGS_SYNC_DATA.md), com propostas ainda não implementadas em [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md). Não interpretar a revisão histórica como uma descrição integral do código atual. As referências de código/linha abaixo pertencem ao commit analisado; ficheiros ainda existentes podem ter mudado de linhas.
 
 Data: 24/10/2026. Código revisto: `5aed51c` (`Refactor frontend and improve security`), sem alterações ao código de produção.
 
@@ -187,7 +187,7 @@ Num ensaio do DOM, bloquear com o editor aberto deixou o modal visível e a pala
 
 ### F17 — A interface biométrica falha mesmo quando o background desbloqueia
 
-**Onde:** [resposta errada](../popup/modules/biometricSetup.js#L53), [visibilidade](../popup/popup.js#L104), [registo](../popup/modules/biometricSetup.js#L113), [retry no site](../content/modules/autofill.js#L462), [assertion](../content/modules/biometric.js#L20).
+**Onde:** [resposta errada](../popup/modules/biometricSetup.js#L53), [visibilidade](../popup/popup.js#L104), [registo](../popup/modules/biometricSetup.js#L113), [retry no site](../content/modules/autofill.js#L462), assertion em `content/modules/biometric.js:20` do commit `5aed51c` (ficheiro removido no checkout atual; consultar com `git show 5aed51c:content/modules/biometric.js`).
 
 O popup lê `entriesRes.data`, mas `LIST_CREDENTIALS` responde `entries`; `renderEntries()` recebe `undefined` e lança. Reproduzido: cofre aberto e mensagem “Authentication failed.” O botão é mostrado quer a biometria esteja ativa quer não. O setup infere PRF só do resultado de `create()`, sem o ensaio de assertion que a documentação do projeto promete. O retry inline chama WebAuthn no contexto do site com RP ID da extensão e usa o ID da entrada do cofre como ID WebAuthn. Sessões canceladas/expiradas não têm limpeza uniforme.
 

@@ -34,11 +34,12 @@ export async function revokeSession() {
 export async function activate(record, entries, keyBytes, expected, timeout) {
   assertGeneration(expected);
   const minutes = timeout || (await loadSettings()).vaultTimeout;
-  const deadline = Date.now() + minutes * 60000;
+  const lastActivity = Date.now();
+  const deadline = lastActivity + minutes * 60000;
   const bytes = new Uint8Array(keyBytes);
   await schedule(async () => {
     assertGeneration(expected);
-    await setStorage('session', { [KEY]: { revision: record.revision, keyEpoch: record.keyEpoch, key: encodeKey(bytes), deadline } });
+    await setStorage('session', { [KEY]: { revision: record.revision, keyEpoch: record.keyEpoch, key: encodeKey(bytes), deadline, lastActivity, timeoutMinutes: minutes } });
     assertGeneration(expected);
     memory = { record, entries: structuredClone(entries), bytes, deadline };
   });
@@ -73,4 +74,21 @@ export async function sessionStatus(record) {
     if (error.message === 'Vault is locked' || error.message.startsWith('Operation cancelled')) return false;
     throw error;
   }
+}
+
+export async function reconfigureTimeout(minutes, previousMinutes = 15) {
+  const expected = generation();
+  await schedule(async () => {
+    const stored = (await getStorage('session', KEY))[KEY];
+    if (!stored) return;
+    assertGeneration(expected);
+    const lastActivity = stored.lastActivity || stored.deadline - (stored.timeoutMinutes || previousMinutes) * 60000;
+    const deadline = lastActivity + minutes * 60000;
+    await setStorage('session', { [KEY]: { ...stored, lastActivity, timeoutMinutes: minutes, deadline } });
+    if (memory) memory.deadline = deadline;
+    await chrome.alarms.create('vaultAutoLock', { when: deadline });
+    chrome.idle.setDetectionInterval(minutes * 60);
+  });
+  const stored = (await getStorage('session', KEY))[KEY];
+  if (stored && stored.deadline <= Date.now()) await revokeSession();
 }

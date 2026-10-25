@@ -158,6 +158,7 @@ try {
   assert.equal(await popup.locator('#clearSyncArchive').isDisabled(), true, 'Archive clearing stays disabled when the archive is empty.');
   assert.match(await popup.locator('.settings-section').filter({ has: popup.locator('#syncToggle') }).textContent(), /asks you to unlock here/);
   await send(popup, 'LOCK_VAULT');
+  await popup.locator('#legacySyncDetails').evaluate(element => { element.open = true; });
   await popup.locator('label[for="syncToggle"]').click();
   await popup.waitForSelector('#unlockSetupModal:not(.hidden)');
   assert.equal(await popup.locator('#unlockWithBiometric').isVisible(), false, 'Biometric unlock is hidden when it is not configured.');
@@ -206,6 +207,7 @@ try {
   await popup.waitForFunction(() => !document.querySelector('#disableBiometric').hidden);
   assert.equal(await popup.locator('#disableBiometric').isVisible(), true);
   await send(popup, 'LOCK_VAULT');
+  await popup.locator('#legacySyncDetails').evaluate(element => { element.open = true; });
   await popup.locator('label[for="syncToggle"]').click();
   await popup.waitForSelector('#unlockSetupModal:not(.hidden)');
   assert.equal(await popup.locator('#unlockWithBiometric').isVisible(), true, 'Configured biometric unlock is offered in the Sync authentication dialog.');

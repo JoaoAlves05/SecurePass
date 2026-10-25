@@ -30,3 +30,13 @@ test('sender origin ignores long paths and queries but rejects unsafe origins', 
   assert.throws(() => senderOrigin({ ...content, url: 'https://user:pass@bank.example/login' }), /Only HTTP and HTTPS/);
   assert.throws(() => senderOrigin({ ...content, url: 'https://bank.example/login', origin: 'https://other.example' }), /mismatched/);
 });
+
+test('SC56: new backup/cache/recovery management handlers remain forbidden to content and auth contexts', () => {
+  const content = { id: chrome.runtime.id, url: 'https://example.com/', origin: 'https://example.com', tab: { id: 1 }, frameId: 0, documentId: 'document' };
+  const auth = { id: chrome.runtime.id, url: chrome.runtime.getURL('auth/auth.html'), tab: { id: 2 } };
+  for (const type of ['PREVIEW_BACKUP', 'COMMIT_BACKUP', 'EXPORT_RECOVERY_SNAPSHOT', 'RECOVERY_ARCHIVE_STATUS', 'HIBP_CACHE_STATUS', 'HIBP_CLEAR_CACHE', 'WIPE_DEVICE']) {
+    assert.throws(() => authorizeMessage({ type }, content), /Forbidden/);
+    assert.throws(() => authorizeMessage({ type }, auth), /Forbidden/);
+  }
+  assert.equal(authorizeMessage({ type: 'COMMIT_BACKUP' }, { id: chrome.runtime.id, url: chrome.runtime.getURL('popup/popup.html?manage=1') }), 'management');
+});

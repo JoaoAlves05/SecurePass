@@ -21,3 +21,15 @@ test('HIBP network success remains valid when optional cache write fails', async
   try { assert.equal((await checkPassword('different fictional password')).compromised, false); }
   finally { globalThis.fetch = original; failWhen(null); }
 });
+
+test('clearing cache prevents an older in-flight request from repopulating it', async () => {
+  const { clearHibpCache } = await import('../src/hibp.js');
+  const original = globalThis.fetch; let started, release;
+  const reached = new Promise(resolve => { started = resolve; });
+  globalThis.fetch = async () => { started(); await new Promise(resolve => { release = resolve; }); return { ok: true, text: async () => `${'0'.repeat(35)}:0` }; };
+  try {
+    const pending = checkPassword('unique disposable password cache barrier'); await reached;
+    await clearHibpCache(); release(); await pending;
+    assert.equal(areas.local.hibpCache, undefined);
+  } finally { globalThis.fetch = original; }
+});

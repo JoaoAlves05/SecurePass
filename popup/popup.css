@@ -3126,3 +3126,57 @@ body[data-theme='dark'] .alert-box.warning {
 .vault-actions .icon-btn { width: 40px; height: 40px; border-radius: 12px; }
 .vault-actions .danger, #wipeDevice { color: var(--danger); }
 .vault-notes { color: var(--text-muted); }
+
+/* Settings journeys share the same trusted page in popup and management-tab mode. */
+.management-overview { padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--primary-soft), var(--surface)); }
+.eyebrow { font-size: 10px; letter-spacing: .14em; font-weight: 700; color: var(--primary); }
+.management-overview h3 { font-size: 24px; line-height: 1.2; margin: 12px 0; letter-spacing: -.6px; }
+.management-overview p { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+.management-links, .management-button-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.management-links a { color: var(--primary); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 7px 12px; font-size: 12px; text-decoration: none; }
+.section-caption { font-size: 11px; color: var(--text-muted); }
+.sync-summary, .legacy-card { padding: 18px; }
+.provider-heading { display: flex; align-items: center; gap: 10px; }
+.provider-heading strong { font-size: 14px; }
+.provider-heading p { margin: 4px 0; color: var(--text-muted); font-size: 11px; }
+.provider-symbol { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); color: var(--primary); font-size: 24px; }
+.status-pill { font-size: 10px; margin-left: auto; padding: 5px 8px; border-radius: 20px; background: var(--warning-bg); color: var(--text); white-space: nowrap; }
+.legacy-card { margin-top: 12px; }
+.legacy-card summary { cursor: pointer; padding: 12px 0; font-size: 12px; font-weight: 600; }
+.remote-review { border-top: 1px solid var(--border); padding-top: 12px; }
+.snapshot-list { padding: 0 16px; }
+.snapshot-item { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+.snapshot-item strong { display: block; color: var(--text); margin-bottom: 4px; }
+.operation-dialog { color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 26px; width: min(440px, calc(100vw - 28px)); max-height: calc(100vh - 28px); overflow: auto; box-shadow: var(--shadow-lg); }
+.operation-dialog::backdrop { background: rgba(0, 0, 0, .55); backdrop-filter: blur(5px); }
+.operation-dialog h2 { font-size: 22px; margin: 12px 0; letter-spacing: -.4px; }
+.operation-dialog p { font-size: 13px; line-height: 1.65; color: var(--text-muted); white-space: pre-line; }
+.operation-field { display: grid; gap: 8px; margin: 18px 0; font-size: 12px; font-weight: 600; }
+.operation-field input, .operation-field select { width: 100%; padding: 12px; color: var(--text); background: var(--surface-raised); border: 1px solid var(--border); border-radius: 10px; font: inherit; }
+.operation-field input:focus-visible, .operation-field select:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.password-reveal { justify-self: start; border: 0; padding: 0; font-size: 11px; background: transparent; color: var(--primary); cursor: pointer; }
+.operation-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.operation-dialog .operation-error { color: var(--danger); background: var(--danger-bg); padding: 12px; border-radius: 8px; }
+.destructive { background: var(--danger) !important; color: white !important; }
+.management-mode { width: 100%; min-width: 360px; min-height: 100vh; }
+.management-mode > .app-header, .management-mode > .main-content, .management-mode > nav { display: none; }
+.management-mode .settings-panel { position: relative; min-height: 100vh; height: 100vh; }
+.management-mode .settings-surface { width: 100%; max-width: 100%; border-radius: 0; }
+.management-mode .settings-header-sticky .header-content { max-width: 1120px; margin: auto; }
+.management-mode .settings-content-wrapper { max-width: 1120px; margin: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 26px; padding: 30px; }
+.management-mode .management-overview { grid-column: 1 / -1; }
+.management-mode .management-overview h3 { font-size: 34px; }
+.management-mode .settings-section { margin: 0; scroll-margin-top: 30px; }
+.management-mode #closeSettings { display: none; }
+@media (max-width: 700px) { .management-mode .settings-content-wrapper { grid-template-columns: 1fr; padding: 20px; } }
+.danger-section > .card { border: 1px solid var(--danger-bg); }
+.danger-section .settings-action { margin: 0; }
+.settings-header-sticky .header-content { gap: 10px; }
+#openManagement { font-size: 10px; padding: 7px 10px; }
+body:has(.settings-panel[aria-hidden='false']) > .app-container { visibility: hidden; }
+.management-mode > .app-container { display: none; }
+.management-mode #aboutSection { grid-column: 1 / -1; }
+.settings-header-sticky .header-content { justify-content: space-between; padding-left: 36px; }
+.settings-header-sticky .header-content h2 { white-space: nowrap; font-size: 15px; }
+#openManagement { width: auto; flex: 0 0 auto; }
+.management-mode .settings-header-sticky .header-content { justify-content: flex-start; padding-left: 0; }
