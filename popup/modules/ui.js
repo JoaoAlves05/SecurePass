@@ -25,10 +25,11 @@ export function setView(id) {
 }
 export function openSettingsPanel() {
   settingsTrigger = $('openSettings'); $('settingsPanel').classList.add('visible'); $('settingsPanel').setAttribute('aria-hidden', 'false'); manageFocus();
-  if (document.body.classList.contains('management-mode')) {
-    document.querySelector('.settings-tabs [aria-selected="true"]')?.focus();
-  } else $('closeSettings').focus();
   document.dispatchEvent(new CustomEvent('settings-opened'));
+}
+function backFromSettings() {
+  if ($('settingsPanel').getAttribute('aria-hidden') === 'true') return;
+  if (document.dispatchEvent(new CustomEvent('settings-back', { cancelable: true }))) closeSettingsPanel();
 }
 export function closeSettingsPanel() {
   if (document.body.classList.contains('management-mode')) return;
@@ -74,7 +75,7 @@ export function attachUIListeners() {
   document.addEventListener('vault-ui-locked', () => { for (const id of ['entryModal', 'masterModal', 'unlockSetupModal']) closeModal(id); });
   $('settingsPanel').inert = true;
   document.querySelectorAll('.nav-item[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
-  $('openSettings').addEventListener('click', openSettingsPanel); $('closeSettings').addEventListener('click', closeSettingsPanel);
+  $('openSettings').addEventListener('click', openSettingsPanel); $('closeSettings').addEventListener('click', backFromSettings);
   document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => closeModal(button.dataset.close)));
   $('modalBackdrop').addEventListener('click', () => { for (const id of ['entryModal', 'masterModal', 'unlockSetupModal']) closeModal(id); });
   document.querySelectorAll('[data-toggle-password]').forEach(button => {
@@ -91,7 +92,7 @@ export function attachUIListeners() {
     if ($('operationDialog')?.open) return;
     const modal = ['unlockSetupModal', 'masterModal', 'entryModal'].map($).find(el => !el.classList.contains('hidden'));
     const active = modal || ($('settingsPanel').classList.contains('visible') ? $('settingsPanel') : null);
-    if (event.key === 'Escape') { if (modal) closeModal(modal.id); else closeSettingsPanel(); }
+    if (event.key === 'Escape') { if (modal) closeModal(modal.id); else backFromSettings(); }
     if (event.key === 'Tab' && active) {
       const items = [...active.querySelectorAll('button, input, textarea, select, summary, a[href], [tabindex="0"]')].filter(el => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length && !el.closest('[hidden], [inert]'));
       if (!items.length) return;

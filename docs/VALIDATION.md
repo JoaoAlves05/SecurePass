@@ -2,7 +2,11 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-## Current four-area Settings revision — 2026-10-25
+## Current hierarchical Settings navigation — 2026-10-25
+
+The [hierarchical navigation revision](SETTINGS_NAVIGATION.md) replaces Settings tabs with a popup category list/detail pages and a persistent sidebar in wide management tabs. Existing controls and authentication/data flows are retained. Checks passed: 57 Node tests, 73 checked modules, the expanded settings browser scenario, the general browser/virtual-PRF suite, and the two-profile emulated Sync suite. Navigation regressions cover keyboard activation, back/Escape, browser history, scroll/focus, legacy fragments, reload, tab transfer, responsive modes and light/dark layouts at 320–1200px. The cache status no longer collapses into one character per line. Current screenshots and reproducible manual checks are linked in the revision report. These are executed disposable scenarios; physical authenticator, authenticated transport and protocol acceptance remain separate.
+
+## Previous four-area Settings revision — 2026-10-25
 
 The [four-area revision](SETTINGS_FOUR_AREAS.md) reuses the extension's existing styling, removes the device overview/section combobox and supplies direct General/Security/Backups/Advanced tabs. Validation passed: 57 Node tests, 73 checked modules, the general browser/virtual-PRF suite and expanded settings journeys including light/dark popup/full-tab layouts, real backup/version downloads, local/archive recovery, reset/cache/entry/archive cleanup, master-password rotation and local erasure. These are disposable automated scenarios; underlying protocol and hardware acceptance limits remain.
 

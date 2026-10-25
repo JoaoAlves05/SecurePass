@@ -2,6 +2,8 @@
 
 2026-10-25 · SecurePass 0.2.0 · implemented directly on `main` at the user's request.
 
+Historical navigation: the subsequent user-approved [hierarchical revision](SETTINGS_NAVIGATION.md) replaces the four tabs with list/detail navigation and a wide-screen sidebar. Linked screenshot fixtures now show that later revision; the feature inventory below remains useful but does not describe current navigation.
+
 This supersedes the six-category design in [SETTINGS_FRONTEND_REVIEW.md](SETTINGS_FRONTEND_REVIEW.md). The user approved a plan to match the existing extension, remove the separate header/device overview/section combobox, and give direct access to four areas before a commit and push for practical review.
 
 ## Implemented interface

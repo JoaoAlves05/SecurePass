@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
 const LEGACY_SECTIONS = {
   preferencesSection: 'generalSection',
+  appearanceSection: 'generalSection',
   dataSection: 'backupsSection',
   recoverySection: 'backupsSection',
   syncSection: 'advancedSection',
@@ -8,45 +9,67 @@ const LEGACY_SECTIONS = {
 };
 
 export function attachSettingsNavigation() {
-  const tabs = [...document.querySelectorAll('[data-settings-section]')];
+  const links = [...document.querySelectorAll('[data-settings-section]')];
   const sections = [...document.querySelectorAll('.settings-content-wrapper > .settings-section')];
-  const indicator = $('settingsNavIndicator');
-  const updateIndicator = () => {
-    const selected = tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
-    if (!selected?.offsetWidth) return;
-    indicator.style.width = `${selected.offsetWidth}px`;
-    indicator.style.transform = `translateX(${selected.offsetLeft - 4}px)`;
-  };
-  const showSection = (requested, focus = false) => {
+  const panel = $('settingsPanel');
+  const navigation = $('settingsNavigation');
+  const content = document.querySelector('.settings-scroll-container');
+  const viewport = matchMedia('(min-width: 760px)');
+  const isSidebar = () => document.body.classList.contains('management-mode') && viewport.matches;
+  const positions = new Map();
+  let currentId = null;
+  let lastSection = 'generalSection';
+
+  const showSection = (requested, { focus = false, replace = false } = {}) => {
     const resolved = LEGACY_SECTIONS[requested] || requested;
-    const id = sections.some(section => section.id === resolved) ? resolved : 'generalSection';
+    const selected = links.find(link => link.dataset.settingsSection === resolved);
+    const id = selected ? resolved : isSidebar() ? lastSection : null;
+    if (currentId) positions.set(currentId, content.scrollTop);
+    currentId = id;
+    if (id) lastSection = id;
+    const link = links.find(item => item.dataset.settingsSection === id);
     for (const section of sections) section.hidden = section.id !== id;
-    for (const tab of tabs) {
-      const selected = tab.dataset.settingsSection === id;
-      tab.setAttribute('aria-selected', String(selected));
-      tab.classList.toggle('active', selected);
-      tab.tabIndex = selected ? 0 : -1;
-      if (selected && focus) tab.focus();
+    for (const item of links) {
+      if (item === link) item.setAttribute('aria-current', 'page');
+      else item.removeAttribute('aria-current');
     }
-    history.replaceState(null, '', `#${id}`);
-    document.querySelector('.settings-scroll-container').scrollTop = 0;
-    requestAnimationFrame(updateIndicator);
+    panel.dataset.settingsDetail = String(Boolean(id));
+    navigation.hidden = Boolean(id) && !isSidebar();
+    content.hidden = !id;
+    $('settingsTitle').textContent = id && !isSidebar() ? link.dataset.settingsTitle : 'Settings';
+    $('closeSettings').hidden = isSidebar() || (document.body.classList.contains('management-mode') && !id);
+    $('closeSettings').setAttribute('aria-label', id && !isSidebar() ? 'Back to settings' : 'Back to extension');
+    const hash = `#${id || 'settings'}`;
+    if (location.hash !== hash) history[replace ? 'replaceState' : 'pushState'](null, '', hash);
+    requestAnimationFrame(() => {
+      if (currentId !== id) return;
+      content.scrollTop = positions.get(id) || 0;
+      if (focus) {
+        const target = id ? isSidebar() ? $(id).querySelector('h3') : $('settingsTitle')
+          : links.find(item => item.dataset.settingsSection === lastSection);
+        target?.focus({ preventScroll: true });
+      }
+    });
     document.dispatchEvent(new CustomEvent('settings-section-changed', { detail: { id } }));
   };
-  for (const tab of tabs) {
-    tab.addEventListener('click', () => showSection(tab.dataset.settingsSection));
-    tab.addEventListener('keydown', event => {
-      const index = tabs.indexOf(tab);
-      const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length
-        : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length
-        : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : null;
-      if (next === null) return;
-      event.preventDefault();
-      showSection(tabs[next].dataset.settingsSection, true);
-    });
-  }
-  window.addEventListener('hashchange', () => showSection(location.hash.slice(1)));
-  document.addEventListener('settings-opened', updateIndicator);
-  new ResizeObserver(updateIndicator).observe(document.querySelector('.settings-tabs'));
-  showSection(location.hash.slice(1));
+
+  for (const link of links) link.addEventListener('click', event => {
+    if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    showSection(link.dataset.settingsSection, { focus: true });
+  });
+  document.addEventListener('settings-back', event => {
+    if (!currentId || isSidebar()) return;
+    event.preventDefault();
+    showSection('settings', { focus: true });
+  });
+  document.addEventListener('settings-opened', () => showSection(location.hash.slice(1), { focus: true, replace: true }));
+  const followHistory = () => {
+    const requested = LEGACY_SECTIONS[location.hash.slice(1)] || location.hash.slice(1);
+    if (requested !== (currentId || 'settings')) showSection(requested, { focus: panel.getAttribute('aria-hidden') === 'false', replace: true });
+  };
+  window.addEventListener('popstate', followHistory);
+  window.addEventListener('hashchange', followHistory);
+  viewport.addEventListener('change', () => showSection(location.hash.slice(1), { focus: panel.getAttribute('aria-hidden') === 'false', replace: true }));
+  showSection(location.hash.slice(1), { replace: true });
 }

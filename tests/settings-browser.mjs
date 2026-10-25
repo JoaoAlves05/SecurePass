@@ -17,10 +17,13 @@ async function submit(page) { await page.locator('#operationConfirm').click(); }
 async function title(page, text) { await page.waitForFunction(text => document.querySelector('#operationDialog').open && document.querySelector('#operationTitle').textContent === text, text); }
 async function upload(page, data) { await page.locator('#importVaultFile').setInputFiles({ name: 'fictional-backup.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) }); }
 async function section(page, id) {
-  await page.locator(`[data-settings-section="${id}"]`).click();
-  assert.equal(await page.locator(`[data-settings-section="${id}"]`).getAttribute('aria-selected'), 'true');
+  const link = page.locator(`[data-settings-section="${id}"]`);
+  if (!await link.isVisible()) await page.getByRole('button', { name: 'Back to settings', exact: true }).click();
+  await link.click();
+  assert.equal(await link.getAttribute('aria-current'), 'page');
   assert.equal(await page.locator('.settings-content-wrapper > .settings-section:visible').count(), 1);
   assert.equal(await page.locator(`#${id}`).isVisible(), true);
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#settingsTitle') || document.activeElement === document.querySelector('.settings-section:not([hidden]) h3'));
 }
 async function screenshot(page, name) {
   await page.waitForFunction(() => !document.querySelector('#toast').classList.contains('visible'));
@@ -34,35 +37,42 @@ async function layouts(page) {
       await page.waitForFunction(theme => document.body.dataset.theme === theme, theme);
       for (const id of ['generalSection', 'securitySection', 'backupsSection', 'advancedSection']) {
         await section(page, id);
-        assert.equal(await page.locator('.settings-tabs [role="tab"]:visible').count(), 4);
+        const sidebar = page.url().includes('manage=1') && width >= 760;
+        assert.equal(await page.locator('#settingsNavigation').isVisible(), sidebar);
+        assert.equal(await page.locator('#settingsPanel [role="tab"], #settingsPanel [role="tablist"]').count(), 0);
+        assert.equal(await page.getByRole('button', { name: 'Back to settings', exact: true }).isVisible(), !sidebar);
         const overflow = await page.evaluate(() => ({ width: innerWidth, body: document.body.scrollWidth, layout: document.querySelector('.settings-content-wrapper').scrollWidth, available: document.querySelector('.settings-content-wrapper').clientWidth }));
         assert.ok(overflow.body <= overflow.width && overflow.layout <= overflow.available, `Horizontal overflow at ${width}px, ${theme}, ${id}: ${JSON.stringify(overflow)}`);
+        if (id === 'advancedSection') {
+          const cache = await page.locator('#hibpCacheUsage').boundingBox();
+          assert.ok(cache.width >= 120 && cache.height < 60, `Cache state remains readable at ${width}px: ${JSON.stringify(cache)}`);
+        }
+      }
+      if (!(page.url().includes('manage=1') && width >= 760)) {
+        await page.getByRole('button', { name: 'Back to settings', exact: true }).click();
+        assert.equal(await page.getByRole('navigation', { name: 'Settings sections' }).getByRole('link').count(), 4);
+        assert.equal(await page.locator('.settings-section:visible').count(), 0);
       }
     }
   }
 }
 try {
   context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: true, args: [`--disable-extensions-except=${root}`, `--load-extension=${root}`, '--no-sandbox'] });
-  const page = await context.newPage(); page.on('pageerror', error => errors.push(error.message));
+  context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
+  const page = await context.newPage();
   let [worker] = context.serviceWorkers(); if (!worker) worker = await context.waitForEvent('serviceworker');
   await page.setViewportSize({ width: 1200, height: 900 });
   await page.goto(`chrome-extension://${worker.url().split('/')[2]}/popup/popup.html?manage=1`);
   await page.waitForFunction(() => document.querySelector('#settingsPanel').getAttribute('aria-hidden') === 'false');
   assert.equal(await page.locator('#generalSection').isVisible(), true);
-  assert.equal(await page.getByRole('tablist', { name: 'Settings sections' }).getByRole('tab').count(), 4);
+  assert.equal(await page.getByRole('navigation', { name: 'Settings sections' }).getByRole('link').count(), 4);
   assert.equal(await page.locator('#settingsSectionSelect, #managementOverview, #managementVaultAction').count(), 0);
   assert.equal(await page.locator('.settings-header').evaluate(el => getComputedStyle(el).borderBottomWidth), '0px');
   assert.equal(await page.locator('#settingsPanel').evaluate(el => getComputedStyle(el).getPropertyValue('--primary').trim()), await page.locator('body').evaluate(el => getComputedStyle(el).getPropertyValue('--primary').trim()));
   for (const id of ['generalSection', 'backupsSection', 'advancedSection', 'securitySection']) {
     await section(page, id);
-    assert.equal(await page.locator(`[data-settings-section="${id}"]`).evaluate(el => el === document.activeElement), true);
+    assert.equal(await page.locator(`#${id} h3`).evaluate(el => el === document.activeElement), true);
   }
-  await page.keyboard.press('ArrowLeft');
-  assert.equal(await page.locator('#generalSection').isVisible(), true);
-  await page.keyboard.press('End');
-  assert.equal(await page.locator('#advancedSection').isVisible(), true);
-  await page.keyboard.press('Home');
-  assert.equal(await page.locator('#generalSection').isVisible(), true);
   await section(page, 'securitySection');
   assert.ok((await page.locator('#autoLockRange').boundingBox()).height >= 24);
   await page.locator('#autoLockRange').focus(); await page.keyboard.press('ArrowRight');
@@ -242,6 +252,35 @@ try {
   await page.waitForFunction(() => document.querySelector('#settingsPanel').getAttribute('aria-hidden') === 'false');
   await page.waitForFunction(() => getComputedStyle(document.querySelector('.settings-surface')).opacity === '1');
   assert.equal(await page.locator('#tab-tester').getAttribute('aria-selected'), 'true');
+  assert.equal(await page.locator('#settingsNavigation').isVisible(), true);
+  assert.equal(await page.locator('.settings-section:visible').count(), 0);
+  await screenshot(page, 'settings-popup-home');
+  await page.locator('[data-settings-section="generalSection"]').focus();
+  await page.keyboard.press('Tab');
+  assert.equal(await page.locator('[data-settings-section="securitySection"]').evaluate(el => el === document.activeElement), true);
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#settingsTitle'));
+  assert.equal(await page.locator('#settingsTitle').textContent(), 'Security');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.activeElement === document.querySelector('[data-settings-section="securitySection"]'));
+  assert.equal(await page.locator('#settingsNavigation').isVisible(), true);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#openSettings'));
+  await page.locator('#openSettings').click();
+  await section(page, 'advancedSection');
+  await page.locator('.settings-scroll-container').evaluate(el => { el.scrollTop = 150; });
+  const previousScroll = await page.locator('.settings-scroll-container').evaluate(el => el.scrollTop);
+  assert.ok(previousScroll > 100);
+  await page.getByRole('button', { name: 'Back to settings', exact: true }).click();
+  await section(page, 'securitySection');
+  await section(page, 'advancedSection');
+  assert.equal(await page.locator('.settings-scroll-container').evaluate(el => el.scrollTop), previousScroll);
+  await page.goBack();
+  await page.waitForFunction(() => document.querySelector('#settingsTitle').textContent === 'Settings');
+  assert.equal(await page.locator('#settingsNavigation').isVisible(), true);
+  await page.goForward();
+  await page.waitForFunction(() => document.querySelector('#settingsTitle').textContent === 'Advanced');
+  await page.waitForFunction(top => document.querySelector('.settings-scroll-container').scrollTop === top, previousScroll);
   await section(page, 'securitySection');
   await screenshot(page, 'settings-popup');
   await layouts(page);
@@ -250,7 +289,8 @@ try {
   await page.setViewportSize({ width: 400, height: 650 });
   await section(page, 'generalSection');
   await screenshot(page, 'settings-popup-appearance');
-  await page.locator('#closeSettings').click();
+  await page.getByRole('button', { name: 'Back to settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to extension', exact: true }).click();
   await page.waitForFunction(() => document.activeElement === document.querySelector('#openSettings'));
   await page.locator('#openSettings').click();
   await section(page, 'backupsSection');
@@ -259,7 +299,24 @@ try {
   assert.match(managementTab.url(), /\?manage=1#backupsSection$/);
   await managementTab.locator('#backupsSection').waitFor({ state: 'visible' });
   await layouts(managementTab);
+  await managementTab.setViewportSize({ width: 1060, height: 900 });
+  for (const [legacy, current] of [['preferencesSection', 'generalSection'], ['recoverySection', 'backupsSection'], ['syncSection', 'advancedSection']]) {
+    await managementTab.goto(managementTab.url().split('#')[0] + `#${legacy}`);
+    await managementTab.locator(`#${current}`).waitFor({ state: 'visible' });
+    assert.equal(await managementTab.locator(`[data-settings-section="${current}"]`).getAttribute('aria-current'), 'page');
+  }
+  await managementTab.setViewportSize({ width: 400, height: 650 });
+  await managementTab.getByRole('button', { name: 'Back to settings', exact: true }).click();
+  await managementTab.reload();
+  await managementTab.locator('#settingsNavigation').waitFor({ state: 'visible' });
+  assert.equal(await managementTab.locator('.settings-section:visible').count(), 0);
+  await section(managementTab, 'securitySection');
+  await managementTab.setViewportSize({ width: 1060, height: 900 });
+  await managementTab.locator('#settingsNavigation').waitFor({ state: 'visible' });
+  assert.equal(await managementTab.locator('#securitySection').isVisible(), true);
+  await managementTab.reload();
+  await managementTab.locator('#securitySection').waitFor({ state: 'visible' });
   await managementTab.close();
   assert.deepEqual(errors, []);
-  console.log('Four-area Settings passed: tabs/keyboard/deep links, shared styling, light/dark popup/tab layouts at 320–1200px, preferences/reset/cache, encrypted backup and version downloads, import/conflicts, local/archive restores and deduplication, legacy remote merge, archive/entry cleanup, device erasure, master-password rotation and focus restoration.');
+  console.log('Hierarchical Settings passed: list/detail/sidebar navigation, keyboard/back/history/scroll/focus, legacy deep links and tab transfer, light/dark layouts at 320–1200px, readable cache state, preferences/reset/cache, encrypted backup and version downloads, import/conflicts, local/archive restores and deduplication, legacy remote merge, archive/entry cleanup, device erasure and master-password rotation.');
 } finally { await context?.close(); await rm(profile, { recursive: true, force: true }); }

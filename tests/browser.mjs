@@ -18,6 +18,12 @@ const errors = [];
 async function send(page, type, data = {}) {
   return page.evaluate(({ type, data }) => chrome.runtime.sendMessage({ type, ...data }), { type, data });
 }
+async function settingsSection(page, id) {
+  const link = page.locator(`[data-settings-section="${id}"]`);
+  if (!await link.isVisible()) await page.getByRole('button', { name: 'Back to settings', exact: true }).click();
+  await link.click();
+  await page.locator(`#${id}`).waitFor({ state: 'visible' });
+}
 async function shadowClick(page, selector) {
   const session = await context.newCDPSession(page);
   const { root } = await session.send('DOM.getDocument', { depth: -1, pierce: true });
@@ -141,7 +147,7 @@ try {
   await popup.screenshot({ path: fileURLToPath(new URL('../docs/screenshots/phase1-vault.png', import.meta.url)) });
   await popup.locator('#openSettings').click();
   await popup.waitForFunction(() => getComputedStyle(document.querySelector('.settings-panel .settings-surface')).opacity === '1');
-  await popup.locator('[data-settings-section="securitySection"]').click();
+  await settingsSection(popup, 'securitySection');
   const autoLock = popup.locator('#autoLockRange');
   const rangeHeight = await autoLock.evaluate(element => element.getBoundingClientRect().height);
   await autoLock.hover();
@@ -159,7 +165,7 @@ try {
   assert.equal(await popup.locator('#clearSyncArchive').isDisabled(), true, 'Archive clearing stays disabled when the archive is empty.');
   assert.match(await popup.locator('.settings-section').filter({ has: popup.locator('#syncToggle') }).textContent(), /Unlock is requested/);
   await send(popup, 'LOCK_VAULT');
-  await popup.locator('[data-settings-section="advancedSection"]').click();
+  await settingsSection(popup, 'advancedSection');
   await popup.locator('label[for="syncToggle"]').click();
   await popup.waitForSelector('#unlockSetupModal:not(.hidden)');
   assert.equal(await popup.locator('#unlockWithBiometric').isVisible(), false, 'Biometric unlock is hidden when it is not configured.');
@@ -172,7 +178,7 @@ try {
   assert.equal((await send(popup, 'VAULT_STATUS')).status.unlocked, false, 'Sync mode change relocks the vault as before.');
   await popup.locator('label[for="syncToggle"]').click();
   await popup.waitForFunction(() => !document.querySelector('#syncToggle').checked && !document.querySelector('#syncToggle').disabled);
-  await popup.locator('[data-settings-section="securitySection"]').click();
+  await settingsSection(popup, 'securitySection');
   await popup.locator('#biometricSetupBtn').click();
   assert.equal(await popup.locator('#biometricSetupBtn').getAttribute('aria-expanded'), 'true');
   assert.equal(await popup.locator('#biometricInlineAuth').getAttribute('aria-hidden'), 'false');
@@ -182,7 +188,7 @@ try {
   await popup.waitForFunction(() => getComputedStyle(document.querySelector('#biometricInlineAuth')).maxHeight === '0px');
   await popup.mouse.move(390, 5);
   await popup.screenshot({ path: fileURLToPath(new URL('../docs/screenshots/phase1-settings.png', import.meta.url)) });
-  await popup.locator('[data-settings-section="backupsSection"]').click();
+  await settingsSection(popup, 'backupsSection');
   await popup.locator('#snapshotList').scrollIntoViewIfNeeded();
   await popup.mouse.move(390, 5);
   await popup.screenshot({ path: fileURLToPath(new URL('../docs/screenshots/phase1-recovery.png', import.meta.url)) });
@@ -208,10 +214,10 @@ try {
   assert.equal((await send(popup, 'VAULT_STATUS')).status.unlocked, true);
   await popup.evaluate(() => document.dispatchEvent(new CustomEvent('vault-ui-state')));
   await popup.waitForFunction(() => !document.querySelector('#disableBiometric').hidden);
-  await popup.locator('[data-settings-section="securitySection"]').click();
+  await settingsSection(popup, 'securitySection');
   assert.equal(await popup.locator('#disableBiometric').isVisible(), true);
   await send(popup, 'LOCK_VAULT');
-  await popup.locator('[data-settings-section="advancedSection"]').click();
+  await settingsSection(popup, 'advancedSection');
   await popup.locator('label[for="syncToggle"]').click();
   await popup.waitForSelector('#unlockSetupModal:not(.hidden)');
   assert.equal(await popup.locator('#unlockWithBiometric').isVisible(), true, 'Configured biometric unlock is offered in the Sync authentication dialog.');
@@ -220,7 +226,7 @@ try {
   assert.equal((await send(popup, 'VAULT_STATUS')).status.unlocked, false, 'Sync mode change relocks the vault after biometric authentication.');
   await popup.locator('label[for="syncToggle"]').click();
   await popup.waitForFunction(() => !document.querySelector('#syncToggle').checked && !document.querySelector('#syncToggle').disabled);
-  await popup.locator('[data-settings-section="securitySection"]').click();
+  await settingsSection(popup, 'securitySection');
   await popup.locator('#disableBiometric').click();
   await popup.waitForFunction(() => document.querySelector('#disableBiometric').hidden);
   assert.equal((await send(popup, 'BIOMETRIC_STATUS')).enabled, false);

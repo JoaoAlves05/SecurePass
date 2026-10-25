@@ -1,4 +1,4 @@
-/* Settings reuse the popup palette, background, navigation and action styles. */
+/* Settings reuse the popup palette, background and action styles. */
 .settings-panel {
   position: fixed;
   inset: 0;
@@ -26,13 +26,14 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   align-items: center;
   gap: 10px;
   width: 100%;
-  max-width: 760px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 14px 20px 10px;
 }
 
 .settings-header h2 {
   flex: 1;
+  min-width: 0;
   margin: 0;
   color: var(--text-muted);
   font-size: 15px;
@@ -59,18 +60,62 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   height: 15px;
 }
 
-.settings-tabs.main-nav {
-  flex-shrink: 0;
-  width: calc(100% - 40px);
-  max-width: 720px;
-  margin: 0 auto 8px;
+.settings-layout {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
-.settings-tabs .nav-item {
+.settings-navigation {
+  overflow-y: auto;
   min-width: 0;
-  min-height: 36px;
-  padding: 8px 2px;
-  font-size: 13px;
+  padding: 12px 20px 24px;
+}
+
+.settings-category {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 80px;
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.settings-category:hover {
+  background: var(--bg-subtle);
+}
+
+.settings-category-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.settings-category-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.settings-category-description {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settings-category > svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
 }
 
 .settings-panel [hidden] {
@@ -79,6 +124,7 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 
 .settings-scroll-container {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
 }
@@ -99,10 +145,11 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 
 .settings-section .section-header {
   margin: 0 0 4px;
-  text-align: center;
+  text-align: left;
 }
 
 .settings-section .section-header h3 {
+  display: none;
   margin: 0 0 5px;
   font-size: 19px;
   font-weight: 650;
@@ -408,9 +455,18 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 }
 
 #hibpCacheUsage {
-  flex: 1;
+  flex: 1 1 140px;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.cache-row {
+  flex-wrap: wrap;
+}
+
+.cache-row .compact-btn {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .settings-danger .settings-action-title {
@@ -454,10 +510,6 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   display: none;
 }
 
-.management-mode #closeSettings {
-  display: none;
-}
-
 body:has(.settings-panel[aria-hidden='false']) {
   min-width: 320px;
 }
@@ -469,13 +521,36 @@ body:has(.settings-panel[aria-hidden='false']) {
   }
 
   .management-mode .settings-content-wrapper {
-    padding-top: 24px;
+    padding-top: 12px;
   }
-}
 
-@media (max-width: 359px) {
-  .settings-tabs .nav-item {
-    font-size: 12px;
+  .management-mode .settings-layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .management-mode .settings-navigation {
+    padding-top: 12px;
+    padding-right: 12px;
+  }
+
+  .management-mode .settings-category {
+    min-height: 76px;
+    border-bottom-color: transparent;
+    margin-bottom: 4px;
+  }
+
+  .management-mode .settings-category[aria-current='page'] {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .management-mode .settings-category > svg {
+    display: none;
+  }
+
+  .management-mode .settings-section .section-header h3 {
+    display: block;
   }
 }
 
