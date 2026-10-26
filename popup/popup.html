@@ -429,7 +429,7 @@
                   </form>
                   <div id="masterChangeSuccess" class="master-change-step" role="status" hidden>
                     <p class="master-step-title" tabindex="-1">Master password changed</p>
-                    <p class="row-sub">Use your new master password the next time you unlock with a password.</p>
+                    <p class="row-sub">Your vault and local checkpoints now use your new master password.</p>
                     <div class="master-change-actions"><button id="masterReconfigureBiometric" type="button" class="primary compact-btn" hidden>Set up biometric unlock again</button><button id="masterChangeDone" type="button" class="secondary compact-btn">Done</button></div>
                   </div>
                   <p id="masterChangeError" class="master-change-error" role="alert" hidden></p>
@@ -487,9 +487,9 @@
                 <button id="importVaultBtn" class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Import backup</span><span class="settings-action-description">Review a file and restore or combine its entries.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
                 <input id="importVaultFile" type="file" accept=".json" class="hidden" />
               </div>
-              <div class="settings-group-heading"><h4>Earlier versions</h4><p class="row-sub">Encrypted copies saved before changes. Each keeps its historical master password.</p></div>
+              <div class="settings-group-heading checkpoint-section-heading"><div><h4>Recovery checkpoints</h4><p class="row-sub">Recover an entry or restore a previous state. Your master password stays the same.</p></div><button id="clearCheckpointHistory" type="button" class="settings-text-action" hidden>Clear history</button></div>
               <p id="recoveryStatus" class="settings-status" role="status" aria-live="polite">Checking saved versions…</p>
-              <div id="snapshotList" class="snapshot-list" aria-label="Earlier vault versions"></div>
+              <div id="snapshotList" class="snapshot-list" aria-label="Recovery checkpoints and archived copies"></div>
             </section>
             <section id="advancedSection" class="settings-section" aria-labelledby="advancedHeading" hidden>
               <div class="section-header"><h3 id="advancedHeading" tabindex="-1">Advanced</h3></div>

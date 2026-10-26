@@ -1,7 +1,7 @@
 // Public vault service. Only background handlers call mutations; UI and content use messages.
 import { getStorage, setStorage, removeStorage, readLocalVaultRecordRaw, writeLocalVaultRecordRaw, readRecoveryRecords, recordRevision, snapshotId } from './utils/storage.js';
 import { validateEntry, validateImportData, validateMaster, MAX_ENTRIES, MAX_VAULT_BYTES } from './validation.js';
-import { createRecord, decryptRecord, decryptWithKey, encryptEntries, validateRecord } from './vault/crypto.js';
+import { createRecord, decryptRecord, decryptWithKey, encryptEntries, protectCheckpoint, validateRecord } from './vault/crypto.js';
 import { withVaultOperation as operation } from './vault/queue.js';
 import { loadRecord, commitRecord, assertCurrent, getSyncStatus as readSyncStatus } from './vault/repository.js';
 import * as session from './vault/session.js';
@@ -75,7 +75,10 @@ async function mutate(transform, epoch) {
   const state = await requireVault();
   await assertCurrent(state.record);
   session.assertGeneration(epoch);
+  const contents = list => JSON.stringify(list.map(({ updatedAt: _updatedAt, ...entry }) => entry));
+  const previousContents = contents(state.entries);
   const entries = await transform(state.entries);
+  if (contents(entries) === previousContents) return state.entries;
   if (entries.length > MAX_ENTRIES || new TextEncoder().encode(JSON.stringify({ entries })).length > MAX_VAULT_BYTES) throw new Error('Vault capacity reached (5,000 entries or 3 MB). Export a backup before reducing entries.');
   const record = await encryptEntries(state.record, entries, state.bytes);
   session.assertGeneration(epoch);
@@ -187,9 +190,17 @@ export function changeMasterPasswordAuthorized(authorization, newPassphrase, own
 }
 
 async function rotateMasterPassword(state, newPassphrase, epoch) {
+  const history = await readRecoveryRecords();
+  const contents = [];
+  for (const checkpoint of history) {
+    try { contents.push(await decryptWithKey(checkpoint, state.bytes)); }
+    catch { throw new Error('An older checkpoint needs its previous password or is damaged. Review it in Backups & recovery before changing your master password. No password was changed.'); }
+  }
   const rotated = await createRecord(state.entries, newPassphrase, { vaultId: state.record.vaultId, parents: [state.record.revision, ...state.record.parents] });
+  const protectedHistory = [];
+  for (let i = 0; i < history.length; i++) protectedHistory.push(await protectCheckpoint(history[i], contents[i], rotated.record, rotated.bytes));
   session.assertGeneration(epoch);
-  await commitRecord(rotated.record, state.record.revision);
+  await commitRecord(rotated.record, state.record.revision, { recoveryRecords: protectedHistory, expectedRecoveryRecords: history });
   await removeStorage('local', ['securepassBiometric', 'securepassTrustedDeviceKey']);
   await session.activate(rotated.record, state.entries, rotated.bytes, epoch);
 }
@@ -222,8 +233,10 @@ export function restoreRecovery(identity, passphrase, expectedRevision) {
     const recovered = await decryptRecord(record, validateMaster(passphrase));
     const current = await readLocalVaultRecordRaw();
     if (expectedRevision !== undefined && recordRevision(current) !== expectedRevision) throw new Error('Vault changed. Review the restore again.');
-    if (current) await session.current(current);
-    const next = await createRecord(recovered.entries, passphrase, { vaultId: record.vaultId });
+    const active = current ? await session.current(current) : null;
+    const next = active
+      ? { record: await encryptEntries(active.record, recovered.entries, active.bytes), bytes: active.bytes }
+      : await createRecord(recovered.entries, passphrase, { vaultId: record.vaultId });
     await commitLocalRecovery(next, recovered.entries, current, epoch);
   });
 }

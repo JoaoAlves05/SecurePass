@@ -98,6 +98,14 @@ export async function encryptEntries(previous, entries, bytes, parents = [previo
   return record;
 }
 
+// Historical contents share the active protection, retaining their content ID/date.
+export async function protectCheckpoint(previous, entries, active, bytes) {
+  entries = validateVaultEntries(entries);
+  const record = { ...active, revision: previous.revision || crypto.randomUUID(), parents: [], updatedAt: previous.updatedAt };
+  record.data = await seal({ entries }, await aesKey(bytes), dataContext(record));
+  return record;
+}
+
 export async function prfKey(prf) {
   const raw = decodeBytes(prf, 32);
   const material = await crypto.subtle.importKey('raw', raw, 'HKDF', false, ['deriveKey']);

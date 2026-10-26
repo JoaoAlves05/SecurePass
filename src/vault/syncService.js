@@ -45,7 +45,7 @@ export function changeSyncMode(target, strategy, passphrase, options = {}) {
       // All differing remote heads remain recoverable locally before resolving the branch.
       for (const head of heads) if (head.revision !== local.revision) await archiveRemote(head);
       await saveSettings({ ...(await loadSettings()), useSync: true }, { allowSyncChange: true });
-      await commitRecord(record, local.revision);
+      await commitRecord(record, local.revision, { saveCheckpoint: false });
     }
     await saveSettings({ ...(await loadSettings()), useSync: true }, { allowSyncChange: true });
     await lockVault();
@@ -73,9 +73,11 @@ export function resolveSyncGeneration(revision, passphrase, merge = false, expec
     session.assertGeneration(epoch);
     if (!merge) {
       // A download is a local recovery operation, never an implicit remote publication.
-      const next = await createRecord(remote.entries, passphrase, { vaultId: chosen.vaultId });
+      const active = local ? await session.current(local) : null;
+      const next = active
+        ? { record: await encryptEntries(active.record, remote.entries, active.bytes), bytes: active.bytes }
+        : await createRecord(remote.entries, passphrase, { vaultId: chosen.vaultId });
       session.assertGeneration(epoch);
-      if (local) await session.current(local);
       await commitLocalRecovery(next, remote.entries, local, epoch);
     } else {
       if (!local) throw new Error('Create or unlock the destination vault before merging.');

@@ -107,7 +107,9 @@ export async function readLocalVaultRecordRaw() {
   });
 }
 
-export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendingSync = false } = {}) {
+export const CHECKPOINT_LIMIT = 3;
+
+export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendingSync = false, recoveryRecords, expectedRecoveryRecords, historyOnly = false, saveCheckpoint = true } = {}) {
   const db = await getDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DB_STORE_NAME, 'readwrite');
@@ -121,13 +123,22 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendi
         tx.abort();
         return;
       }
-      if (previous) {
-        const recovery = store.get('recovery');
-        recovery.onsuccess = () => store.put([previous, ...(recovery.result || [])].slice(0, 5), 'recovery');
-      }
-      store.put(record, VAULT_KEY);
-      if (pendingSync) store.put({ revision: record.revision, vaultId: record.vaultId }, 'syncOutbox');
-      else store.delete('syncOutbox');
+      const recovery = store.get('recovery');
+      recovery.onsuccess = () => {
+        const existing = recovery.result || [];
+        if (expectedRecoveryRecords !== undefined && JSON.stringify(existing) !== JSON.stringify(expectedRecoveryRecords)) {
+          failure = new Error('Recovery history changed. Review the checkpoints again.');
+          tx.abort();
+          return;
+        }
+        if (recoveryRecords !== undefined) store.put(recoveryRecords.slice(0, CHECKPOINT_LIMIT), 'recovery');
+        else if (previous && !historyOnly && saveCheckpoint) store.put([previous, ...existing].slice(0, CHECKPOINT_LIMIT), 'recovery');
+        if (!historyOnly) {
+          store.put(record, VAULT_KEY);
+          if (pendingSync) store.put({ revision: record.revision, vaultId: record.vaultId }, 'syncOutbox');
+          else store.delete('syncOutbox');
+        }
+      };
     };
     tx.oncomplete = () => { db.close(); resolve(); };
     tx.onerror = tx.onabort = () => { db.close(); reject(failure || tx.error || new Error('Vault write aborted.')); };
@@ -137,9 +148,12 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendi
 export async function readRecoveryRecords() {
   const db = await getDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(DB_STORE_NAME, 'readonly');
+    const tx = db.transaction(DB_STORE_NAME, 'readwrite');
     const request = tx.objectStore(DB_STORE_NAME).get('recovery');
-    tx.oncomplete = () => { db.close(); resolve(request.result || []); };
+    request.onsuccess = () => {
+      if (request.result?.length > CHECKPOINT_LIMIT) tx.objectStore(DB_STORE_NAME).put(request.result.slice(0, CHECKPOINT_LIMIT), 'recovery');
+    };
+    tx.oncomplete = () => { db.close(); resolve((request.result || []).slice(0, CHECKPOINT_LIMIT)); };
     tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || new Error('Recovery read failed.')); };
   });
 }

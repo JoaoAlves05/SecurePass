@@ -7,6 +7,7 @@ import { readRecoveryRecords, getStorage, snapshotId } from '../utils/storage.js
 import { previewBackup, commitBackup } from '../vault/backupService.js';
 import { masterAuthorizationOwner, cancelMasterAuthorization } from '../vault/masterAuthorization.js';
 import { withVaultLock } from '../vault/queue.js';
+import { checkpointStatus, unlockCheckpoint, previewCheckpoint, recoverCheckpoint, removeCheckpoints, clearCheckpointPreviews } from '../vault/checkpoints.js';
 
 export const vaultHandlers = new Map([
   ['VAULT_STATUS', async () => ({ status: await vault.vaultStatus() })],
@@ -42,7 +43,11 @@ export const vaultHandlers = new Map([
   ['PREVIEW_BACKUP', async m => previewBackup(m.data, m.backupPassword, m.strategy)],
   ['COMMIT_BACKUP', commitBackup],
   ['EXPORT_RECOVERY_SNAPSHOT', async m => {
-    const records = [...await readRecoveryRecords(), ...((await getStorage('local', 'syncRecovery')).syncRecovery || [])];
+    if (m.source !== undefined && !['Local', 'Archived Sync'].includes(m.source)) throw new Error('Invalid recovery source.');
+    const records = m.source === 'Archived Sync'
+      ? ((await getStorage('local', 'syncRecovery')).syncRecovery || [])
+      : m.source === 'Local' ? await readRecoveryRecords()
+        : [...await readRecoveryRecords(), ...((await getStorage('local', 'syncRecovery')).syncRecovery || [])];
     for (const record of records) if (await snapshotId(record) === m.id) return { data: { kind: 'securepass-encrypted-recovery', version: 1, snapshots: [record], sync: [] } };
     throw new Error('Snapshot no longer available. Refresh the history.');
   }],
@@ -62,8 +67,17 @@ export const vaultHandlers = new Map([
   ['WIPE_DEVICE', async m => { await wipeDevice(m.passphrase, { force: m.force === true, confirmation: m.confirmation }); return {}; }],
   ['IMPORT_RECOVERY', async m => { await restoreExternalRecord(m.record, m.passphrase, m.expectedRevision); return {}; }],
   ['RECOVERY_ARCHIVE_STATUS', async () => {
-    const local = await readRecoveryRecords(); const archive = (await getStorage('local', 'syncRecovery')).syncRecovery || [];
-    return { snapshots: await Promise.all([...local.map(record => ({ record, source: 'Local' })), ...archive.map(record => ({ record, source: 'Archived Sync' }))].map(async ({ record, source }) => ({ id: await snapshotId(record), revision: record.revision, updatedAt: record.updatedAt, source }))) };
+    const local = await checkpointStatus(); const archive = (await getStorage('local', 'syncRecovery')).syncRecovery || [];
+    return { snapshots: [...local, ...await Promise.all(archive.map(async record => ({ id: await snapshotId(record), revision: record.revision, updatedAt: record.updatedAt, source: 'Archived Sync' })))] };
+  }],
+  ['UNLOCK_CHECKPOINT', async m => unlockCheckpoint(validateString(m.id, 80, 'checkpoint', true), validateMaster(m.passphrase), m.expectedRevision)],
+  ['PREVIEW_CHECKPOINT', async (m, s) => previewCheckpoint(validateString(m.id, 80, 'checkpoint', true), m.mode, masterAuthorizationOwner(m, s))],
+  ['RECOVER_CHECKPOINT', async (m, s) => recoverCheckpoint(m.token, m.entryId, masterAuthorizationOwner(m, s))],
+  ['REMOVE_CHECKPOINTS', async m => { await removeCheckpoints(validateMaster(m.passphrase), m.expectedRevision, m.id === undefined ? undefined : validateString(m.id, 80, 'checkpoint', true)); return {}; }],
+  ['CANCEL_CHECKPOINT_PREVIEW', async (m, s) => {
+    const owner = masterAuthorizationOwner(m, s);
+    await withVaultLock(() => clearCheckpointPreviews(owner, validateString(m.token, 64, 'preview', true)));
+    return {};
   }],
   ['RECOVERY_STATUS', async () => ({ snapshots: await vault.recoveryStatus() })],
   ['RESTORE_RECOVERY', async m => { await vault.restoreRecovery(m.id ?? m.index, m.passphrase, m.expectedRevision); return {}; }],

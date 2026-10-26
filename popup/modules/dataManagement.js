@@ -1,3 +1,4 @@
+import { handleCheckpointAction, attachCheckpointListeners } from './checkpoints.js';
 import { state } from '../state.js';
 import { ensureVaultAccessible } from './vault.js';
 import { showToast } from './toast.js';
@@ -16,7 +17,7 @@ const versionDetails = item => [
   { label: 'Source', value: item.source === 'Local' ? 'This device' : item.source === 'Archived Sync' ? 'Archived Chrome Sync' : 'Backup file' },
   { label: 'Version', value: (item.id || item.revision || 'Legacy').slice(0, 8) }
 ];
-const restoreNotice = initialized => ({ title: 'What changes on this device', text: initialized ? 'Your current vault is kept in recovery history. Automatic Sync turns off; remote copies stay unchanged.' : 'This version becomes your local vault. Automatic Sync stays off; remote copies stay unchanged.' });
+const restoreNotice = initialized => ({ title: 'What changes on this device', text: initialized ? 'Your current contents become a checkpoint. Your master password stays the same. Automatic Sync turns off; remote copies stay unchanged.' : 'This version becomes your local vault. Automatic Sync stays off; remote copies stay unchanged.' });
 const restoreFailure = 'Could not open this version. Check its master password; the saved data may also be damaged.';
 const versionPassword = () => ({ ...password('password', 'Version’s master password'), hint: 'Use the master password this version had when it was saved.' });
 async function accessibleDestination() {
@@ -69,6 +70,7 @@ async function importFile(input) {
   } finally { review.backupPassword = undefined; }
 }
 export function attachDataListeners() {
+  attachCheckpointListeners();
   const $ = id => document.getElementById(id); const file = $('importVaultFile');
   $('exportVault').addEventListener('click', () => runManagement(async () => {
     if (!await ensureVaultAccessible('Unlock your vault to export a backup.')) return;
@@ -89,28 +91,23 @@ export function attachDataListeners() {
   $('snapshotList').addEventListener('click', event => {
     const button = event.target.closest('button[data-snapshot-action]');
     if (!button || !$('snapshotList').contains(button)) return;
-    const { snapshotId: id, snapshotAction: action } = button.dataset;
+    const { snapshotId: id, snapshotAction: action, snapshotSource: source } = button.dataset;
     runManagement(async () => {
       const { snapshots } = await checked('RECOVERY_ARCHIVE_STATUS');
-      const selected = snapshots.find(item => item.id === id);
+      const selected = snapshots.find(item => item.id === id && (!source || item.source === source));
       if (!selected) throw new Error('This version is no longer available. Review the updated history.');
       if (action === 'export') {
-        const result = await requestOperation({ title: 'Export saved version', description: 'Download this encrypted version as a recovery file.', details: versionDetails(selected), notice: { title: 'Uses its original master password', text: 'This file keeps the master password the version had when saved. You won’t need to choose a new backup password.' }, confirmLabel: 'Download version', busyLabel: 'Preparing…', submit: () => checked('EXPORT_RECOVERY_SNAPSHOT', { id }) });
+        const result = await requestOperation({ title: 'Export saved version', description: 'Download this encrypted version as a recovery file.', details: versionDetails(selected), notice: { title: selected.source === 'Local' && !selected.locked && !selected.needsPassword ? 'Uses your current master password' : 'May require an older master password', text: 'The exported file keeps its current encryption. Later password changes in SecurePass will not update downloaded files.' }, confirmLabel: 'Download version', busyLabel: 'Preparing…', submit: () => checked('EXPORT_RECOVERY_SNAPSHOT', { id, source: selected.source }) });
         if (result) {
           downloadJSON(result.data, `securepass-snapshot-${id.slice(0, 8)}.json`);
           showToast('Encrypted version download requested.', 'success');
         }
         return;
       }
+      if (selected.source === 'Local') { await handleCheckpointAction(selected, action); return; }
       if (action !== 'restore') return;
-      if (selected.source !== 'Local') {
-        const result = await checked('EXPORT_RECOVERY_SNAPSHOT', { id });
-        await restoreRecord(result.data.snapshots[0], selected);
-        return;
-      }
-      const status = await accessibleDestination(); if (!status) return;
-      const result = await requestOperation({ title: 'Restore saved version', description: 'Restore the selected version on this device.', details: versionDetails(selected), notice: restoreNotice(status.initialized), fields: [versionPassword()], confirmLabel: 'Restore version', busyLabel: 'Restoring…', failureMessage: restoreFailure, submit: values => checked('RESTORE_RECOVERY', { id, passphrase: values.password, expectedRevision: status.revision || null }) });
-      if (result) showToast('Snapshot restored locally. Sync is off.', 'success');
+      const result = await checked('EXPORT_RECOVERY_SNAPSHOT', { id, source: selected.source });
+      await restoreRecord(result.data.snapshots[0], selected);
     });
   });
   $('wipeDevice').addEventListener('click', () => runManagement(async () => {

@@ -3,11 +3,14 @@ export function cancelOperation() {
   if (!active) return;
   const pending = active; active = null;
   pending.dialog.querySelectorAll('input').forEach(input => { input.value = ''; });
+  document.getElementById('operationSummary').replaceChildren();
+  document.getElementById('operationFields').replaceChildren();
   pending.dialog.close(); pending.resolve(null);
 }
-export function requestOperation({ title, description, fields = [], details = [], notice, confirmLabel = 'Continue', busyLabel = 'Working…', failureMessage, danger = false, submit }) {
+export function requestOperation({ title, description, fields = [], details = [], changes = [], layout, notice, confirmLabel = 'Continue', busyLabel = 'Working…', failureMessage, danger = false, submit }) {
   if (active) return Promise.reject(new Error('Finish or cancel the current operation first.'));
   const dialog = document.getElementById('operationDialog');
+  dialog.classList.toggle('checkpoint-operation', layout === 'checkpoint');
   const form = dialog.querySelector('form'); const body = document.getElementById('operationFields');
   document.getElementById('operationTitle').textContent = title;
   document.getElementById('operationDescription').textContent = description;
@@ -21,6 +24,14 @@ export function requestOperation({ title, description, fields = [], details = []
   document.getElementById('operationNoticeText').textContent = notice?.text || '';
   const error = document.getElementById('operationError'); error.textContent = ''; error.hidden = true;
   body.replaceChildren();
+  if (changes.length) {
+    const list = document.createElement('ul'); list.className = 'checkpoint-review-changes'; list.setAttribute('aria-label', 'Checkpoint differences');
+    for (const change of changes) {
+      const item = document.createElement('li'); const title = document.createElement('strong'); const text = document.createElement('span');
+      title.textContent = change.title; text.textContent = change.text; item.append(title, text); list.append(item);
+    }
+    body.append(list);
+  }
   const passwords = [];
   for (const field of fields) {
     const group = document.createElement('div'); group.className = 'operation-field';
@@ -68,9 +79,10 @@ export function requestOperation({ title, description, fields = [], details = []
       try {
         const result = submit ? await submit(values) : values;
         if (active !== pending) return;
-        active = null; dialog.close(); resolve(result);
+        active = null; dialog.close(); body.replaceChildren(); summary.replaceChildren(); resolve(result);
       } catch (failure) {
         if (active !== pending) return;
+        if (pending.locked) { active = null; dialog.close(); resolve(null); return; }
         const generic = !failure.message || ['Operation failed.', 'The operation failed for an operation-specific reason'].includes(failure.message);
         error.textContent = generic && failureMessage ? failureMessage : failure.message || 'Could not complete this operation. Please try again.';
         error.hidden = false; error.focus(); error.scrollIntoView({ block: 'nearest' });
@@ -89,6 +101,11 @@ export function requestOperation({ title, description, fields = [], details = []
 document.addEventListener('vault-ui-locked', () => {
   // A background commit may deliberately lock on completion. Do not report that as rollback.
   if (active && !document.getElementById('operationConfirm').disabled) cancelOperation();
-  else active?.dialog.querySelectorAll('input').forEach(input => { input.value = ''; });
+  else if (active) {
+    active.locked = true;
+    active.dialog.querySelectorAll('input').forEach(input => { input.value = ''; });
+    document.getElementById('operationSummary').replaceChildren();
+    document.getElementById('operationFields').replaceChildren();
+  }
 });
 window.addEventListener('pagehide', cancelOperation);

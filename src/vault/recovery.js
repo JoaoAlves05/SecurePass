@@ -1,5 +1,5 @@
 import { withVaultOperation } from './queue.js';
-import { createRecord, decryptRecord, validateRecord } from './crypto.js';
+import { createRecord, decryptRecord, encryptEntries, validateRecord } from './crypto.js';
 import { validateMaster } from '../validation.js';
 import { loadSettings, saveSettings } from '../settings.js';
 import { writeLocalVaultRecordRaw, readLocalVaultRecordRaw, recordRevision, getStorage, removeStorage, clearStorage, deleteIndexedDb, setStorage } from '../utils/storage.js';
@@ -11,7 +11,7 @@ export async function finishLocalRecovery() {
   if (!pending) return;
   if (pending.operation === 'erase') throw new Error('Local erasure was interrupted. Repeat Delete local SecurePass data to finish.');
   await saveSettings({ ...await loadSettings(), useSync: false }, { allowSyncChange: true });
-  await removeStorage('local', ['securepassBiometric', 'syncStatus', 'syncRetryState']);
+  await removeStorage('local', [...(pending.preserveBiometric ? [] : ['securepassBiometric']), 'syncStatus', 'syncRetryState']);
   // Keep publication suppressed until every cleanup step has completed.
   await removeStorage('local', 'localRestorePending');
 }
@@ -21,7 +21,7 @@ export function reconcileLocalRecovery() {
 export async function commitLocalRecovery(next, entries, expectedRecord, epoch) {
   session.assertGeneration(epoch);
   // This durable safety marker suppresses publication even if a later storage write fails.
-  await setStorage('local', { localRestorePending: { revision: next.record.revision } });
+  await setStorage('local', { localRestorePending: { revision: next.record.revision, preserveBiometric: Boolean(expectedRecord && expectedRecord.keyEpoch === next.record.keyEpoch) } });
   session.assertGeneration(epoch);
   await writeLocalVaultRecordRaw(next.record, recordRevision(expectedRecord));
   await finishLocalRecovery();
@@ -33,8 +33,10 @@ export function restoreExternalRecord(record, passphrase, expectedRevision) {
     const data = await decryptRecord(record, passphrase);
     const current = await readLocalVaultRecordRaw();
     if (expectedRevision !== undefined && recordRevision(current) !== expectedRevision) throw new Error('Vault changed. Review the restore again.');
-    if (current) await session.current(current);
-    const next = await createRecord(data.entries, passphrase, { vaultId: record.vaultId });
+    const active = current ? await session.current(current) : null;
+    const next = active
+      ? { record: await encryptEntries(active.record, data.entries, active.bytes), bytes: active.bytes }
+      : await createRecord(data.entries, passphrase, { vaultId: record.vaultId });
     await commitLocalRecovery(next, data.entries, current, epoch);
   });
 }

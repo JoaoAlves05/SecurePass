@@ -58,8 +58,8 @@ try {
       assert.equal(await page.locator('#operation-backupPassword').evaluate(input => input === document.activeElement), true);
       assert.ok(await page.getByLabel('Backup password', { exact: true }).getAttribute('aria-describedby'));
       await fit(page); await capture(page, `export-${theme}-${width}`); await cancel(page);
-      await page.locator('[data-snapshot-action="restore"]').first().click(); await dialog(page, 'Restore saved version');
-      assert.equal(await page.locator('#operationSummary dd').count(), 3);
+      await page.locator('[data-snapshot-action="restore"]').first().click(); await dialog(page, 'Restore whole vault');
+      assert.equal(await page.locator('#operationSummary dd').count(), 5);
       assert.match(await page.locator('#operationNotice').textContent(), /Sync turns off/);
       await fit(page); await capture(page, `restore-${theme}-${width}`); await page.keyboard.press('Escape'); await idle(page);
     }
@@ -94,13 +94,10 @@ try {
   const snapshot = JSON.parse(await readFile(await snapshotDownload.path(), 'utf8')); await idle(page);
   assert.equal(snapshot.snapshots[0].revision, selectedId);
 
-  await page.locator('[data-snapshot-action="restore"]').first().click(); await dialog(page, 'Restore saved version');
-  await page.getByLabel('Version’s master password', { exact: true }).fill('wrong'); await page.locator('#operationConfirm').click();
-  await page.locator('#operationError').waitFor({ state: 'visible' }); await fit(page); await capture(page, 'restore-error-dark');
-  assert.match(await page.locator('#operationError').textContent(), /master password/);
-  assert.equal((await send(page, 'VAULT_STATUS')).status.revision, revision);
-  await page.getByLabel('Version’s master password', { exact: true }).fill(PASS); await page.locator('#operationConfirm').click(); await idle(page);
-  assert.equal((await send(page, 'LIST_CREDENTIALS')).entries.length, 1);
+  await page.locator('[data-snapshot-action="restore"]').first().click(); await dialog(page, 'Restore whole vault');
+  assert.equal(await page.locator('#operationFields input[type="password"]').count(), 0);
+  assert.match(await page.locator('#operationDescription').textContent(), /master password.*stay the same/);
+  await page.locator('#operationConfirm').click(); await idle(page);
   assert.equal((await send(page, 'LOAD_SETTINGS')).settings.useSync, false);
 
   // A deferred action keeps its progress label and disables editable controls.
