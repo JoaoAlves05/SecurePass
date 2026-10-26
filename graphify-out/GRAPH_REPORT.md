@@ -1,15 +1,17 @@
 # Graph Report - SecurePass  (2026-10-26)
 
 ## Corpus Check
-- cluster-only mode — file stats not available
+- 99 files · ~74,284 words
+- Verdict: corpus is large enough that graph structure adds value.
+- Unclassified: 7 file(s) not represented in the graph (top: .css 4, (none) 3)
 
 ## Summary
-- 1083 nodes · 2590 edges · 77 communities (43 shown, 34 thin omitted)
+- 1083 nodes · 2589 edges · 77 communities (43 shown, 34 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0697b0a5`
+- Built from commit: `7653a111`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -57,7 +59,7 @@
 - Revisão funcional — Backups & recovery e Advanced
 - Evidência visual das definições
 - Security settings area
-- Evidência visual das definições
+- REVIEW_BACKUP_ADVANCED.md
 - Evidência visual das definições
 - Quatro áreas das definições
 - Análise de formulários
@@ -95,12 +97,12 @@
 10. `initialise()` - 34 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Two-minute single-use revision-bound password-change grant` --references--> `consumeMasterAuthorization()`  [EXTRACTED]
-  docs/MASTER_PASSWORD_FLOW.md → src/vault/masterAuthorization.js
-- `Ordinary biometric unlock cannot become a password-change grant` --references--> `startAuthentication()`  [EXTRACTED]
-  docs/MASTER_PASSWORD_FLOW.md → src/biometric/service.js
 - `Fresh identity confirmation replaces preliminary unlock and modal` --references--> `attachMasterPasswordListeners()`  [EXTRACTED]
   docs/MASTER_PASSWORD_FLOW.md → popup/modules/masterPassword.js
+- `Ordinary biometric unlock cannot become a password-change grant` --references--> `startAuthentication()`  [EXTRACTED]
+  docs/MASTER_PASSWORD_FLOW.md → src/biometric/service.js
+- `Two-minute single-use revision-bound password-change grant` --references--> `consumeMasterAuthorization()`  [EXTRACTED]
+  docs/MASTER_PASSWORD_FLOW.md → src/vault/masterAuthorization.js
 - `Purpose-bound inline master-password authorization` --references--> `attachMasterPasswordListeners()`  [EXTRACTED]
   ARCHITECTURE.md → popup/modules/masterPassword.js
 - `Extension-owned secure confirmation page` --semantically_similar_to--> `Origin and document bound autofill`  [INFERRED] [semantically similar]
@@ -167,8 +169,8 @@ Cohesion: 0.18
 Nodes (16): attachButton(), entry, element(), initAutofill(), pending, showSaveSuggestion(), submitted, tracked (+8 more)
 
 ### Community 15 - "backupCrypto.js"
-Cohesion: 0.10
-Nodes (20): Backups & recovery — export and restore dialogs, Delivered interaction, Executed checks, Visual evidence, Journey scope and unconfigured OAuth, Exercised automated regression boundaries, Backup Advanced functional baseline: 75 Node tests and 74 modules, Current popup dialog UI and 75-module browser evidence (+12 more)
+Cohesion: 0.14
+Nodes (16): Journey scope and unconfigured OAuth, Exercised automated regression boundaries, Backup Advanced functional baseline: 75 Node tests and 74 modules, Current popup dialog UI and 75-module browser evidence, Earlier settings/data increment evidence, Dated validation evidence and missing acceptance, Previous four-area Settings validation, Previous Settings frontend validation (+8 more)
 
 ### Community 16 - "Evidência visual das definições"
 Cohesion: 0.16
@@ -262,9 +264,9 @@ Nodes (6): Copy edit and delete controls, Credential cards, Generator Tester Vau
 Cohesion: 0.47
 Nodes (4): legacyClipboard(), read(), serial, write()
 
-### Community 46 - "Evidência visual das definições"
-Cohesion: 0.40
-Nodes (5): Limites e aceitação restante, Problemas reproduzidos e corrigidos, Revisão funcional — Backups & recovery e Advanced, Validação, Verificação manual reproduzível
+### Community 46 - "REVIEW_BACKUP_ADVANCED.md"
+Cohesion: 0.18
+Nodes (9): Backups & recovery — export and restore dialogs, Delivered interaction, Executed checks, Visual evidence, Limites e aceitação restante, Problemas reproduzidos e corrigidos, Revisão funcional — Backups & recovery e Advanced, Validação (+1 more)
 
 ### Community 48 - "Quatro áreas das definições"
 Cohesion: 0.50
@@ -294,19 +296,17 @@ Nodes (3): Timestamped encrypted local-version backup cards with Restore and Exp
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Current architecture with implemented local and legacy increment` connect `biometric/service.js` to `cryptoVault.js`, `Ferramentas de desenvolvimento`, `Documentação de Sync e dados`, `Ferramentas de desenvolvimento`, `Arquitetura documentada`, `Revisão funcional histórica`, `Evidência visual das definições`, `backupCrypto.js`, `Modelo de segurança`, `Settings UX — journeys, screens and acceptance map`, `Navegação e validação Settings`, `Settings frontend review and refinement`?**
+- **Why does `Current architecture with implemented local and legacy increment` connect `biometric/service.js` to `cryptoVault.js`, `Ferramentas de desenvolvimento`, `Documentação de Sync e dados`, `Ferramentas de desenvolvimento`, `Arquitetura documentada`, `Revisão funcional histórica`, `REVIEW_BACKUP_ADVANCED.md`, `Evidência visual das definições`, `Modelo de segurança`, `Settings UX — journeys, screens and acceptance map`, `Navegação e validação Settings`, `Settings frontend review and refinement`?**
   _High betweenness centrality (0.389) - this node is a cross-community bridge._
 - **What connects `./modules/operationDialog.js`, `Independent management-tab layout with shared trusted pathname`, `Popup toast live status` to the rest of the system?**
   _156 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `cryptoVault.js` be split into smaller, more focused modules?**
   _Cohesion score 0.05051948051948052 - nodes in this community are weakly interconnected._
 - **Why does `Purpose-bound inline master-password authorization` connect `cryptoVault.js` to `Edição do cofre`, `biometric/service.js`, `popup.js`?**
-  _High betweenness centrality (0.381) - this node is a cross-community bridge._
+  _High betweenness centrality (0.386) - this node is a cross-community bridge._
 - **Should `biometric/service.js` be split into smaller, more focused modules?**
   _Cohesion score 0.1033182503770739 - nodes in this community are weakly interconnected._
 - **Why does `attachMasterPasswordListeners()` connect `Edição do cofre` to `cryptoVault.js`, `Revisão funcional — Backups & recovery e Advanced`, `popup.js`?**
-  _High betweenness centrality (0.148) - this node is a cross-community bridge._
+  _High betweenness centrality (0.162) - this node is a cross-community bridge._
 - **Should `cryptoVault.js` be split into smaller, more focused modules?**
   _Cohesion score 0.07293868921775898 - nodes in this community are weakly interconnected._
-
-Semantic maintenance note (2026-10-26): changed master-password documentation and seven screenshots were revalidated incrementally. Delegated extraction token usage was unavailable; any zero semantic token counters are placeholders, not measured cost. Existing unrelated backup-dialog cache prompt vintage and pending label suggestions remain unchanged. Five code self-loops are recursive calls, with no dangling/missing endpoints or collapsed graph edges.
