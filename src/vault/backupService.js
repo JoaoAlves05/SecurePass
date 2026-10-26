@@ -3,7 +3,7 @@ import { decryptBackupPayload, isEncryptedBackupEnvelope } from '../backupCrypto
 import { readLocalVaultRecordRaw, recordRevision, getStorage, setStorage, removeStorage } from '../utils/storage.js';
 import { withVaultOperation } from './queue.js';
 import { createRecord, encryptEntries } from './crypto.js';
-import { commitRecord } from './repository.js';
+import { assertCurrent, commitRecord } from './repository.js';
 import { commitLocalRecovery } from './recovery.js';
 import * as session from './session.js';
 const PREVIEW = 'backupPreview';
@@ -20,7 +20,10 @@ export function planImport(current, incoming, strategy = 'keep-both') {
   if (!['keep-both', 'skip', 'replace'].includes(strategy)) throw new Error('Choose an import conflict policy.');
   const entries = structuredClone(current); const stats = { new: 0, identical: 0, conflicts: 0, imported: 0 };
   for (const item of incoming) {
-    const index = entries.findIndex(entry => entry.id === item.id || (entry.site === item.site && entry.username === item.username));
+    // A previous keep-both import has a new ID; recognize its exact contents too.
+    if (strategy === 'keep-both' && entries.some(entry => equal(entry, item))) { stats.identical++; continue; }
+    let index = entries.findIndex(entry => entry.id === item.id);
+    if (index < 0) index = entries.findIndex(entry => entry.site === item.site && entry.username === item.username);
     if (index < 0) { entries.push(item); stats.new++; stats.imported++; continue; }
     const existing = entries[index];
     if (equal(existing, item)) { stats.identical++; continue; }
@@ -57,6 +60,11 @@ export function commitBackup({ data, backupPassword, token, newMasterPassword })
     const incoming = await decode(data, backupPassword);
     const plan = planImport(state?.entries || [], incoming, preview.strategy);
     if (current) {
+      if (!plan.imported) {
+        await removeStorage('session', PREVIEW);
+        return { count: 0 };
+      }
+      await assertCurrent(current);
       const next = await encryptEntries(current, plan.entries, state.bytes);
       session.assertGeneration(epoch);
       await commitRecord(next, current.revision);

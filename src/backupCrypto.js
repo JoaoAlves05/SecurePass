@@ -3,7 +3,7 @@ import { MAX_IMPORT_BYTES } from './validation.js';
 import { decodeBytes } from './vault/crypto.js';
 
 const ENCODER = new TextEncoder();
-const DECODER = new TextDecoder();
+const DECODER = new TextDecoder('utf-8', { fatal: true });
 
 const BACKUP_ENCRYPTED_KIND = 'securepass-encrypted-backup';
 const BACKUP_ENCRYPTED_VERSION = 1;
@@ -76,7 +76,7 @@ export async function decryptBackupPayload(encryptedBackup, backupPassword) {
     throw new Error('Backup password is required for encrypted backups.');
   }
 
-  if (encryptedBackup.version !== 1 || JSON.stringify(encryptedBackup).length > MAX_IMPORT_BYTES) throw new Error('Unsupported or oversized encrypted backup.');
+  if (encryptedBackup.version !== 1 || ENCODER.encode(JSON.stringify(encryptedBackup)).length > MAX_IMPORT_BYTES) throw new Error('Unsupported or oversized encrypted backup.');
   const kdf = encryptedBackup.kdf || {};
   const cipher = encryptedBackup.cipher || {};
 

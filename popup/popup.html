@@ -638,10 +638,18 @@
   </div>
 
   <dialog id="operationDialog" class="operation-dialog" aria-labelledby="operationTitle" aria-describedby="operationDescription">
-    <form>
-      <span class="eyebrow">SECUREPASS</span><h2 id="operationTitle"></h2><p id="operationDescription"></p>
-      <div id="operationFields"></div><p id="operationError" class="operation-error" role="alert" tabindex="-1" hidden></p>
-      <div class="operation-actions"><button id="operationCancel" type="button" class="secondary">Cancel</button><button id="operationConfirm" type="submit" class="primary">Continue</button></div>
+    <form class="operation-form">
+      <header class="operation-header">
+        <h2 id="operationTitle"></h2>
+        <p id="operationDescription"></p>
+      </header>
+      <div class="operation-body">
+        <dl id="operationSummary" class="operation-summary" hidden></dl>
+        <div id="operationFields"></div>
+        <aside id="operationNotice" class="operation-notice" hidden><strong id="operationNoticeTitle"></strong><p id="operationNoticeText"></p></aside>
+        <p id="operationError" class="operation-error" role="alert" tabindex="-1" hidden></p>
+      </div>
+      <footer class="operation-actions"><button id="operationCancel" type="button" class="secondary">Cancel</button><button id="operationConfirm" type="submit" class="primary">Continue</button></footer>
     </form>
   </dialog>
   <script type="module" src="popup.js"></script>

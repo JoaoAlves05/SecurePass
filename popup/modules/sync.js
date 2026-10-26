@@ -6,14 +6,18 @@ import { requestOperation } from './operationDialog.js';
 import { checked, runManagement } from './management.js';
 const $ = id => document.getElementById(id);
 let lastRemote = null;
+let refreshSequence = 0;
 const master = { name: 'password', label: 'Master password for the selected remote vault', type: 'password' };
 export async function refreshSyncView(inspectRemote = false) {
+  const sequence = ++refreshSequence;
   const [sync, recovery] = await Promise.allSettled([checked('SYNC_STATUS', { inspectRemote }), checked('RECOVERY_ARCHIVE_STATUS')]);
+  if (sequence !== refreshSequence) return;
   if (sync.status === 'fulfilled') {
     const status = sync.value.status;
     if (status.remoteInspected) lastRemote = status;
+    const remoteError = status.remoteError || (!status.remoteInspected && lastRemote?.remoteError);
     $('syncToggle').checked = status.enabled;
-    $('syncStatus').textContent = `Sync is ${status.enabled ? 'on' : 'off'}. ${status.pending ? `Saved locally; upload pending. ${status.error || ''}` : status.enabled ? 'Legacy Chrome Sync is enabled.' : 'Your vault stays on this device. No automatic remote communication.'}${status.issues.length ? ` ${status.issues.length} remote version(s) need attention; valid copies remain listed.` : ''}${status.restorePending ? ' A local recovery operation needs reconciliation; publication is paused.' : ''}`;
+    $('syncStatus').textContent = `Sync is ${status.enabled ? 'on' : 'off'}. ${status.pending ? `Saved locally; upload pending. ${status.error || ''}` : status.enabled ? 'Legacy Chrome Sync is enabled.' : 'Your vault stays on this device. No automatic remote communication.'}${remoteError ? ` Could not inspect remote copies: ${remoteError}. Local backups and history remain available.` : ''}${status.issues.length ? ` ${status.issues.length} remote version(s) need attention; valid copies remain listed.` : ''}${status.restorePending ? ' Local recovery or erasure is incomplete; automatic publication is paused.' : ''}`;
     $('retrySync').disabled = !status.enabled || !status.pending;
     $('compactSync').disabled = !status.enabled || !status.heads.length || Boolean(status.issues.length);
     $('clearSyncArchive').disabled = !status.recoveryArchiveCount;

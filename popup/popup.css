@@ -2911,14 +2911,40 @@ body[data-theme='dark'] .alert-box.warning {
 .vault-actions .danger, #wipeDevice { color: var(--danger); }
 .vault-notes { color: var(--text-muted); }
 
-.operation-dialog { color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 26px; width: min(440px, calc(100vw - 28px)); max-height: calc(100vh - 28px); overflow: auto; box-shadow: var(--shadow-lg); }
-.operation-dialog::backdrop { background: rgba(0, 0, 0, .55); backdrop-filter: blur(5px); }
-.operation-dialog h2 { font-size: 22px; margin: 12px 0; letter-spacing: -.4px; }
-.operation-dialog p { font-size: 13px; line-height: 1.65; color: var(--text-muted); white-space: pre-line; }
-.operation-field { display: grid; gap: 8px; margin: 18px 0; font-size: 12px; font-weight: 600; }
-.operation-field input, .operation-field select { width: 100%; padding: 12px; color: var(--text); background: var(--surface-raised); border: 1px solid var(--border); border-radius: 10px; font: inherit; }
+.operation-dialog { color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0; width: min(440px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: hidden; box-shadow: var(--shadow-lg); }
+.operation-dialog::backdrop { background: rgba(0, 0, 0, .55); }
+.operation-form { display: flex; flex-direction: column; max-height: calc(100dvh - 26px); }
+.operation-header { padding: 24px 24px 0; flex: none; }
+.operation-dialog h2 { font-size: 21px; line-height: 1.3; margin: 0 0 8px; letter-spacing: -.3px; overflow-wrap: anywhere; }
+.operation-dialog p { font-size: 13px; line-height: 1.6; margin: 0; color: var(--text-muted); white-space: pre-line; }
+.operation-body { display: grid; gap: 20px; padding: 20px 24px 24px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.operation-summary { display: grid; gap: 10px; margin: 0; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--surface-raised); }
+.operation-summary > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.operation-summary dt { color: var(--text-muted); font-size: 12px; }
+.operation-summary dd { margin: 0; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+#operationFields { display: grid; gap: 18px; }
+#operationFields:empty { display: none; }
+.operation-field { display: grid; gap: 7px; font-size: 13px; font-weight: 600; }
+.operation-control { position: relative; min-width: 0; }
+.operation-field input, .operation-field select { width: 100%; min-height: 44px; padding: 11px 12px; color: var(--text); caret-color: var(--primary); background: var(--surface-raised); border: 1px solid color-mix(in srgb, var(--text-muted) 35%, transparent); border-radius: var(--radius-sm); font: inherit; font-weight: 400; }
+.operation-password input { padding-right: 66px; }
 .operation-field input:focus-visible, .operation-field select:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.password-reveal { justify-self: start; border: 0; padding: 0; font-size: 11px; background: transparent; color: var(--primary); cursor: pointer; }
-.operation-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
-.operation-dialog .operation-error { color: var(--danger); background: var(--danger-bg); padding: 12px; border-radius: 8px; }
+.operation-dialog .operation-hint { font-size: 12px; font-weight: 400; line-height: 1.5; }
+.operation-password .password-reveal { position: absolute; inset: 1px 1px 1px auto; min-width: 58px; padding: 0 12px; border: 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font: inherit; font-size: 12px; font-weight: 600; background: transparent; color: var(--text-muted); cursor: pointer; }
+.operation-password .password-reveal:hover { color: var(--text); background: var(--bg-subtle); }
+.operation-dialog button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.operation-notice { font-size: 12px; line-height: 1.5; }
+.operation-notice strong { display: block; font-size: 12px; margin-bottom: 4px; }
+.operation-dialog .operation-notice p { font-size: 12px; }
+.operation-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 10px; padding: 16px 24px; border-top: 1px solid color-mix(in srgb, var(--text-muted) 18%, transparent); flex: none; }
+.operation-actions button { min-height: 42px; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.4; }
+.operation-actions button:disabled { cursor: wait; opacity: .65; }
+.operation-dialog .operation-error { color: color-mix(in srgb, var(--danger) 75%, var(--text)); background: var(--danger-bg); padding: 12px; border-radius: var(--radius-sm); }
+.operation-dialog [hidden] { display: none; }
+@media (max-width: 360px) {
+  .operation-header { padding: 20px 18px 0; }
+  .operation-body { padding: 18px; gap: 16px; }
+  .operation-actions { padding: 14px 18px; }
+  .operation-dialog h2 { font-size: 20px; }
+}
 .destructive { background: var(--danger) !important; color: white !important; }

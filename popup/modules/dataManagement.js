@@ -11,20 +11,30 @@ export function downloadJSON(data, name) {
 }
 const password = (name = 'password', label = 'Master password') => ({ name, label, type: 'password' });
 const snapshotLabel = item => `${item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'Legacy snapshot'} · ${(item.id || item.revision || '').slice(0, 8)}`;
+const versionDetails = item => [
+  { label: 'Saved', value: item.updatedAt ? new Date(item.updatedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'Legacy version' },
+  { label: 'Source', value: item.source === 'Local' ? 'This device' : item.source === 'Archived Sync' ? 'Archived Chrome Sync' : 'Backup file' },
+  { label: 'Version', value: (item.id || item.revision || 'Legacy').slice(0, 8) }
+];
+const restoreNotice = initialized => ({ title: 'What changes on this device', text: initialized ? 'Your current vault is kept in recovery history. Automatic Sync turns off; remote copies stay unchanged.' : 'This version becomes your local vault. Automatic Sync stays off; remote copies stay unchanged.' });
+const restoreFailure = 'Could not open this version. Check its master password; the saved data may also be damaged.';
+const versionPassword = () => ({ ...password('password', 'Version’s master password'), hint: 'Use the master password this version had when it was saved.' });
 async function accessibleDestination() {
   const { status } = await checked('VAULT_STATUS');
   if (status.initialized && !await ensureVaultAccessible('Unlock the current vault before changing its data.')) return null;
   // Unlocking a legacy vault can migrate its revision; capture the destination afterwards.
   return (await checked('VAULT_STATUS')).status;
 }
-async function restoreRecord(record) {
+async function restoreRecord(record, selected = record) {
   const status = await accessibleDestination(); if (!status) return;
-  const result = await requestOperation({ title: 'Restore on this device', description: 'The current encrypted vault is kept in recovery history. Automatic Sync will be turned off. Remote copies remain unchanged. Enter the password this snapshot used.', fields: [password()], confirmLabel: 'Restore locally', submit: values => checked('IMPORT_RECOVERY', { record, passphrase: values.password, expectedRevision: status.revision || null }) });
+  const result = await requestOperation({ title: 'Restore saved version', description: 'Restore the selected version on this device.', details: versionDetails(selected), notice: restoreNotice(status.initialized), fields: [versionPassword()], confirmLabel: 'Restore version', busyLabel: 'Restoring…', failureMessage: restoreFailure, submit: values => checked('IMPORT_RECOVERY', { record, passphrase: values.password, expectedRevision: status.revision || null }) });
   if (result) showToast('Snapshot restored locally. Sync is off.', 'success');
 }
 async function importFile(input) {
   if (input.size > MAX_IMPORT_BYTES) throw new Error('This import supports files up to 16 MiB. Export individual snapshots for larger recovery archives.');
-  const data = JSON.parse(await input.text());
+  let data;
+  try { data = JSON.parse(await input.text()); }
+  catch { throw new Error('This file is not a valid JSON backup. Choose a SecurePass backup file.'); }
   if (!data || typeof data !== 'object') throw new Error('Invalid backup file.');
   if (data.kind === 'securepass-encrypted-recovery') {
     if (data.version !== 1 || !Array.isArray(data.snapshots) || !Array.isArray(data.sync)) throw new Error('Invalid recovery archive.');
@@ -62,7 +72,7 @@ export function attachDataListeners() {
   const $ = id => document.getElementById(id); const file = $('importVaultFile');
   $('exportVault').addEventListener('click', () => runManagement(async () => {
     if (!await ensureVaultAccessible('Unlock your vault to export a backup.')) return;
-    const result = await requestOperation({ title: 'Export encrypted backup', description: 'Choose a separate backup password of at least 12 characters. You will need it to restore this file. Store the file somewhere safe outside this device.', fields: [password('backupPassword', 'Backup password'), password('confirmation', 'Confirm backup password')], confirmLabel: 'Export backup', submit: values => {
+    const result = await requestOperation({ title: 'Export encrypted backup', description: 'Download a password-protected copy of your current vault.', fields: [{ ...password('backupPassword', 'Backup password'), hint: 'At least 12 characters. Choose a separate password from your master password.' }, password('confirmation', 'Confirm backup password')], notice: { title: 'Keep your backup password safe', text: 'You’ll need it to restore this file. Store your backup somewhere safe outside this device.' }, confirmLabel: 'Export backup', busyLabel: 'Encrypting…', submit: values => {
       if (values.backupPassword !== values.confirmation) throw new Error('Backup passwords do not match.');
       return checked('EXPORT_VAULT', { backupPassword: values.backupPassword });
     } });
@@ -85,19 +95,21 @@ export function attachDataListeners() {
       const selected = snapshots.find(item => item.id === id);
       if (!selected) throw new Error('This version is no longer available. Review the updated history.');
       if (action === 'export') {
-        const result = await checked('EXPORT_RECOVERY_SNAPSHOT', { id });
-        downloadJSON(result.data, `securepass-snapshot-${id.slice(0, 8)}.json`);
-        showToast('Encrypted version download requested.', 'success');
+        const result = await requestOperation({ title: 'Export saved version', description: 'Download this encrypted version as a recovery file.', details: versionDetails(selected), notice: { title: 'Uses its original master password', text: 'This file keeps the master password the version had when saved. You won’t need to choose a new backup password.' }, confirmLabel: 'Download version', busyLabel: 'Preparing…', submit: () => checked('EXPORT_RECOVERY_SNAPSHOT', { id }) });
+        if (result) {
+          downloadJSON(result.data, `securepass-snapshot-${id.slice(0, 8)}.json`);
+          showToast('Encrypted version download requested.', 'success');
+        }
         return;
       }
       if (action !== 'restore') return;
       if (selected.source !== 'Local') {
         const result = await checked('EXPORT_RECOVERY_SNAPSHOT', { id });
-        await restoreRecord(result.data.snapshots[0]);
+        await restoreRecord(result.data.snapshots[0], selected);
         return;
       }
       const status = await accessibleDestination(); if (!status) return;
-      const result = await requestOperation({ title: 'Restore snapshot locally', description: 'Your current vault is kept in recovery history. Sync turns off; remote copies remain. Enter the master password used by this version.', fields: [password()], confirmLabel: 'Restore locally', submit: values => checked('RESTORE_RECOVERY', { id, passphrase: values.password, expectedRevision: status.revision || null }) });
+      const result = await requestOperation({ title: 'Restore saved version', description: 'Restore the selected version on this device.', details: versionDetails(selected), notice: restoreNotice(status.initialized), fields: [versionPassword()], confirmLabel: 'Restore version', busyLabel: 'Restoring…', failureMessage: restoreFailure, submit: values => checked('RESTORE_RECOVERY', { id, passphrase: values.password, expectedRevision: status.revision || null }) });
       if (result) showToast('Snapshot restored locally. Sync is off.', 'success');
     });
   });

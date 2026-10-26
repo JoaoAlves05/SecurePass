@@ -34,11 +34,15 @@ export async function assertCurrent(record) {
     if (incompatible.length) throw new Error('Sync changed on another device. Resolve or download the new version in settings before editing.');
   }
 }
-export async function getSyncStatus({ inspectRemote = false } = {}) {
+export async function getSyncStatus({ inspectRemote = false, localOnly = false } = {}) {
   const local = await readLocalVaultRecordRaw();
   const enabled = (await loadSettings()).useSync;
-  const remoteInspected = enabled || inspectRemote;
-  const remote = remoteInspected ? await inspectSync() : { heads: [], issues: [] };
+  const remoteInspected = !localOnly && (enabled || inspectRemote);
+  let remote = { heads: [], issues: [] }; let remoteError;
+  if (remoteInspected) {
+    try { remote = await inspectSync(); }
+    catch (error) { remoteError = error.message; }
+  }
   const stored = await getStorage('local', ['syncStatus', 'syncRecovery', 'localRestorePending']);
   const outbox = await readSyncOutbox();
   const pending = Boolean(outbox && outbox.revision === local?.revision);
@@ -46,7 +50,7 @@ export async function getSyncStatus({ inspectRemote = false } = {}) {
     pending, error: pending ? stored.syncStatus?.error : undefined,
     localRevision: local?.revision, initialized: Boolean(local), remoteInspected,
     heads: remote.heads.map(r => ({ revision: r.revision || 'legacy', vaultId: r.vaultId, updatedAt: r.updatedAt, current: recordRevision(r) === recordRevision(local) })),
-    enabled, issues: remote.issues, bytesUsed: remote.bytesUsed, itemCount: remote.itemCount,
+    enabled, remoteError, issues: remote.issues, bytesUsed: remote.bytesUsed, itemCount: remote.itemCount,
     recoveryArchiveCount: (stored.syncRecovery || []).length,
     restorePending: Boolean(stored.localRestorePending),
     drive: { available: false, reason: 'Google OAuth and the signed-device protocol are not configured. Local vault and backups are available.' }

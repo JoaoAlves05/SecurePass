@@ -20,8 +20,8 @@ export function runManagement(task) {
   busy = true;
   document.getElementById('managementActivity').textContent = 'Operation in progress…';
   return Promise.resolve().then(task).catch(error => showToast(error.message, 'error')).finally(async () => {
-    busy = false; document.getElementById('managementActivity').textContent = '';
     try { await refreshManagement(); } catch (error) { showToast(error.message, 'error'); }
+    finally { busy = false; document.getElementById('managementActivity').textContent = ''; }
   });
 }
 

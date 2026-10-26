@@ -6,6 +6,7 @@ import { createRecord, decryptRecord, encryptEntries } from './crypto.js';
 import { withVaultOperation as operation } from './queue.js';
 import * as session from './session.js';
 import { validateMaster } from '../validation.js';
+import { commitLocalRecovery, finishLocalRecovery } from './recovery.js';
 
 const lockVault = session.revokeSession;
 async function requireVault() { return session.current(await loadRecord()); }
@@ -13,6 +14,7 @@ export { getSyncStatus };
 
 export function changeSyncMode(target, strategy, passphrase, options = {}) {
   return operation(async epoch => {
+    await finishLocalRecovery();
     if (!target) {
       await saveSettings({ ...(await loadSettings()), useSync: false }, { allowSyncChange: true });
       await lockVault();
@@ -21,16 +23,19 @@ export function changeSyncMode(target, strategy, passphrase, options = {}) {
     const local = await readLocalVaultRecordRaw();
     if (options.expectedRevision !== undefined && recordRevision(local) !== options.expectedRevision) throw new Error('Local vault changed. Review the storage choice again.');
     const heads = await syncHeads();
+    if (!local && !heads.length) throw new Error('Create a local vault or restore a backup before enabling Sync.');
     const divergent = heads.filter(r => recordRevision(r) !== recordRevision(local) && !local?.parents?.includes(r.revision));
     if (local && divergent.length && !strategy) return { requiresResolution: true };
     if (strategy && !['keep-local', 'use-sync'].includes(strategy)) throw new Error('Invalid Sync resolution.');
     if (strategy === 'use-sync' || (!local && heads.length)) {
-      if (heads.length !== 1) throw new Error('Choose a specific Sync generation in the recovery panel.');
-      if (options.revision && (heads[0].revision || 'legacy') !== options.revision) throw new Error('Remote version changed. Refresh and choose again.');
+      const chosen = options.revision ? heads.find(head => (head.revision || 'legacy') === options.revision) : heads.length === 1 ? heads[0] : null;
+      if (!chosen) throw new Error('Remote version changed or is ambiguous. Refresh and choose a specific Sync generation.');
       if (!passphrase) throw new Error('Enter the master password for the selected remote vault first.');
-      await decryptRecord(heads[0], validateMaster(passphrase));
+      await decryptRecord(chosen, validateMaster(passphrase));
+      if (local) await session.current(local);
       session.assertGeneration(epoch);
-      await writeLocalVaultRecordRaw(heads[0], recordRevision(local));
+      await writeLocalVaultRecordRaw(chosen, recordRevision(local));
+      await removeStorage('local', 'securepassBiometric');
     } else if (local) {
       const state = await requireVault();
       if (heads.some(r => !r.version)) throw new Error('Legacy remote vault: download and unlock it before merging.');
@@ -70,10 +75,8 @@ export function resolveSyncGeneration(revision, passphrase, merge = false, expec
       // A download is a local recovery operation, never an implicit remote publication.
       const next = await createRecord(remote.entries, passphrase, { vaultId: chosen.vaultId });
       session.assertGeneration(epoch);
-      await setStorage('local', { localRestorePending: { revision: next.record.revision } });
-      await writeLocalVaultRecordRaw(next.record, recordRevision(local));
-      await saveSettings({ ...(await loadSettings()), useSync: false }, { allowSyncChange: true });
-      await removeStorage('local', ['securepassBiometric', 'localRestorePending']);
+      if (local) await session.current(local);
+      await commitLocalRecovery(next, remote.entries, local, epoch);
     } else {
       if (!local) throw new Error('Create or unlock the destination vault before merging.');
       const state = await requireVault();

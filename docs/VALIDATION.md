@@ -2,7 +2,19 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-## Current hierarchical Settings navigation — 2026-10-25
+## Current backup dialog refinement — 2026-10-26
+
+The [export/restore UI refinement](BACKUP_DIALOGS_UI.md) improves the extension popup and management dialogs with selected-version metadata, password help and reveal controls, explicit recovery effects, fixed visible actions, pending states and clearer errors. Earlier-version export now includes a version review before downloading. The dedicated `npm run test:backup-dialogs-browser`, existing settings/browser suites and 75-module check passed. New captures live under `screenshots/backup-dialogs/`; unrelated generated baseline screenshots were restored. Backend test evidence and acceptance limits remain those recorded below.
+
+## Current Backups/recovery and Advanced review — 2026-10-26
+
+The [functional review](REVIEW_BACKUP_ADVANCED.md) records reproduced defects and fixes for import identity/deduplication, unchanged imports, remote divergence, local access during remote outages, resumable local recovery, confirmed erasure with an unreadable database, interrupted deletion, selected remote adoption and concurrent retry suppression. Added 18 Node regressions and Chromium journeys for malformed files, failed remote inspection and encrypted reimport without consuming history.
+
+Validation: **75 Node tests passed**, **74 JavaScript modules checked**, `npm run test:settings-browser`, `npm run test:browser` (including virtual PRF) and `npm run test:sync-browser` passed. The two-profile Sync scenario emulates transport. The graph was refreshed after source/document changes; generated baseline screenshots were restored after the runs. `git diff --check` passed.
+
+This does not establish authenticated Google transport, physical PRF hardware, every failure/interleaving or full distributed transition recovery. Legacy capacity deadlock, large aggregate archive migration and the proposed Drive/device protocol remain outside acceptance. See the review's limits and manual steps.
+
+## Previous hierarchical Settings navigation — 2026-10-25
 
 The [hierarchical navigation revision](SETTINGS_NAVIGATION.md) replaces Settings tabs with a popup category list/detail pages and a persistent sidebar in wide management tabs. Existing controls and authentication/data flows are retained. Checks passed: 57 Node tests, 73 checked modules, the expanded settings browser scenario, the general browser/virtual-PRF suite, and the two-profile emulated Sync suite. Navigation regressions cover keyboard activation, back/Escape, browser history, scroll/focus, legacy fragments, reload, tab transfer, responsive modes and light/dark layouts at 320–1200px. The cache status no longer collapses into one character per line. Current screenshots and reproducible manual checks are linked in the revision report. These are executed disposable scenarios; physical authenticator, authenticated transport and protocol acceptance remain separate.
 

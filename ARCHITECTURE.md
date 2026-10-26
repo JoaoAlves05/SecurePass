@@ -10,6 +10,8 @@ See [current evidence](docs/SETTINGS_UX_IMPLEMENTATION.md) and [journey design](
 
 The detailed SD descriptions below preserve the reviewed baseline where stated; consult the increment before interpreting them as current behavior. Full signed-device/Drive protocol and distributed transition recovery remain unimplemented.
 
+The [2026-10-26 backup/Advanced review](docs/REVIEW_BACKUP_ADVANCED.md) adds idempotent conflict import, stable-ID replacement priority, unchanged-import preservation, remote-divergence checks, local-only vault status, explicit remote inspection errors and resumable local recovery cleanup. Startup/alarms finish a pending local restore with Sync off. Interrupted erasure remains suspended until explicitly repeated; force erasure does not open IndexedDB. These are local safety guarantees, not distributed transaction recovery.
+
 ## Boundaries
 
 | Module | Responsibility |

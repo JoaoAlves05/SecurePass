@@ -16,8 +16,8 @@ export const assertVaultGeneration = session.assertGeneration;
 export { getSyncStatus, changeSyncMode, resolveSyncGeneration, retrySync, compactSync, clearSyncArchive } from './vault/syncService.js';
 
 export async function vaultStatus() {
-  const record = await loadRecord();
-  const sync = await readSyncStatus();
+  const record = await readLocalVaultRecordRaw();
+  const sync = await readSyncStatus({ localOnly: true });
   return { initialized: Boolean(record), unlocked: record ? await session.sessionStatus(record) : false, revision: record?.revision, syncPending: Boolean((await loadSettings()).useSync && sync?.pending), syncError: sync?.error };
 }
 

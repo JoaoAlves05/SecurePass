@@ -131,13 +131,25 @@ try {
   await send(page, 'SET_SYNC_MODE_SAFE', { targetUseSync: true }); await send(page, 'UNLOCK_VAULT', { passphrase: PASS });
   const selected = (await send(page, 'RECOVERY_STATUS')).snapshots[0];
   await section(page, 'backupsSection');
-  await page.locator(`[data-snapshot-id="${selected.id}"][data-snapshot-action="restore"]`).click(); await title(page, 'Restore snapshot locally');
+  await page.locator(`[data-snapshot-id="${selected.id}"][data-snapshot-action="restore"]`).click(); await title(page, 'Restore saved version');
   await fill(page, 'password', 'wrong'); await submit(page); await page.locator('#operationError').waitFor({ state: 'visible' });
   await fill(page, 'password', PASS); await submit(page);
   await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#syncToggle').checked && document.querySelector('#syncStatus').textContent.startsWith('Sync is off.'));
   assert.equal((await send(page, 'LOAD_SETTINGS')).settings.useSync, false);
   assert.equal(await page.locator('#retrySync').isDisabled(), true);
   await section(page, 'advancedSection');
+  await worker.evaluate(() => {
+    globalThis.reviewOriginalSyncGet = chrome.storage.sync.get;
+    chrome.storage.sync.get = () => { throw new Error('Disposable remote storage outage'); };
+  });
+  try {
+    await page.locator('#refreshSync').click();
+    await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent && document.querySelector('#syncStatus').textContent.includes('Could not inspect remote copies'));
+    assert.equal(await page.locator('#remoteVersionReview').isVisible(), false);
+    assert.ok(await page.locator('[data-snapshot-action="export"]').count());
+  } finally {
+    await worker.evaluate(() => { chrome.storage.sync.get = globalThis.reviewOriginalSyncGet; delete globalThis.reviewOriginalSyncGet; });
+  }
   await page.locator('#refreshSync').click();
   await page.locator('#syncVersions:not([disabled])').waitFor();
   await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent);
@@ -164,7 +176,20 @@ try {
   }, { data: exportedBackup, password: BACKUP });
   assert.deepEqual(exportedEntries, (await send(page, 'LIST_CREDENTIALS')).entries);
   await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent);
-  const [snapshotDownload] = await Promise.all([page.waitForEvent('download'), page.locator('[data-snapshot-action="export"]').first().click()]);
+  await page.locator('#importVaultFile').setInputFiles({ name: 'malformed.json', mimeType: 'application/json', buffer: Buffer.from('{invalid') });
+  await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent && document.querySelector('#toast').textContent.includes('not a valid JSON backup'));
+  assert.equal(await page.locator('#operationDialog').isVisible(), false);
+  const beforeRepeatedImport = (await send(page, 'VAULT_STATUS')).status.revision;
+  const historyBeforeRepeatedImport = (await send(page, 'RECOVERY_STATUS')).snapshots;
+  await upload(page, exportedBackup); await title(page, 'Unlock your backup');
+  await fill(page, 'backupPassword', BACKUP); await submit(page); await title(page, 'Confirm import');
+  assert.match(await page.locator('#operationDescription').textContent(), /0 entries will be imported/);
+  await submit(page);
+  await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#managementActivity').textContent);
+  assert.equal((await send(page, 'VAULT_STATUS')).status.revision, beforeRepeatedImport);
+  assert.deepEqual((await send(page, 'RECOVERY_STATUS')).snapshots, historyBeforeRepeatedImport);
+  await page.locator('[data-snapshot-action="export"]').first().click(); await title(page, 'Export saved version');
+  const [snapshotDownload] = await Promise.all([page.waitForEvent('download'), submit(page)]);
   const snapshotData = JSON.parse(await readFile(await snapshotDownload.path(), 'utf8'));
   assert.equal(snapshotData.kind, 'securepass-encrypted-recovery');
   assert.equal(snapshotData.snapshots.length, 1);
@@ -222,7 +247,7 @@ try {
   await page.evaluate(data => chrome.storage.local.set({ syncRecovery: data.snapshots }), snapshotData);
   await section(page, 'backupsSection');
   await page.locator('.snapshot-item').filter({ hasText: 'Archived Chrome Sync copy' }).getByRole('button', { name: /^Restore/ }).click();
-  await title(page, 'Restore on this device'); await fill(page, 'password', PASS); await submit(page);
+  await title(page, 'Restore saved version'); await fill(page, 'password', PASS); await submit(page);
   await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#managementActivity').textContent);
   const restoredArchive = (await send(page, 'LIST_CREDENTIALS')).entries;
   assert.ok(restoredArchive.length > 0);
