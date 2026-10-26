@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const profile = await mkdtemp(`${tmpdir()}/securepass-checkpoints-`);
-const captures = new URL('../docs/screenshots/checkpoints/', import.meta.url);
+const captures = new URL('../docs/screenshots/checkpoint-review/', import.meta.url);
 const PASS = 'Disposable checkpoint master 123!';
 const NEXT = 'Disposable new checkpoint master 456!';
 const OLD = 'Disposable historical checkpoint 789!';
@@ -51,17 +51,36 @@ try {
   await capture(page, 'management-light');
   await page.emulateMedia({ colorScheme: 'dark' }); await page.waitForFunction(() => document.body.dataset.theme === 'dark');
   await capture(page, 'management-dark');
-  await card.locator('[data-snapshot-action="recover"]').click(); await title(page, 'Recover an entry');
-  assert.equal(await page.locator('#operationFields input[type="password"]').count(), 0);
-  assert.equal(await page.locator('#operationFields').textContent().then(text => text.includes('Fictional mail password')), false);
-  await page.locator('#operation-entryId').selectOption('mail');
+  assert.equal(await card.locator('[data-snapshot-action="recover"], [data-snapshot-action="restore"]').count(), 0);
+  await card.locator('[data-snapshot-action="review"]').click(); await page.locator('#checkpointReview').waitFor({ state: 'visible' }); await idle(page);
+  assert.equal(await page.locator('#operationDialog').isVisible(), false);
+  assert.equal(await page.locator('#checkpointReviewEntries [data-recover-entry]').count(), 2);
+  await capture(page, 'review-management-dark');
+  await page.locator('#checkpointReviewSearch').fill('BANK');
+  assert.equal(await page.locator('#checkpointReviewEntries article').count(), 0);
+  await page.locator('#checkpointShowMatching').check();
+  assert.equal(await page.locator('#checkpointReviewEntries article').count(), 1);
+  assert.equal(await page.locator('#checkpointReviewEntries [data-recover-entry]').count(), 0);
+  await page.locator('#checkpointReviewSearch').focus(); await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#checkpointReview').isVisible(), true);
+  assert.equal(await page.locator('#checkpointReviewSearch').inputValue(), '');
+  await page.locator('#checkpointShowMatching').uncheck();
+  const recoverMail = page.locator('[data-recover-entry="mail"]');
+  await recoverMail.click(); await title(page, 'Recover deleted entry');
+  assert.equal(await page.locator('#operationFields select, #operationFields input').count(), 0);
+  assert.equal((await page.locator('#operationSummary').textContent()).includes('Fictional mail password'), false);
   await fit(page); await capture(page, 'recover-entry');
+  await page.locator('#operationCancel').click(); await idle(page);
+  assert.equal(await page.locator('#checkpointReview').isVisible(), true);
+  await recoverMail.click(); await title(page, 'Recover deleted entry');
   await page.locator('#operationConfirm').click(); await idle(page);
+  await page.waitForFunction(() => !document.querySelector('[data-recover-entry="mail"]'));
   let contents = (await send(page, 'LIST_CREDENTIALS')).entries;
   assert.equal(contents.find(item => item.id === 'mail').password, entry('mail').password);
   assert.equal(contents.find(item => item.id === 'work').password, 'New unrelated work password');
+  await page.locator('#checkpointReviewBack').click();
   const full = (await send(page, 'RECOVERY_ARCHIVE_STATUS')).snapshots.find(item => item.source === 'Local' && item.newer > 0);
-  await page.locator(`[data-checkpoint-id="${full.id}"] [data-snapshot-action="restore"]`).click(); await title(page, 'Restore whole vault');
+  await page.locator(`[data-checkpoint-id="${full.id}"] [data-snapshot-action="review"]`).click(); await page.locator('#checkpointReviewFullRestore').click(); await title(page, 'Restore whole vault');
   assert.match(await page.locator('#operationDescription').textContent(), /master password.*stay the same/);
   assert.match(await page.locator('#operationSummary').textContent(), /To remove/);
   await fit(page); await capture(page, 'restore-whole-vault');
@@ -69,6 +88,21 @@ try {
   await send(page, 'LOCK_VAULT');
   await page.waitForFunction(() => !document.querySelector('#snapshotList').textContent.includes('mail-account'));
   assert.equal(await page.locator('#operationFields').textContent(), '');
+  await send(page, 'UNLOCK_VAULT', { passphrase: PASS });
+  // A changed destination must be reviewed again before any per-entry action.
+  const stalePoint = (await send(page, 'RECOVERY_ARCHIVE_STATUS')).snapshots[0];
+  await page.locator(`[data-checkpoint-id="${stalePoint.id}"] [data-snapshot-action="review"]`).click(); await idle(page);
+  await send(page, 'STORE_CREDENTIAL', { entry: entry('later') });
+  await page.locator('#checkpointReviewEntries [data-recover-entry]').first().click();
+  await page.locator('#checkpointReviewWarning').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#operationDialog').isVisible(), false);
+  await page.locator('#checkpointReviewRefresh').click(); await idle(page);
+  await page.locator('[data-review-entry-id="later"]').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('[data-review-entry-id="later"] button').count(), 0);
+  await send(page, 'LOCK_VAULT');
+  await page.locator('#checkpointReview').waitFor({ state: 'hidden' });
+  assert.equal(await page.locator('#checkpointReviewEntries').textContent(), '');
+  assert.equal(await page.locator('#checkpointReviewSearch').inputValue(), '');
   await send(page, 'UNLOCK_VAULT', { passphrase: PASS });
   // Add a legacy-protection fixture and exercise explicit migration before password rotation.
   const olderId = await page.evaluate(async ({ old, entry }) => {
@@ -86,11 +120,12 @@ try {
   assert.match(await page.locator('#masterChangeError').textContent(), /older checkpoint/);
   await page.locator('[data-settings-section="backupsSection"]').click();
   const legacy = page.locator(`[data-checkpoint-id="${olderId}"]`);
-  await legacy.locator('[data-snapshot-action="unlock"]').click(); await title(page, 'Unlock older checkpoint');
+  await legacy.locator('[data-snapshot-action="review"]').click(); await title(page, 'Unlock older checkpoint');
   await page.locator('#operation-password').fill('Wrong older password'); await page.locator('#operationConfirm').click();
   await page.locator('#operationError').waitFor({ state: 'visible' });
   await page.locator('#operation-password').fill(OLD); await page.locator('#operationConfirm').click(); await idle(page);
-  await legacy.locator('[data-snapshot-action="recover"]').waitFor({ state: 'visible' });
+  await page.locator('#checkpointReview').waitFor({ state: 'visible' }); await idle(page);
+  await page.locator('#checkpointReviewBack').click();
   const idsBeforeRotation = (await send(page, 'RECOVERY_STATUS')).snapshots.map(item => item.id);
   await page.locator('[data-settings-section="securitySection"]').click();
   await page.locator('#changeMasterKeyBtn').click(); await page.locator('#currentMaster').fill(PASS);
@@ -107,9 +142,15 @@ try {
     await page.locator('.snapshot-item').first().scrollIntoViewIfNeeded(); await capture(page, `popup-${theme}`);
     const header = await page.locator('.settings-header').boundingBox();
     assert.ok(header.height >= 44 && header.y >= 0, 'Long checkpoint lists keep the popup heading fully visible.');
+    await page.locator('[data-snapshot-action="review"]').first().click(); await page.locator('#checkpointReview').waitFor({ state: 'visible' }); await idle(page);
+    await capture(page, `review-popup-${theme}`);
     await page.setViewportSize({ width: 320, height: 480 });
-    await page.locator('[data-snapshot-action="recover"]').first().click(); await title(page, 'Recover an entry'); await fit(page);
+    await page.locator('#checkpointReviewFullRestore').click(); await title(page, 'Restore whole vault'); await fit(page);
     await page.keyboard.press('Escape'); await idle(page);
+    assert.equal(await page.locator('#checkpointReview').isVisible(), true);
+    await page.keyboard.press('Escape');
+    await page.locator('#checkpointReview').waitFor({ state: 'hidden' });
+    assert.equal(await page.locator('#backupsSection').isVisible(), true);
     assert.ok(await page.locator('.snapshot-item').evaluateAll(cards => cards.every(card => card.scrollWidth <= card.clientWidth)));
     await page.setViewportSize({ width: 400, height: 650 });
   }
@@ -141,6 +182,36 @@ try {
   await page.locator('#operation-password').fill(NEXT); await page.locator('#operationConfirm').click(); await idle(page);
   assert.equal((await send(page, 'RECOVERY_STATUS')).snapshots.length, 0);
   assert.deepEqual((await send(page, 'LIST_CREDENTIALS')).entries, beforeClear);
+  // Matching content offers no destructive action; larger comparisons are paginated/searchable.
+  async function seedReviewFixture(count) {
+    return page.evaluate(async count => {
+      const vault = await import('../src/cryptoVault.js'); const storage = await import('../src/utils/storage.js'); const crypto = await import('../src/vault/crypto.js');
+      const active = await vault.requireVault();
+      const entries = count === null ? active.entries : Array.from({ length: count }, (_, index) => ({ id: `entry${index}`, site: `https://entry${index}.example`, username: index === 64 ? '<img src=x onerror=alert(1)>' : `account${index}`, password: 'Fictional large-list password', notes: '' }));
+      const checkpoint = await crypto.protectCheckpoint({ revision: globalThis.crypto.randomUUID(), updatedAt: new Date().toISOString() }, entries, active.record, active.bytes);
+      await storage.writeLocalVaultRecordRaw(active.record, active.record.revision, { historyOnly: true, recoveryRecords: [checkpoint] });
+      return checkpoint.revision;
+    }, count);
+  }
+  for (const count of [null, 65]) {
+    const fixture = await seedReviewFixture(count);
+    await page.reload(); await page.locator('#openSettings').click();
+    await page.locator(`[data-checkpoint-id="${fixture}"] [data-snapshot-action="review"]`).click(); await idle(page);
+    if (count === null) {
+      assert.equal(await page.locator('#checkpointReviewFullRestore').isDisabled(), true);
+      assert.match(await page.locator('#checkpointReviewEmpty').textContent(), /matches your current vault/);
+      await page.locator('#checkpointShowMatching').check();
+      assert.equal(await page.locator('#checkpointReviewEntries [data-recover-entry]').count(), 0);
+    } else {
+      assert.equal(await page.locator('#checkpointReviewEntries article').count(), 50);
+      await page.locator('#checkpointReviewMore').click();
+      assert.equal(await page.locator('#checkpointReviewEntries article').count(), 65 + beforeClear.length);
+      await page.locator('#checkpointReviewSearch').fill('entry64');
+      assert.equal(await page.locator('#checkpointReviewEntries article').count(), 1);
+      assert.equal(await page.locator('#checkpointReviewEntries img').count(), 0);
+    }
+    await page.locator('#checkpointReviewBack').click();
+  }
   assert.deepEqual(errors, []);
-  console.log('Checkpoint browser checks passed: differentiated cards, individual/full recovery, unchanged master password, legacy migration, rotation without a checkpoint, lock privacy, deletion and light/dark popup/tab layouts.');
+  console.log('Checkpoint review passed: one card action, per-entry confirmations, secondary full restore, search/matching/pagination, stale reviews, lock privacy, migration and light/dark popup/tab layouts.');
 } finally { await context?.close(); await rm(profile, { recursive: true, force: true }); }

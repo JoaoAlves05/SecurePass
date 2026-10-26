@@ -3,9 +3,8 @@ import { checked, runManagement } from './management.js';
 import { requestOperation } from './operationDialog.js';
 import { ensureVaultAccessible } from './vault.js';
 import { showToast } from './toast.js';
+import { reviewCheckpoint, attachCheckpointReviewListeners } from './checkpointReview.js';
 
-const clientId = crypto.randomUUID();
-const request = (type, data = {}) => checked(type, { ...data, clientId });
 const $ = id => document.getElementById(id);
 const date = value => value && Number.isFinite(new Date(value).getTime()) ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' }).format(new Date(value)) : 'Date unavailable';
 const plural = (count, word) => `${count} ${count === 1 ? word : word.endsWith('entry') ? word.replace(/entry$/, 'entries') : `${word}s`}`;
@@ -56,10 +55,10 @@ export function renderCheckpoints(snapshots) {
     }
     const actions = document.createElement('div'); actions.className = 'snapshot-actions';
     const choices = local
-      ? [...(item.needsPassword && !locked ? [['unlock', 'Unlock older checkpoint']] : [['recover', locked ? 'Unlock to review' : 'Recover an entry'], ['restore', 'Restore whole vault']]), ['export', 'Export'], ['remove', 'Remove']]
+      ? [['review', locked ? 'Unlock to review' : 'Review checkpoint'], ['export', 'Export'], ['remove', 'Remove']]
       : [['restore', 'Restore archived copy'], ['export', 'Export']];
     for (const [action, label] of choices) {
-      const button = document.createElement('button'); button.type = 'button'; button.className = `${action === 'recover' || action === 'unlock' ? 'primary' : 'secondary'} compact-btn`;
+      const button = document.createElement('button'); button.type = 'button'; button.className = `${action === 'review' ? 'primary' : 'secondary'} compact-btn`;
       button.textContent = label; button.dataset.snapshotId = item.id; button.dataset.snapshotAction = action;
       button.dataset.snapshotSource = item.source;
       button.setAttribute('aria-label', `${label} · ${date(item.updatedAt)} · ${item.id.slice(0, 8)}`);
@@ -71,51 +70,8 @@ export function renderCheckpoints(snapshots) {
   list.querySelector('[data-restore-focus]')?.focus({ preventScroll: true });
 }
 
-async function unlockOlderCheckpoint(selected) {
-  if (!await ensureVaultAccessible('Unlock your current vault to manage its checkpoints.')) return false;
-  const { status } = await checked('VAULT_STATUS');
-  return requestOperation({
-    title: 'Unlock older checkpoint', description: 'Enter the master password used by this checkpoint. It will then use your current vault protection, including future password changes.',
-    details: [{ label: 'Checkpoint', value: date(selected.updatedAt) }],
-    fields: [{ name: 'password', label: 'Checkpoint’s previous master password', type: 'password' }],
-    confirmLabel: 'Update checkpoint protection', busyLabel: 'Updating protection…',
-    submit: values => checked('UNLOCK_CHECKPOINT', { id: selected.id, passphrase: values.password, expectedRevision: status.revision })
-  });
-}
-
-export async function reviewCheckpoint(selected, mode = 'entry') {
-  if (!await ensureVaultAccessible('Unlock your current vault to review this checkpoint.')) return;
-  const latest = (await checked('RECOVERY_ARCHIVE_STATUS')).snapshots.find(item => item.id === selected.id);
-  if (!latest) throw new Error('This checkpoint is no longer available. Refresh the history.');
-  if (latest.needsPassword) {
-    if (!await unlockOlderCheckpoint(latest)) return;
-    showToast('Checkpoint now uses your current vault protection.', 'success');
-    return;
-  }
-  const preview = await request('PREVIEW_CHECKPOINT', { id: selected.id, mode });
-  try {
-    const recoverable = preview.entries.filter(entry => entry.change !== 'unchanged');
-    const result = await requestOperation({
-      layout: 'checkpoint',
-      title: mode === 'entry' ? 'Recover an entry' : 'Restore whole vault',
-      description: mode === 'entry'
-        ? recoverable.length ? 'Choose an entry to recover. Other entries and your master password stay the same.' : 'There are no deleted or changed entries to recover from this checkpoint.'
-        : 'Review the differences before replacing your current vault contents. Your master password and biometric setup stay the same.',
-      details: [{ label: 'Checkpoint', value: date(selected.updatedAt) }, { label: 'Saved entries', value: String(preview.count) }, { label: 'To recover', value: String(preview.missing) }, { label: 'Older details', value: String(preview.changed) }, ...(mode === 'vault' ? [{ label: 'To remove', value: String(preview.newer) }] : [])],
-      changes: [...preview.entries.filter(entry => entry.change !== 'unchanged').map(entry => ({ title: account(entry), text: entry.change === 'missing' ? 'Deleted from your current vault' : `Older ${entry.fields.join(', ')}` })), ...(mode === 'vault' ? preview.newerEntries.map(entry => ({ title: account(entry), text: 'Will be removed by full restore' })) : [])].slice(0, 20),
-      fields: mode === 'entry' && recoverable.length ? [{ name: 'entryId', label: 'Entry to recover', options: recoverable.map(entry => ({ value: entry.id, label: `${account(entry)} — ${entry.change === 'missing' ? 'deleted' : `older ${entry.fields.join(', ')}`}` })) }] : [],
-      notice: mode === 'vault' ? { title: 'Before you restore', text: 'Your current contents become a checkpoint. Automatic Sync turns off; remote copies stay unchanged.' } : { title: 'Only the selected entry changes', text: 'Its saved details will be restored. A checkpoint of your current contents is kept. Your existing Sync setting applies.' },
-      confirmLabel: mode === 'entry' ? recoverable.length ? 'Recover selected entry' : 'Done' : 'Restore whole vault',
-      busyLabel: 'Recovering…', danger: mode === 'vault' && preview.newer > 0,
-      submit: values => mode === 'entry' && !recoverable.length ? { unchanged: true } : request('RECOVER_CHECKPOINT', { token: preview.token, entryId: values.entryId })
-    });
-    if (result) showToast(result.unchanged ? 'Your vault contents are unchanged.' : mode === 'entry' ? 'Entry recovered. Your other entries are unchanged.' : 'Vault contents restored. Your master password is unchanged; Sync is off.', 'success');
-  } finally { await request('CANCEL_CHECKPOINT_PREVIEW', { token: preview.token }).catch(() => {}); }
-}
-
 export async function handleCheckpointAction(selected, action) {
-  if (action === 'recover' || action === 'restore') return reviewCheckpoint(selected, action === 'recover' ? 'entry' : 'vault');
-  if (action === 'unlock') return unlockOlderCheckpoint(selected);
+  if (action === 'review') return reviewCheckpoint(selected, { managed: true });
   if (action !== 'remove') return;
   return deleteHistory(selected);
 }
@@ -134,6 +90,7 @@ async function deleteHistory(selected) {
 }
 
 export function attachCheckpointListeners() {
+  attachCheckpointReviewListeners();
   $('clearCheckpointHistory').addEventListener('click', () => runManagement(() => deleteHistory()));
   document.addEventListener('vault-ui-locked', () => { $('snapshotList').replaceChildren(); $('clearCheckpointHistory').hidden = true; });
 }

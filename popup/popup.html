@@ -490,6 +490,20 @@
               <div class="settings-group-heading checkpoint-section-heading"><div><h4>Recovery checkpoints</h4><p class="row-sub">Recover an entry or restore a previous state. Your master password stays the same.</p></div><button id="clearCheckpointHistory" type="button" class="settings-text-action" hidden>Clear history</button></div>
               <p id="recoveryStatus" class="settings-status" role="status" aria-live="polite">Checking saved versions…</p>
               <div id="snapshotList" class="snapshot-list" aria-label="Recovery checkpoints and archived copies"></div>
+              <section id="checkpointReview" class="checkpoint-review" aria-labelledby="checkpointReviewTitle" hidden>
+                <button id="checkpointReviewBack" type="button" class="settings-text-action checkpoint-review-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>Back to checkpoints</button>
+                <header class="checkpoint-review-header"><h4 id="checkpointReviewTitle" tabindex="-1">Review checkpoint</h4><p id="checkpointReviewDate" class="row-sub"></p></header>
+                <p id="checkpointReviewSummary" class="checkpoint-review-summary"></p>
+                <div id="checkpointReviewWarning" class="checkpoint-review-warning" role="alert" hidden><p id="checkpointReviewWarningText"></p><button id="checkpointReviewRefresh" type="button" class="secondary compact-btn">Refresh comparison</button></div>
+                <div class="checkpoint-review-filters">
+                  <label class="checkpoint-search" for="checkpointReviewSearch">Find an entry<input id="checkpointReviewSearch" type="search" placeholder="Website or username" autocomplete="off" maxlength="255" /></label>
+                  <label id="checkpointMatchingLabel" class="checkpoint-matching" for="checkpointShowMatching"><input id="checkpointShowMatching" type="checkbox" />Show matching entries <span id="checkpointMatchingCount"></span></label>
+                </div>
+                <p id="checkpointReviewEmpty" class="row-sub" role="status" hidden></p>
+                <div id="checkpointReviewEntries" class="checkpoint-review-entries" aria-label="Entries compared with your current vault"></div>
+                <button id="checkpointReviewMore" type="button" class="secondary compact-btn checkpoint-review-more" hidden>Show more entries</button>
+                <section class="checkpoint-review-full" aria-labelledby="checkpointReviewFullTitle"><h5 id="checkpointReviewFullTitle">Restore the whole checkpoint</h5><p class="row-sub">Replace all current entries with this saved state. Your master password and biometric setup stay the same.</p><button id="checkpointReviewFullRestore" type="button" class="secondary compact-btn">Review full restore</button><p id="checkpointReviewFullHelp" class="row-sub" hidden>This checkpoint already matches your vault.</p></section>
+              </section>
             </section>
             <section id="advancedSection" class="settings-section" aria-labelledby="advancedHeading" hidden>
               <div class="section-header"><h3 id="advancedHeading" tabindex="-1">Advanced</h3></div>
