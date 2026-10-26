@@ -36,7 +36,7 @@ export function attachSettingsNavigation() {
     panel.dataset.settingsDetail = String(Boolean(id));
     navigation.hidden = Boolean(id) && !isSidebar();
     content.hidden = !id;
-    $('settingsTitle').textContent = id && !isSidebar() ? link.dataset.settingsTitle : 'Settings';
+    $('settingsTitle').textContent = id && !isSidebar() ? link.dataset.settingsTitle : document.body.classList.contains('management-mode') ? 'Vault management' : 'Settings';
     $('closeSettings').hidden = isSidebar() || (document.body.classList.contains('management-mode') && !id);
     $('closeSettings').setAttribute('aria-label', id && !isSidebar() ? 'Back to settings' : 'Back to extension');
     const hash = `#${id || 'settings'}`;

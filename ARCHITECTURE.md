@@ -66,6 +66,8 @@ IndexedDB retains five previous local records. UI recovery selects stable snapsh
 
 `operationDialog.js` supplies native exclusive operation dialogs; `management.js` refreshes settings, vault and history state after actions. The same trusted popup pathname supports `?manage=1`; content/auth capabilities are not widened. The Drive button is disabled with an explicit availability reason. HIBP cache writes carry a generation barrier across clear/wipe, and offscreen clipboard erasure only targets still-owned content.
 
+Master-password changes use the inline `masterPassword.js` flow: fresh password authentication or a purpose-bound verified PRF assertion, then new password/confirmation, then an in-place result. `vault/masterAuthorization.js` stores a random, two-minute, single-use grant in restricted session storage, bound to the management client, available browser document/tab identity, vault revision/key epoch and lock revocation nonce. The background consumes the grant under the same operation lock as rotation; an already-unlocked vault or ordinary biometric unlock is insufficient. Rotation preserves entries and removes the local biometric wrapper. `management.css` owns the tab layout independently of popup sizing. See [flow and verification](docs/MASTER_PASSWORD_FLOW.md).
+
 ## Message flows
 
 1. A content script asks for autofill with its browser-supplied origin/document identity.

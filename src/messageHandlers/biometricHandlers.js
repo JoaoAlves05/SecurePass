@@ -7,6 +7,6 @@ export const biometricHandlers = new Map([
   ['BIOMETRIC_REGISTER_PREPARE', biometric.prepareRegistration],
   ['BIOMETRIC_REGISTER_COMPLETE', biometric.finishRegistration],
   ['BIOMETRIC_AUTH_START', biometric.startAuthentication],
-  ['BIOMETRIC_AUTH_COMPLETE', async (m, s) => { await biometric.finishAuthentication(m, s); return {}; }],
+  ['BIOMETRIC_AUTH_COMPLETE', async (m, s) => biometric.finishAuthentication(m, s)],
   ['BIOMETRIC_CANCELLED', async (m, s) => { await biometric.cancelAuthentication(m, s); return {}; }]
 ]);

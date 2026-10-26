@@ -35,8 +35,12 @@ export async function enrollBiometric(passphrase, signal) {
     return await request('BIOMETRIC_REGISTER_COMPLETE', { sessionId: session.sessionId, ...await assert(session, signal) });
   } finally { await request('BIOMETRIC_CANCELLED', { sessionId: session.sessionId }).catch(() => {}); }
 }
-export async function authenticateBiometric(signal) {
-  const session = await request('BIOMETRIC_AUTH_START');
+export async function authenticateBiometric(signal, purpose) {
+  const session = await request('BIOMETRIC_AUTH_START', { purpose });
   try { return await request('BIOMETRIC_AUTH_COMPLETE', { sessionId: session.sessionId, ...await assert(session, signal) }); }
   finally { await request('BIOMETRIC_CANCELLED', { sessionId: session.sessionId }).catch(() => {}); }
 }
+
+export const authorizeMasterPassword = passphrase => request('AUTHORIZE_MASTER_PASSWORD', { passphrase });
+export const updateMasterPassword = (authorization, newPassphrase) => request('CHANGE_MASTER_PASSWORD', { authorization, newPassphrase });
+export const cancelMasterPassword = authorization => request('CANCEL_MASTER_PASSWORD', { authorization });

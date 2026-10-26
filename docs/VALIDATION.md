@@ -2,6 +2,14 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Inline master-password and management layout — 2026-10-26
+
+The [inline flow and authorization contract](MASTER_PASSWORD_FLOW.md) replace the preliminary unlock plus modal with fresh identity verification, new password/confirmation and an in-place result. Either the current password or a fresh purpose-bound PRF ceremony can authorize rotation. Grants expire after two minutes, are single-use and bound to the client/document, vault revision/key epoch and lock revocation. The UI warns before biometric revocation and offers optional setup again. The management tab now has its own layout stylesheet and bounded form/control proportions.
+
+Validation: **84 Node tests passed**, **78 JavaScript modules checked**, `npm run test:settings-browser` and `npm run test:browser` passed. Settings checks include actual Chromium virtual PRF rotation without the old password, biometric revocation, inline error/cancel/lock cleanup, focus and light/dark popup/tab layouts from 320 to 1600 px. The resize matrix waits for the media-query navigation listener before interacting. New master-password captures and updated relevant settings fixtures are linked from the flow document; unrelated generated fixtures were restored. The Impeccable detector ran, with remaining broader base-popup findings documented there.
+
+Physical PRF authentication and actual toolbar popup sizing remain manual checks; disposable extension pages and virtual authenticators do not establish those results. This increment does not close Sync/Drive or other release gates. No commit or push was requested.
+
 ## Current backup dialog refinement — 2026-10-26
 
 The [export/restore UI refinement](BACKUP_DIALOGS_UI.md) improves the extension popup and management dialogs with selected-version metadata, password help and reveal controls, explicit recovery effects, fixed visible actions, pending states and clearer errors. Earlier-version export now includes a version review before downloading. The dedicated `npm run test:backup-dialogs-browser`, existing settings/browser suites and 75-module check passed. New captures live under `screenshots/backup-dialogs/`; unrelated generated baseline screenshots were restored. Backend test evidence and acceptance limits remain those recorded below.

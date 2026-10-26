@@ -5,6 +5,8 @@ import { restoreExternalRecord, wipeDevice } from '../vault/recovery.js';
 import { readRecoveryRecords, getStorage, snapshotId } from '../utils/storage.js';
 
 import { previewBackup, commitBackup } from '../vault/backupService.js';
+import { masterAuthorizationOwner, cancelMasterAuthorization } from '../vault/masterAuthorization.js';
+import { withVaultLock } from '../vault/queue.js';
 
 export const vaultHandlers = new Map([
   ['VAULT_STATUS', async () => ({ status: await vault.vaultStatus() })],
@@ -16,7 +18,21 @@ export const vaultHandlers = new Map([
   ['UPDATE_CREDENTIAL', async m => ({ entry: await vault.updateCredential(validateString(m.id, 64, 'id', true), validateEntry(m.updates, true)) })],
   ['DELETE_CREDENTIAL', async m => { await vault.deleteCredential(validateString(m.id, 64, 'id', true)); return {}; }],
   ['KEEP_ALIVE', async () => ({ alive: await vault.keepAlive() })],
-  ['CHANGE_MASTER_PASSWORD', async m => { await vault.changeMasterPassword(validateMaster(m.oldPassphrase), validateMaster(m.newPassphrase, true)); return {}; }],
+  ['AUTHORIZE_MASTER_PASSWORD', async (m, s) => {
+    const owner = masterAuthorizationOwner(m, s);
+    const { authorization, expiresAt } = await vault.unlockVault(validateMaster(m.passphrase), owner);
+    return { authorization, expiresAt };
+  }],
+  ['CANCEL_MASTER_PASSWORD', async (m, s) => {
+    const owner = masterAuthorizationOwner(m, s);
+    if (typeof m.authorization !== 'string' || m.authorization.length > 64) throw new Error('Invalid authorization.');
+    await withVaultLock(() => cancelMasterAuthorization(owner, m.authorization));
+    return {};
+  }],
+  ['CHANGE_MASTER_PASSWORD', async (m, s) => {
+    await vault.changeMasterPasswordAuthorized(m.authorization, validateMaster(m.newPassphrase, true), masterAuthorizationOwner(m, s));
+    return {};
+  }],
   ['EXPORT_VAULT', async m => {
     const state = await vault.requireVault();
     const data = await encryptBackupPayload(createVaultBackup(state.entries), validateBackupPassword(m.backupPassword, true));

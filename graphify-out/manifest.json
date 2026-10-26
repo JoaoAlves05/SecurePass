@@ -6,10 +6,10 @@
     "semantic_hash": "6a41fcf1488ae44e5ab8d63d94e6e9a8"
   },
   "background/serviceWorker.js": {
-    "mtime": 1792896779.6588879,
-    "seen": 1792927818.372979,
-    "ast_hash": "b6d8565fab8c173fdc6db7c5035bafd8",
-    "semantic_hash": "b6d8565fab8c173fdc6db7c5035bafd8"
+    "mtime": 1793035765.3303754,
+    "seen": 1793036894.8058035,
+    "ast_hash": "e7b6dde4c038eb8fd0d8f92b6663f7db",
+    "semantic_hash": "e7b6dde4c038eb8fd0d8f92b6663f7db"
   },
   "content/content.js": {
     "mtime": 1792856314.1655893,
@@ -55,9 +55,9 @@
   },
   "package.json": {
     "mtime": 1792974906.0233946,
-    "seen": 1792975146.9370806,
+    "seen": 1793036894.80583,
     "ast_hash": "ec9c19a8e3c2aae33e919f8ef2210371",
-    "semantic_hash": ""
+    "semantic_hash": "ec9c19a8e3c2aae33e919f8ef2210371"
   },
   "popup/modules/biometricSetup.js": {
     "mtime": 1792937784.6921275,
@@ -73,9 +73,9 @@
   },
   "popup/modules/dataManagement.js": {
     "mtime": 1792975063.4081264,
-    "seen": 1792975146.9370928,
+    "seen": 1793036894.8058383,
     "ast_hash": "4d33a85b5190f55da33f33c0e659bb83",
-    "semantic_hash": ""
+    "semantic_hash": "4d33a85b5190f55da33f33c0e659bb83"
   },
   "popup/modules/generator.js": {
     "mtime": 1792856314.1841648,
@@ -103,9 +103,9 @@
   },
   "popup/modules/sync.js": {
     "mtime": 1792974239.3650897,
-    "seen": 1792974290.5482016,
+    "seen": 1793036894.805863,
     "ast_hash": "f57b668c30ba62b17e80db7245847ede",
-    "semantic_hash": ""
+    "semantic_hash": "f57b668c30ba62b17e80db7245847ede"
   },
   "popup/modules/tester.js": {
     "mtime": 1792863751.4169452,
@@ -126,16 +126,16 @@
     "semantic_hash": "3722c1bbf48ee5fe24c8075e82599fdb"
   },
   "popup/modules/ui.js": {
-    "mtime": 1792969774.8919666,
-    "seen": 1792971601.9935489,
-    "ast_hash": "3bb002f49f5c4953b2d7ce034022604e",
-    "semantic_hash": "3bb002f49f5c4953b2d7ce034022604e"
+    "mtime": 1793035981.1253018,
+    "seen": 1793036894.8058722,
+    "ast_hash": "e7606dee63147d9e62094ed65d3632de",
+    "semantic_hash": "e7606dee63147d9e62094ed65d3632de"
   },
   "popup/modules/vault.js": {
-    "mtime": 1792893947.562755,
-    "seen": 1792894710.5290737,
-    "ast_hash": "7aafbd5a06a62c743b7c3e0e791a937f",
-    "semantic_hash": "7aafbd5a06a62c743b7c3e0e791a937f"
+    "mtime": 1793036355.1227949,
+    "seen": 1793036894.8058746,
+    "ast_hash": "631f8c7a7c21259bcbf0294ff3987725",
+    "semantic_hash": "631f8c7a7c21259bcbf0294ff3987725"
   },
   "popup/modules/vaultSession.js": {
     "mtime": 1792856314.186059,
@@ -144,10 +144,10 @@
     "semantic_hash": "4f2f38faf88ccf0b9b014a1225dcb176"
   },
   "popup/popup.js": {
-    "mtime": 1792937784.6921275,
-    "seen": 1792938869.8504782,
-    "ast_hash": "2d8714d1e1b919f5fd991feec54a66d7",
-    "semantic_hash": "2d8714d1e1b919f5fd991feec54a66d7"
+    "mtime": 1793036355.1232777,
+    "seen": 1793036894.8058796,
+    "ast_hash": "31595400f46e3edd8a9d621039a8db16",
+    "semantic_hash": "31595400f46e3edd8a9d621039a8db16"
   },
   "popup/state.js": {
     "mtime": 1792864004.393106,
@@ -181,21 +181,21 @@
   },
   "src/backupCrypto.js": {
     "mtime": 1792974239.3690898,
-    "seen": 1792974290.5482383,
+    "seen": 1793036894.805893,
     "ast_hash": "3cf93cba723fb08cb5a69b050d71065d",
-    "semantic_hash": ""
+    "semantic_hash": "3cf93cba723fb08cb5a69b050d71065d"
   },
   "src/biometric/client.js": {
-    "mtime": 1792858399.164924,
-    "seen": 1792867754.9882326,
-    "ast_hash": "2f11981236cb57e0a206ec1e8836ae0f",
-    "semantic_hash": "2f11981236cb57e0a206ec1e8836ae0f"
+    "mtime": 1793035828.837141,
+    "seen": 1793036894.805895,
+    "ast_hash": "c1e4c518c07de60b07095fbb7ecd3d5d",
+    "semantic_hash": "c1e4c518c07de60b07095fbb7ecd3d5d"
   },
   "src/biometric/service.js": {
-    "mtime": 1792858426.8518221,
-    "seen": 1792867754.9882345,
-    "ast_hash": "1912f6fc8fb69fd63a30f2a949371918",
-    "semantic_hash": "1912f6fc8fb69fd63a30f2a949371918"
+    "mtime": 1793035765.3263755,
+    "seen": 1793036894.8058975,
+    "ast_hash": "8d079d40efc52645f9c67100ed490274",
+    "semantic_hash": "8d079d40efc52645f9c67100ed490274"
   },
   "src/biometric/webauthn.js": {
     "mtime": 1792856314.1921551,
@@ -216,10 +216,10 @@
     "semantic_hash": "7cdded380c41c74b7a55ba5768fffe37"
   },
   "src/cryptoVault.js": {
-    "mtime": 1792974089.8746474,
-    "seen": 1792974290.548254,
-    "ast_hash": "43b27e603b3f2577bd822b09f3e1f5bd",
-    "semantic_hash": ""
+    "mtime": 1793035765.3183753,
+    "seen": 1793036894.8059163,
+    "ast_hash": "07ba1201773d963a2c4a4b97a6125e69",
+    "semantic_hash": "07ba1201773d963a2c4a4b97a6125e69"
   },
   "src/encoding.js": {
     "mtime": 1785694666.8163462,
@@ -246,10 +246,10 @@
     "semantic_hash": "256e46ed512cc98d17ce24983384ca80"
   },
   "src/messageHandlers/biometricHandlers.js": {
-    "mtime": 1792856314.1942017,
-    "seen": 1792867754.9882526,
-    "ast_hash": "0a781b641d1f346f5e8e2f2284ae0cc3",
-    "semantic_hash": "0a781b641d1f346f5e8e2f2284ae0cc3"
+    "mtime": 1793035765.3263755,
+    "seen": 1793036894.8059285,
+    "ast_hash": "390c23f9553fb82b5f9fafe6aa84166f",
+    "semantic_hash": "390c23f9553fb82b5f9fafe6aa84166f"
   },
   "src/messageHandlers/utilHandlers.js": {
     "mtime": 1792896779.6823595,
@@ -258,10 +258,10 @@
     "semantic_hash": "05e8aaa0723bd7dae633af50a4e363fc"
   },
   "src/messageHandlers/vaultHandlers.js": {
-    "mtime": 1792896779.6823595,
-    "seen": 1792927818.3731542,
-    "ast_hash": "8e827b96d2e30c7c9466c1d0a0105104",
-    "semantic_hash": "8e827b96d2e30c7c9466c1d0a0105104"
+    "mtime": 1793035828.837141,
+    "seen": 1793036894.805933,
+    "ast_hash": "42f6c32b6f5cd963fe8693b262cfd661",
+    "semantic_hash": "42f6c32b6f5cd963fe8693b262cfd661"
   },
   "src/passwordGenerator.js": {
     "mtime": 1792856314.1948676,
@@ -325,15 +325,15 @@
   },
   "src/vault/recovery.js": {
     "mtime": 1792974089.8746474,
-    "seen": 1792974290.548318,
+    "seen": 1793036894.8059666,
     "ast_hash": "31a1a74eab655377377924a4fee51771",
-    "semantic_hash": ""
+    "semantic_hash": "31a1a74eab655377377924a4fee51771"
   },
   "src/vault/repository.js": {
     "mtime": 1792974176.034641,
-    "seen": 1792974290.54832,
+    "seen": 1793036894.805969,
     "ast_hash": "e98b86ff910c70802fcdd1c55e05696e",
-    "semantic_hash": ""
+    "semantic_hash": "e98b86ff910c70802fcdd1c55e05696e"
   },
   "src/vault/session.js": {
     "mtime": 1792896779.6823595,
@@ -349,15 +349,15 @@
   },
   "src/vault/syncService.js": {
     "mtime": 1792974239.3650897,
-    "seen": 1792974290.5483294,
+    "seen": 1793036894.8059783,
     "ast_hash": "9405cf47aaa499eef9b0b65bcbb98fb9",
-    "semantic_hash": ""
+    "semantic_hash": "9405cf47aaa499eef9b0b65bcbb98fb9"
   },
   "tests/biometric.test.js": {
-    "mtime": 1792858438.046658,
-    "seen": 1792867754.9883137,
-    "ast_hash": "b0eb3d64dea991dc5912e972f4bc27de",
-    "semantic_hash": "b0eb3d64dea991dc5912e972f4bc27de"
+    "mtime": 1793035981.1765232,
+    "seen": 1793036894.8059866,
+    "ast_hash": "2d276f7ec8b445b2c5502e026c8d9034",
+    "semantic_hash": "2d276f7ec8b445b2c5502e026c8d9034"
   },
   "tests/browser.mjs": {
     "mtime": 1792969774.8959665,
@@ -408,16 +408,16 @@
     "semantic_hash": "596b636dbb30b786b39621e7a2791b45"
   },
   "ARCHITECTURE.md": {
-    "mtime": 1792974381.207274,
-    "seen": 1792974482.890183,
-    "ast_hash": "965e98e1432ab6ae075c4eb4731561be",
-    "semantic_hash": "965e98e1432ab6ae075c4eb4731561be"
+    "mtime": 1793036285.0769522,
+    "seen": 1793036853.2826083,
+    "ast_hash": "9badd24c823c70bb8f855246fc19ba31",
+    "semantic_hash": "9badd24c823c70bb8f855246fc19ba31"
   },
   "README.md": {
     "mtime": 1792975784.1569824,
-    "seen": 1792975834.6831422,
-    "ast_hash": "1aa71495f32f92d1806451576fb0f2ef",
-    "semantic_hash": "1cda1377ea119c92e21b30082f1744f6"
+    "seen": 1793035670.943498,
+    "ast_hash": "1cda1377ea119c92e21b30082f1744f6",
+    "semantic_hash": ""
   },
   "SECURITY.md": {
     "mtime": 1792896779.6588879,
@@ -444,10 +444,10 @@
     "semantic_hash": "52fa42d087caf2bf7c6e47c007eb087f"
   },
   "docs/VALIDATION.md": {
-    "mtime": 1792975122.591558,
-    "seen": 1792975226.2775595,
-    "ast_hash": "83268874bcc7732fb38a2f0bab52eb68",
-    "semantic_hash": "83268874bcc7732fb38a2f0bab52eb68"
+    "mtime": 1793036473.7247078,
+    "seen": 1793036853.282622,
+    "ast_hash": "7dea14936cdfe1b9a40a2a0fd5b7f724",
+    "semantic_hash": "7dea14936cdfe1b9a40a2a0fd5b7f724"
   },
   "offscreen.html": {
     "mtime": 1775164609.297193,
@@ -456,27 +456,27 @@
     "semantic_hash": "393df8c52a43b6fcca4fc5cae51f23cc"
   },
   "popup/popup.html": {
-    "mtime": 1792974792.501009,
-    "seen": 1792975146.937417,
-    "ast_hash": "5d1b2c3cca19572771142a334ed598f8",
-    "semantic_hash": ""
+    "mtime": 1793035981.1263921,
+    "seen": 1793036853.282629,
+    "ast_hash": "2c1b48c257c131112fe29eff3847e964",
+    "semantic_hash": "2c1b48c257c131112fe29eff3847e964"
   },
   "docs/screenshots/phase1-recovery.png": {
-    "mtime": 1792974952.5423675,
-    "seen": 1792975146.9374566,
-    "ast_hash": "072f526151d14d4d5b6b325ad198015d",
+    "mtime": 1793036473.7093854,
+    "seen": 1793036512.735047,
+    "ast_hash": "22ceb04a051532586bb241df6f73a9eb",
     "semantic_hash": ""
   },
   "docs/screenshots/phase1-settings.png": {
-    "mtime": 1792974951.6143675,
-    "seen": 1792975146.93746,
-    "ast_hash": "9f8fcb56f37d0a5b91bb30306fbd754e",
+    "mtime": 1793036473.715237,
+    "seen": 1793036512.73505,
+    "ast_hash": "625887c90662488c4e4527f076f44610",
     "semantic_hash": ""
   },
   "docs/screenshots/phase1-vault.png": {
-    "mtime": 1792974946.7906826,
-    "seen": 1792975146.9374635,
-    "ast_hash": "5002f67280b084ebf75fb5e898857754",
+    "mtime": 1793036473.703095,
+    "seen": 1793036512.7350528,
+    "ast_hash": "9fec435da0904afeca4d5d8bad9f2190",
     "semantic_hash": ""
   },
   "icons/icon-128.png": {
@@ -517,15 +517,15 @@
   },
   "popup/modules/management.js": {
     "mtime": 1792974176.038641,
-    "seen": 1792974290.5481832,
+    "seen": 1793036894.8058443,
     "ast_hash": "50db7a30621367aabf421ca4824c4072",
-    "semantic_hash": ""
+    "semantic_hash": "50db7a30621367aabf421ca4824c4072"
   },
   "popup/modules/operationDialog.js": {
     "mtime": 1792974990.1943707,
-    "seen": 1792975146.9371126,
+    "seen": 1793036894.8058553,
     "ast_hash": "7b84f31a9aa3317159c8bf52e1375534",
-    "semantic_hash": ""
+    "semantic_hash": "7b84f31a9aa3317159c8bf52e1375534"
   },
   "src/operationQueue.js": {
     "mtime": 1792896779.6823595,
@@ -535,21 +535,21 @@
   },
   "src/vault/backupService.js": {
     "mtime": 1792974176.034641,
-    "seen": 1792974290.5483105,
+    "seen": 1793036894.8059568,
     "ast_hash": "833a27984d80cce6abc2b88a2635535c",
-    "semantic_hash": ""
+    "semantic_hash": "833a27984d80cce6abc2b88a2635535c"
   },
   "src/vault/retry.js": {
     "mtime": 1792974348.9315786,
-    "seen": 1792974407.4070292,
+    "seen": 1793036894.8059711,
     "ast_hash": "1013f426652b4ef57cb35e8335612d9d",
-    "semantic_hash": ""
+    "semantic_hash": "1013f426652b4ef57cb35e8335612d9d"
   },
   "tests/settings-browser.mjs": {
-    "mtime": 1792975063.3618817,
-    "seen": 1792975146.937323,
-    "ast_hash": "c1ff0f04845ec4badaa7d4ac196e58a3",
-    "semantic_hash": ""
+    "mtime": 1793036412.512895,
+    "seen": 1793036894.8060088,
+    "ast_hash": "f4d3f7577ab5a27b6ad30e1d672b1c9f",
+    "semantic_hash": "f4d3f7577ab5a27b6ad30e1d672b1c9f"
   },
   "tests/settingsData.test.js": {
     "mtime": 1792896779.6863594,
@@ -570,52 +570,52 @@
     "semantic_hash": "2dca0208d8a5c4baa252e9ac062bf708"
   },
   "docs/issues/SETTINGS_UX.md": {
-    "mtime": 1792969774.8599665,
-    "seen": 1792971601.993748,
-    "ast_hash": "ab148ecee5c92d8ce31446b8e835af27",
-    "semantic_hash": "ab148ecee5c92d8ce31446b8e835af27"
+    "mtime": 1793036285.0769522,
+    "seen": 1793036853.2826257,
+    "ast_hash": "529910f7d6432f3b89e70f6726a6e168",
+    "semantic_hash": "529910f7d6432f3b89e70f6726a6e168"
   },
   "docs/screenshots/settings-erasure-review.png": {
-    "mtime": 1792975097.19324,
-    "seen": 1792975146.9374707,
-    "ast_hash": "3f05770869c2ea26dab48d46e4e17c09",
+    "mtime": 1793036473.723316,
+    "seen": 1793036512.7350576,
+    "ast_hash": "9e2a3ceec021ece8157a3f151587681f",
     "semantic_hash": ""
   },
   "docs/screenshots/settings-management-dark.png": {
-    "mtime": 1792975095.8687334,
-    "seen": 1792975146.9374738,
-    "ast_hash": "2d4b0592228c141603356211cda1e544",
-    "semantic_hash": ""
+    "mtime": 1793036419.3793557,
+    "seen": 1793036853.2826357,
+    "ast_hash": "b0a51a50ee922fed3501fc3eb0a99625",
+    "semantic_hash": "b0a51a50ee922fed3501fc3eb0a99625"
   },
   "docs/screenshots/settings-management-light.png": {
-    "mtime": 1792975095.4447336,
-    "seen": 1792975146.9374776,
-    "ast_hash": "f68158ce4961c68c6b38da90166b1373",
-    "semantic_hash": "f68158ce4961c68c6b38da90166b1373"
+    "mtime": 1793036419.1233556,
+    "seen": 1793036853.282639,
+    "ast_hash": "8a764e95f84e1b8fc0b046901640b423",
+    "semantic_hash": "8a764e95f84e1b8fc0b046901640b423"
   },
   "docs/screenshots/settings-popup.png": {
-    "mtime": 1792975106.4328656,
-    "seen": 1792975146.9374874,
-    "ast_hash": "f2ad069bcf1b36245ad9ce2db272990e",
-    "semantic_hash": "f2ad069bcf1b36245ad9ce2db272990e"
+    "mtime": 1793036442.1802263,
+    "seen": 1793036853.2826498,
+    "ast_hash": "a4029c374d76401006d9bf2a673c7b8f",
+    "semantic_hash": "a4029c374d76401006d9bf2a673c7b8f"
   },
   "popup/modules/settingsNavigation.js": {
-    "mtime": 1792969774.8919666,
-    "seen": 1792971601.993533,
-    "ast_hash": "e3c65e0f955bbd47abbe805ace9ee227",
-    "semantic_hash": "e3c65e0f955bbd47abbe805ace9ee227"
+    "mtime": 1793035924.7878757,
+    "seen": 1793036894.8058605,
+    "ast_hash": "9ab91c19b1ffcfc8e57302027dc2cf4e",
+    "semantic_hash": "9ab91c19b1ffcfc8e57302027dc2cf4e"
   },
   "docs/screenshots/settings-appearance-dark.png": {
-    "mtime": 1792975108.7314298,
-    "seen": 1792975146.937467,
-    "ast_hash": "4f9465e2c0a54134df16bd92466a655a",
-    "semantic_hash": ""
+    "mtime": 1793036419.5913556,
+    "seen": 1793036853.2826324,
+    "ast_hash": "558f87703a7282c8c19fcbf251803ab0",
+    "semantic_hash": "558f87703a7282c8c19fcbf251803ab0"
   },
   "docs/screenshots/settings-popup-appearance.png": {
-    "mtime": 1792975117.1794856,
-    "seen": 1792975146.937481,
+    "mtime": 1793036446.7412724,
+    "seen": 1793036853.2826474,
     "ast_hash": "90e84d8b52579693ea039194866c0330",
-    "semantic_hash": ""
+    "semantic_hash": "90e84d8b52579693ea039194866c0330"
   },
   "docs/SETTINGS_FRONTEND_REVIEW.md": {
     "mtime": 1792938570.579305,
@@ -642,16 +642,16 @@
     "semantic_hash": "7b3322e92debb5f97ffa13bc7d51067d"
   },
   "docs/screenshots/settings-popup-home.png": {
-    "mtime": 1792975105.3109183,
-    "seen": 1792975146.9374843,
+    "mtime": 1793036440.7202263,
+    "seen": 1793036512.7350726,
     "ast_hash": "17f32c135664a53e9f8425abfaae18b4",
     "semantic_hash": "17f32c135664a53e9f8425abfaae18b4"
   },
   "tests/backupAdvanced.test.js": {
     "mtime": 1792974348.9355786,
-    "seen": 1792974407.4070518,
+    "seen": 1793036894.8059816,
     "ast_hash": "f1b506cfc08ea9392329f193cb742dc8",
-    "semantic_hash": ""
+    "semantic_hash": "f1b506cfc08ea9392329f193cb742dc8"
   },
   "docs/REVIEW_BACKUP_ADVANCED.md": {
     "mtime": 1792974348.9355786,
@@ -661,15 +661,15 @@
   },
   "tests/backupDialogs-browser.mjs": {
     "mtime": 1792975063.3625095,
-    "seen": 1792975146.9372933,
+    "seen": 1793036894.8059843,
     "ast_hash": "0f7fa9a53453db8c44b65b8ccd0000fb",
-    "semantic_hash": ""
+    "semantic_hash": "0f7fa9a53453db8c44b65b8ccd0000fb"
   },
   "docs/BACKUP_DIALOGS_UI.md": {
     "mtime": 1792975151.3557382,
-    "seen": 1792975226.2775466,
-    "ast_hash": "609ee8108f1676a67cf947c340098f88",
-    "semantic_hash": "51bf13b6cebc4f740217641182249e4e"
+    "seen": 1792975623.3162105,
+    "ast_hash": "51bf13b6cebc4f740217641182249e4e",
+    "semantic_hash": ""
   },
   "docs/screenshots/backup-dialogs/export-dark-320.png": {
     "mtime": 1792975074.524821,
@@ -742,5 +742,41 @@
     "seen": 1792975226.2775989,
     "ast_hash": "9d8a12919b8f96b2d0f1910ce26120a1",
     "semantic_hash": "9d8a12919b8f96b2d0f1910ce26120a1"
+  },
+  "popup/modules/masterPassword.js": {
+    "mtime": 1793036538.6062977,
+    "seen": 1793036894.8058474,
+    "ast_hash": "98712d955f4a95134228a25795391b51",
+    "semantic_hash": "98712d955f4a95134228a25795391b51"
+  },
+  "src/vault/masterAuthorization.js": {
+    "mtime": 1793035828.833141,
+    "seen": 1793036894.805962,
+    "ast_hash": "8423d920f9834b358d9b889785462d4b",
+    "semantic_hash": "8423d920f9834b358d9b889785462d4b"
+  },
+  "tests/masterPassword.test.js": {
+    "mtime": 1793035981.1765232,
+    "seen": 1793036894.8059988,
+    "ast_hash": "35cc3a9dc6f913e27dd5c617d5797245",
+    "semantic_hash": "35cc3a9dc6f913e27dd5c617d5797245"
+  },
+  "docs/MASTER_PASSWORD_FLOW.md": {
+    "mtime": 1793036285.0769522,
+    "seen": 1793036853.282617,
+    "ast_hash": "d7594f4aa2cf47e66e5c7f896c60eb49",
+    "semantic_hash": "d7594f4aa2cf47e66e5c7f896c60eb49"
+  },
+  "docs/screenshots/settings-master-identity-popup.png": {
+    "mtime": 1793036442.700226,
+    "seen": 1793036853.2826414,
+    "ast_hash": "42afe62c71bff2140a5cc4c9cb0dca8d",
+    "semantic_hash": "42afe62c71bff2140a5cc4c9cb0dca8d"
+  },
+  "docs/screenshots/settings-master-new-popup.png": {
+    "mtime": 1793036443.0962262,
+    "seen": 1793036853.2826445,
+    "ast_hash": "05887775035aeae56148427f662b2387",
+    "semantic_hash": "05887775035aeae56148427f662b2387"
   }
 }

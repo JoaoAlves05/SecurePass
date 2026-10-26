@@ -7,6 +7,7 @@ import { loadRecord, commitRecord, assertCurrent, getSyncStatus as readSyncStatu
 import * as session from './vault/session.js';
 import { loadSettings } from './settings.js';
 import { commitLocalRecovery } from './vault/recovery.js';
+import { issueMasterAuthorization, consumeMasterAuthorization } from './vault/masterAuthorization.js';
 
 
 export const lockVault = session.revokeSession;
@@ -33,7 +34,7 @@ export function initializeVault(passphrase) {
   });
 }
 
-export function unlockVault(passphrase) {
+export function unlockVault(passphrase, authorizationOwner) {
   validateMaster(passphrase);
   return operation(async epoch => {
     const attempt = (await getStorage('session', 'unlockAttempts')).unlockAttempts || { count: 0, until: 0 };
@@ -58,7 +59,9 @@ export function unlockVault(passphrase) {
     await setStorage('session', { unlockAttempts: { count: 0, until: 0 } });
     await session.activate(record, decrypted.entries, decrypted.bytes, epoch);
     await removeStorage('local', ['securepassMeta', 'securepassTrustedDeviceKey']);
-    return { entries: structuredClone(decrypted.entries) };
+    const authorization = authorizationOwner ? await issueMasterAuthorization(record, authorizationOwner) : {};
+    session.assertGeneration(epoch);
+    return { entries: structuredClone(decrypted.entries), ...authorization };
   });
 }
 
@@ -169,15 +172,29 @@ export function changeMasterPassword(oldPassphrase, newPassphrase) {
     const state = await requireVault();
     await assertCurrent(state.record);
     await decryptRecord(state.record, validateMaster(oldPassphrase));
-    const rotated = await createRecord(state.entries, newPassphrase, { vaultId: state.record.vaultId, parents: [state.record.revision, ...state.record.parents] });
-    session.assertGeneration(epoch);
-    await commitRecord(rotated.record, state.record.revision);
-    await removeStorage('local', ['securepassBiometric', 'securepassTrustedDeviceKey']);
-    await session.activate(rotated.record, state.entries, rotated.bytes, epoch);
+    await rotateMasterPassword(state, newPassphrase, epoch);
   });
 }
 
-export function unlockWithBiometricKey(bytes, vaultId, keyEpoch, expectedEpoch, credentialId) {
+export function changeMasterPasswordAuthorized(authorization, newPassphrase, owner) {
+  validateMaster(newPassphrase, true);
+  return operation(async epoch => {
+    const state = await requireVault();
+    await assertCurrent(state.record);
+    await consumeMasterAuthorization(state.record, authorization, owner);
+    await rotateMasterPassword(state, newPassphrase, epoch);
+  });
+}
+
+async function rotateMasterPassword(state, newPassphrase, epoch) {
+  const rotated = await createRecord(state.entries, newPassphrase, { vaultId: state.record.vaultId, parents: [state.record.revision, ...state.record.parents] });
+  session.assertGeneration(epoch);
+  await commitRecord(rotated.record, state.record.revision);
+  await removeStorage('local', ['securepassBiometric', 'securepassTrustedDeviceKey']);
+  await session.activate(rotated.record, state.entries, rotated.bytes, epoch);
+}
+
+export function unlockWithBiometricKey(bytes, vaultId, keyEpoch, expectedEpoch, credentialId, authorizationOwner) {
   return operation(async epoch => {
     session.assertGeneration(expectedEpoch);
     const config = (await getStorage('local', 'securepassBiometric')).securepassBiometric;
@@ -186,6 +203,9 @@ export function unlockWithBiometricKey(bytes, vaultId, keyEpoch, expectedEpoch, 
     if (record?.vaultId !== vaultId || record.keyEpoch !== keyEpoch) throw new Error('Biometric setup was revoked. Use the master password.');
     const entries = await decryptWithKey(record, bytes);
     await session.activate(record, entries, bytes, epoch);
+    const authorization = authorizationOwner ? await issueMasterAuthorization(record, authorizationOwner) : {};
+    session.assertGeneration(epoch);
+    return authorization;
   });
 }
 
