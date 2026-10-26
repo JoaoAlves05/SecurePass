@@ -21,9 +21,9 @@ export async function publishLocalRecord(record) {
     await setStorage('local', { syncStatus: { pending: true, revision: record.revision, error: error.message } });
   }
 }
-export async function commitRecord(record, expected) {
+export async function commitRecord(record, expected, options = {}) {
   const enabled = (await loadSettings()).useSync;
-  await writeLocalVaultRecordRaw(record, expected, { pendingSync: enabled });
+  await writeLocalVaultRecordRaw(record, expected, { ...options, pendingSync: enabled });
   if (enabled) await publishLocalRecord(record);
 }
 export async function assertCurrent(record) {

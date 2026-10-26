@@ -27,6 +27,7 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 
 .settings-header {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 10px;
   width: 100%;
@@ -499,22 +500,127 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 }
 
 .snapshot-item {
-  padding: 16px;
+  padding: 18px;
 }
 
-.snapshot-item strong {
-  display: block;
+.checkpoint-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.checkpoint-heading h4 {
+  flex: 1 1 240px;
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkpoint-tag {
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+  font-size: 11px;
+}
+
+.snapshot-item .checkpoint-summary {
+  margin: 10px 0 0;
+}
+
+.checkpoint-differences {
+  display: grid;
+  gap: 5px;
+  margin: 14px 0 0;
+  padding-left: 18px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.snapshot-item .checkpoint-examples {
+  margin: 10px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.checkpoint-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.checkpoint-section-heading > div {
+  flex: 1 1 240px;
+}
+
+.settings-text-action {
+  width: auto;
+  padding: 4px 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.checkpoint-review-changes {
+  display: grid;
+  gap: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkpoint-review-changes li {
+  display: grid;
+  gap: 3px;
+  overflow-wrap: anywhere;
+}
+
+.checkpoint-review-changes strong {
   font-size: 13px;
+  font-weight: 600;
 }
 
-.snapshot-item p {
-  margin: 6px 0 12px;
+.checkpoint-review-changes span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.checkpoint-operation .operation-summary > div {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+}
+
+.settings-section h3:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .snapshot-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 16px;
+}
+
+.snapshot-actions .compact-btn {
+  width: auto;
+  min-height: 36px;
+  max-width: 100%;
+  white-space: normal;
 }
 
 #recoveryStatus {

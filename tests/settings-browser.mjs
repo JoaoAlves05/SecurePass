@@ -135,11 +135,13 @@ try {
   await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#managementActivity').textContent);
   const entries = (await send(page, 'LIST_CREDENTIALS')).entries; assert.equal(entries.length, 3); assert.equal(entries.find(e => e.password === 'Second fictional credential').notes.length, 4096);
   await send(page, 'SET_SYNC_MODE_SAFE', { targetUseSync: true }); await send(page, 'UNLOCK_VAULT', { passphrase: PASS });
-  const selected = (await send(page, 'RECOVERY_STATUS')).snapshots[0];
+  const selected = (await send(page, 'RECOVERY_ARCHIVE_STATUS')).snapshots.find(item => item.source === 'Local' && item.count > 0 && (item.missing || item.changed || item.newer));
+  assert.ok(selected, 'A checkpoint with different contents is available.');
   await section(page, 'backupsSection');
-  await page.locator(`[data-snapshot-id="${selected.id}"][data-snapshot-action="restore"]`).click(); await title(page, 'Restore saved version');
-  await fill(page, 'password', 'wrong'); await submit(page); await page.locator('#operationError').waitFor({ state: 'visible' });
-  await fill(page, 'password', PASS); await submit(page);
+  await page.locator(`[data-snapshot-id="${selected.id}"][data-snapshot-action="restore"]`).click(); await title(page, 'Restore whole vault');
+  assert.equal(await page.locator('#operationFields input[type="password"]').count(), 0);
+  assert.match(await page.locator('#operationDescription').textContent(), /master password.*stay the same/);
+  await submit(page);
   await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#syncToggle').checked && document.querySelector('#syncStatus').textContent.startsWith('Sync is off.'));
   assert.equal((await send(page, 'LOAD_SETTINGS')).settings.useSync, false);
   assert.equal(await page.locator('#retrySync').isDisabled(), true);
@@ -201,7 +203,7 @@ try {
   assert.equal(snapshotData.snapshots.length, 1);
   await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent);
   await page.evaluate(data => chrome.storage.local.set({ syncRecovery: data.snapshots }), snapshotData);
-  const uniqueVersions = new Set((await send(page, 'RECOVERY_ARCHIVE_STATUS')).snapshots.map(item => item.id)).size;
+  const uniqueVersions = new Set((await send(page, 'RECOVERY_ARCHIVE_STATUS')).snapshots.map(item => `${item.source}:${item.id}`)).size;
   await page.waitForFunction(count => document.querySelectorAll('[data-snapshot-action="export"]').length === count, uniqueVersions);
   const beforeReset = (await send(page, 'LIST_CREDENTIALS')).entries;
   await section(page, 'generalSection');
@@ -252,7 +254,7 @@ try {
   assert.equal((await send(page, 'VAULT_STATUS')).status.unlocked, true);
   await page.evaluate(data => chrome.storage.local.set({ syncRecovery: data.snapshots }), snapshotData);
   await section(page, 'backupsSection');
-  await page.locator('.snapshot-item').filter({ hasText: 'Archived Chrome Sync copy' }).getByRole('button', { name: /^Restore/ }).click();
+  await page.locator('.snapshot-item').filter({ hasText: 'Archived Chrome Sync' }).getByRole('button', { name: /^Restore/ }).click();
   await title(page, 'Restore saved version'); await fill(page, 'password', PASS); await submit(page);
   await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#managementActivity').textContent);
   const restoredArchive = (await send(page, 'LIST_CREDENTIALS')).entries;
@@ -426,4 +428,9 @@ try {
   await managementTab.close();
   assert.deepEqual(errors, []);
   console.log('Hierarchical Settings passed: list/detail/sidebar navigation, keyboard/back/history/scroll/focus, legacy deep links and tab transfer, light/dark layouts at 320–1600px, readable cache state, preferences/reset/cache, encrypted backup and version downloads, import/conflicts, local/archive restores and deduplication, legacy remote merge, archive/entry cleanup, device erasure and inline password/virtual-PRF master rotation with biometric revocation.');
+} catch (failure) {
+  for (const page of context?.pages() || []) {
+    console.error(await page.evaluate(() => ({ error: document.querySelector('#operationError')?.textContent, activity: document.querySelector('#managementActivity')?.textContent, toast: document.querySelector('#toast')?.textContent, empty: document.querySelector('#backupEmptyState')?.hidden })));
+  }
+  throw failure;
 } finally { await context?.close(); await rm(profile, { recursive: true, force: true }); }

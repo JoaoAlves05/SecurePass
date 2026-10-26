@@ -4,6 +4,7 @@ import { syncSettingsView } from './settings.js';
 import { showToast } from './toast.js';
 import { requestOperation } from './operationDialog.js';
 import { checked, runManagement } from './management.js';
+import { renderCheckpoints } from './checkpoints.js';
 const $ = id => document.getElementById(id);
 let lastRemote = null;
 let refreshSequence = 0;
@@ -39,30 +40,9 @@ export async function refreshSyncView(inspectRemote = false) {
   if (recovery.status === 'fulfilled') {
     const snapshots = [];
     for (const item of recovery.value.snapshots) {
-      if (!snapshots.some(snapshot => snapshot.id === item.id)) snapshots.push(item);
+      if (!snapshots.some(snapshot => snapshot.id === item.id && snapshot.source === item.source)) snapshots.push(item);
     }
-    $('recoveryStatus').textContent = snapshots.length
-      ? `${snapshots.length} saved version${snapshots.length === 1 ? '' : 's'}. Restoring a version turns Sync off on this device.`
-      : 'No earlier versions yet. They appear here after your vault changes.';
-    const list = $('snapshotList');
-    const focused = list.contains(document.activeElement) ? { id: document.activeElement.dataset.snapshotId, action: document.activeElement.dataset.snapshotAction } : null;
-    list.replaceChildren();
-    for (const item of snapshots) {
-      const row = document.createElement('div'); row.className = 'snapshot-item card';
-      const title = document.createElement('strong'); title.textContent = item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'Legacy snapshot';
-      const description = document.createElement('p'); description.className = 'row-sub';
-      description.textContent = `${item.source === 'Local' ? 'Local version' : 'Archived Chrome Sync copy'} · ${item.id.slice(0, 8)} · encrypted`;
-      const actions = document.createElement('div'); actions.className = 'snapshot-actions';
-      for (const [action, label] of [['restore', 'Restore'], ['export', 'Export']]) {
-        const button = document.createElement('button'); button.type = 'button'; button.className = 'secondary compact-btn';
-        button.textContent = label; button.dataset.snapshotId = item.id; button.dataset.snapshotAction = action;
-        button.setAttribute('aria-label', `${label} version ${item.id.slice(0, 8)}`); actions.append(button);
-        if (focused?.id === item.id && focused.action === action) button.dataset.restoreFocus = 'true';
-      }
-      row.append(title, description, actions); list.append(row);
-    }
-    const restoreFocus = list.querySelector('[data-restore-focus]');
-    if (restoreFocus) { restoreFocus.removeAttribute('data-restore-focus'); restoreFocus.focus({ preventScroll: true }); }
+    renderCheckpoints(snapshots);
   } else $('recoveryStatus').textContent = `Could not read local history: ${recovery.reason.message}`;
 }
 async function changeMode(payload) {
@@ -75,6 +55,7 @@ async function changeMode(payload) {
 }
 export function attachSyncListeners() {
   document.addEventListener('management-refresh', () => refreshSyncView().catch(error => showToast(error.message, 'error')));
+  document.addEventListener('vault-ui-state', () => refreshSyncView().catch(error => showToast(error.message, 'error')));
   $('refreshSync').addEventListener('click', () => runManagement(async () => { await refreshSyncView(true); }));
   $('syncToggle').addEventListener('change', () => {
     const targetUseSync = $('syncToggle').checked; $('syncToggle').disabled = true;
@@ -112,7 +93,7 @@ export function attachSyncListeners() {
     let { status } = await checked('VAULT_STATUS');
     if (status.initialized && !await ensureVaultAccessible('Unlock the destination vault before changing its contents.')) return;
     status = (await checked('VAULT_STATUS')).status;
-    const result = await requestOperation({ title: merge ? 'Combine into the local vault' : 'Restore this version locally', description: merge ? 'The selected remote entries will be combined with the unlocked local vault. Conflicting copies are kept separately. The local master password stays the same; other remote versions are not resolved.' : 'The current local vault is kept in recovery history. Sync turns off. Remote copies are not changed. Use the selected version’s master password.', fields: [master], confirmLabel: merge ? 'Combine entries' : 'Restore locally', submit: values => checked('SYNC_RESOLVE', { revision, passphrase: values.password, merge, expectedRevision: status.revision || null }) });
+    const result = await requestOperation({ title: merge ? 'Combine into the local vault' : 'Restore this version locally', description: merge ? 'The selected remote entries will be combined with the unlocked local vault. Conflicting copies are kept separately. The local master password stays the same; other remote versions are not resolved.' : `Current contents are kept in a checkpoint. Sync turns off; remote copies stay unchanged. ${status.initialized ? 'Your current master password and biometric setup stay the same.' : 'The selected version’s master password will unlock this new local vault.'}`, fields: [master], confirmLabel: merge ? 'Combine entries' : 'Restore locally', submit: values => checked('SYNC_RESOLVE', { revision, passphrase: values.password, merge, expectedRevision: status.revision || null }) });
     if (result) showToast(merge ? 'Combined entries. Unlock with the local master password.' : 'Restored locally. Sync is off.', 'success');
   }));
   refreshSyncView().catch(error => showToast(error.message, 'error'));

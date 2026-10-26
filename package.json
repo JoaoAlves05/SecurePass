@@ -8,6 +8,7 @@
     "test:browser": "node tests/browser.mjs",
     "check": "node scripts/check.mjs",
     "test:settings-browser": "node tests/settings-browser.mjs",
+    "test:checkpoints-browser": "node tests/checkpoints-browser.mjs",
     "test:backup-dialogs-browser": "node tests/backupDialogs-browser.mjs",
     "test:sync-browser": "node tests/sync-browser.mjs",
     "package": "node scripts/package.mjs"

@@ -87,6 +87,7 @@ test('popup ceremonies work without documentId and remain bound to the popup ins
 });
 
 test('fresh purpose-bound PRF authentication authorizes master rotation without the old password', async () => {
+  await vault.storeCredential({ site: 'https://fictional.example', password: 'Disposable entry secret' });
   const { pair, prepared } = await registration();
   const prfOutput = b64(crypto.getRandomValues(new Uint8Array(32)));
   await service.finishRegistration(request({ sessionId: prepared.sessionId, assertion: await assertion(prepared, pair), prfOutput }), sender);
@@ -97,6 +98,12 @@ test('fresh purpose-bound PRF authentication authorizes master rotation without 
   const { vaultHandlers } = await import('../src/messageHandlers/vaultHandlers.js');
   const next = 'Replacement fictional password 456!';
   await vaultHandlers.get('CHANGE_MASTER_PASSWORD')(request({ authorization: grant.authorization, newPassphrase: next }), sender);
+  const { readRecoveryRecords } = await import('../src/utils/storage.js');
+  const { decryptRecord } = await import('../src/vault/crypto.js');
+  const checkpoints = await readRecoveryRecords();
+  assert.equal(checkpoints.length, 1);
+  await decryptRecord(checkpoints[0], next);
+  await assert.rejects(decryptRecord(checkpoints[0], PASS));
   assert.equal((await service.biometricStatus()).enabled, false);
   await vault.lockVault();
   await vault.unlockVault(next);

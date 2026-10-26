@@ -158,7 +158,7 @@ try {
   assert.equal(await popup.locator('#biometricSetupBtn button').count(), 0, 'Biometric disclosure does not nest interactive controls.');
   assert.equal(await popup.locator('#disableBiometric').isVisible(), false, 'Revoke action is hidden until biometric unlock is enabled.');
   assert.equal(await popup.locator('#biometricRevokeHelp').isVisible(), false, 'Revoke explanation is hidden until biometric unlock is enabled.');
-  await popup.waitForFunction(() => document.querySelector('#recoveryStatus').textContent.includes('saved version'));
+  await popup.waitForFunction(() => document.querySelector('#recoveryStatus').textContent.includes('automatic checkpoint'));
   assert.match(await popup.locator('#syncStatus').textContent(), /Sync is off\./);
   assert.equal(await popup.locator('#retrySync').isDisabled(), true, 'Retry stays disabled when no publication is pending.');
   assert.equal(await popup.locator('#compactSync').isDisabled(), true, 'Compaction stays disabled while Sync is off.');

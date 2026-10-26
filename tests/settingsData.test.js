@@ -48,7 +48,8 @@ test('SC32: local download and off-mode merge never publish remotely', async () 
   assert.equal((await vault.listCredentials()).length, 2);
   await vault.resolveSyncGeneration(remote.record.revision, REMOTE, false);
   assert.deepEqual(areas.sync, before); assert.equal((await settings.loadSettings()).useSync, false);
-  await vault.unlockVault(REMOTE); assert.equal((await vault.listCredentials()).length, 1);
+  await vault.lockVault(); await vault.unlockVault(PASS); assert.equal((await vault.listCredentials()).length, 1);
+  await assert.rejects(vault.unlockVault(REMOTE));
   await assert.rejects(vault.retrySync(), /Sync is off/); await assert.rejects(vault.compactSync(), /Sync is off/);
 });
 test('SC07/30: off-mode status avoids remote reads; manual scan separates incomplete and valid versions', async () => {

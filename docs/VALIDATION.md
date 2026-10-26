@@ -2,6 +2,14 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Recovery checkpoints — 2026-10-26
+
+The [checkpoint implementation and evidence](CHECKPOINTS.md) delivers three local content states, individual-entry recovery, reviewed full restore, current-password/biometric preservation, atomic live/history re-encryption on master-password change, explicit migration of older protection and local-history deletion. Cards show sequence/date, entry counts and differences only while unlocked. Archived Sync copies are separately identified and exported by source, even when they share a local revision ID.
+
+Validation: **100 Node tests passed**, **82 JavaScript modules checked**, `npm run test:checkpoints-browser`, `npm run test:settings-browser`, `npm run test:backup-dialogs-browser`, `npm run test:browser` (virtual PRF) and `npm run test:sync-browser` passed. Coverage includes retention/no-op saves, preservation across local/external/remote recovery, PRF-authorized history rotation, transaction abort, legacy-key migration, preview integrity/expiry/owner/concurrency, scoped deletion, privacy on lock and popup/tab light/dark layouts. New captures are under `screenshots/checkpoints/`; unrelated generated baseline fixtures were restored. The design detector ran with existing broader base-popup findings documented in the implementation notes. `git diff --check` passed.
+
+The three-state policy prunes older local history on read/write. Historical remote/archive/exported copies remain outside local re-encryption. Physical PRF, actual toolbar sizing and Google-authenticated transport remain manual acceptance gates; these automated results do not establish release acceptance.
+
 ## Inline master-password and management layout — 2026-10-26
 
 The [inline flow and authorization contract](MASTER_PASSWORD_FLOW.md) replace the preliminary unlock plus modal with fresh identity verification, new password/confirmation and an in-place result. Either the current password or a fresh purpose-bound PRF ceremony can authorize rotation. Grants expire after two minutes, are single-use and bound to the client/document, vault revision/key epoch and lock revocation. The UI warns before biometric revocation and offers optional setup again. The management tab now has its own layout stylesheet and bounded form/control proportions.
