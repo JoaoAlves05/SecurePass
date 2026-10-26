@@ -389,11 +389,6 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   line-height: 1.5;
 }
 
-.settings-panel .biometric-help {
-  margin: 0;
-  padding: 0 16px 16px;
-}
-
 .biometric-revoke {
   display: grid;
   gap: 10px;
