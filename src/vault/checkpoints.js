@@ -97,12 +97,13 @@ export function previewCheckpoint(id, mode, owner) {
     if (obsolete.length) await removeStorage('session', obsolete);
     if (Object.keys(all).filter(key => key.startsWith(PREFIX) && !obsolete.includes(key)).length >= 16) throw new Error('Too many recovery previews. Try again shortly.');
     const token = crypto.randomUUID();
+    const sourceDigest = await digest(checkpoint);
     await setStorage('session', { [`${PREFIX}${token}`]: {
-      owner, id, mode, digest: await digest(checkpoint), revision: active.record.revision,
+      owner, id, mode, digest: sourceDigest, revision: active.record.revision,
       expires: Date.now() + 120000, revocation: all.vaultRevocation || null
     } });
     session.assertGeneration(epoch);
-    return { token, ...compare(entries, active.entries) };
+    return { token, revision: active.record.revision, sourceDigest, ...compare(entries, active.entries) };
   });
 }
 

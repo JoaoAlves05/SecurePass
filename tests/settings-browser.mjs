@@ -138,7 +138,7 @@ try {
   const selected = (await send(page, 'RECOVERY_ARCHIVE_STATUS')).snapshots.find(item => item.source === 'Local' && item.count > 0 && (item.missing || item.changed || item.newer));
   assert.ok(selected, 'A checkpoint with different contents is available.');
   await section(page, 'backupsSection');
-  await page.locator(`[data-snapshot-id="${selected.id}"][data-snapshot-action="restore"]`).click(); await title(page, 'Restore whole vault');
+  await page.locator(`[data-snapshot-id="${selected.id}"][data-snapshot-action="review"]`).click(); await page.locator('#checkpointReviewFullRestore').click(); await title(page, 'Restore whole vault');
   assert.equal(await page.locator('#operationFields input[type="password"]').count(), 0);
   assert.match(await page.locator('#operationDescription').textContent(), /master password.*stay the same/);
   await submit(page);

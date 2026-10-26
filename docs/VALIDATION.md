@@ -2,6 +2,12 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Checkpoint review interaction — 2026-10-26
+
+The [review refinement](CHECKPOINT_REVIEW.md) gives each local card one Review checkpoint entry point. An inline comparison offers per-entry recovery with short confirmation, search, optional matching entries and pagination. Full restore is a secondary action at the bottom with its own confirmation. Actions acquire fresh scope-specific tokens and compare source/destination identity with the displayed state; stale views require refresh. Lock/close clears the comparison.
+
+Validation: **100 Node tests passed**, **83 JavaScript modules checked**, and the dedicated checkpoint, settings and backup-dialog Chromium suites passed. The checkpoint journey additionally covers per-row confirmation/cancellation, stale state and refresh, search/Escape/back, matching and empty comparisons, 65-entry pagination, untrusted username rendering and lock cleanup. New captures are under `screenshots/checkpoint-review/`; unrelated generated baseline fixtures were restored. The design detector ran with broader pre-existing findings recorded in the review notes. `git diff --check` passed. General autofill/PRF and two-profile Sync suites were not rerun for this interaction-only refinement; previous evidence below remains historical.
+
 ## Recovery checkpoints — 2026-10-26
 
 The [checkpoint implementation and evidence](CHECKPOINTS.md) delivers three local content states, individual-entry recovery, reviewed full restore, current-password/biometric preservation, atomic live/history re-encryption on master-password change, explicit migration of older protection and local-history deletion. Cards show sequence/date, entry counts and differences only while unlocked. Archived Sync copies are separately identified and exported by source, even when they share a local revision ID.

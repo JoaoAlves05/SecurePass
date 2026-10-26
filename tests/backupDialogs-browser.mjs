@@ -16,7 +16,7 @@ async function send(page, type, data = {}) {
 }
 async function idle(page) { await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent); }
 async function dialog(page, text) { await page.waitForFunction(text => document.querySelector('#operationDialog').open && document.querySelector('#operationTitle').textContent === text, text); }
-async function cancel(page) { await page.locator('#operationCancel').click(); await idle(page); }
+async function cancel(page) { await page.locator('#operationCancel').click(); await idle(page); if (await page.locator('#checkpointReview').isVisible()) await page.locator('#checkpointReviewBack').click(); }
 async function capture(page, name) {
   await page.waitForFunction(() => !document.querySelector('#toast').classList.contains('visible'));
   await page.screenshot({ path: fileURLToPath(new URL(`${name}.png`, captures)), animations: 'disabled' });
@@ -45,7 +45,7 @@ try {
   await send(page, 'STORE_CREDENTIAL', { entry: { id: 'first', site: 'https://example.com', username: 'fictional', password: 'Disposable first secret' } });
   await send(page, 'STORE_CREDENTIAL', { entry: { id: 'second', site: 'https://example.org', password: 'Disposable second secret' } });
   await page.reload(); await page.locator('#openSettings').click(); await page.locator('[data-settings-section="backupsSection"]').click();
-  await page.waitForFunction(() => document.querySelectorAll('[data-snapshot-action="restore"]').length >= 2);
+  await page.waitForFunction(() => document.querySelectorAll('[data-snapshot-action="review"]').length >= 2);
   const revision = (await send(page, 'VAULT_STATUS')).status.revision;
 
   // Verify the actual popup route, both themes, narrow/short viewports and the tab layout.
@@ -58,10 +58,10 @@ try {
       assert.equal(await page.locator('#operation-backupPassword').evaluate(input => input === document.activeElement), true);
       assert.ok(await page.getByLabel('Backup password', { exact: true }).getAttribute('aria-describedby'));
       await fit(page); await capture(page, `export-${theme}-${width}`); await cancel(page);
-      await page.locator('[data-snapshot-action="restore"]').first().click(); await dialog(page, 'Restore whole vault');
+      await page.locator('[data-snapshot-action="review"]').first().click(); await page.locator('#checkpointReviewFullRestore').click(); await dialog(page, 'Restore whole vault');
       assert.equal(await page.locator('#operationSummary dd').count(), 5);
       assert.match(await page.locator('#operationNotice').textContent(), /Sync turns off/);
-      await fit(page); await capture(page, `restore-${theme}-${width}`); await page.keyboard.press('Escape'); await idle(page);
+      await fit(page); await capture(page, `restore-${theme}-${width}`); await page.keyboard.press('Escape'); await idle(page); await page.locator('#checkpointReviewBack').click();
     }
   }
   assert.equal((await send(page, 'VAULT_STATUS')).status.revision, revision, 'Review/cancel never changes the vault');
@@ -94,7 +94,7 @@ try {
   const snapshot = JSON.parse(await readFile(await snapshotDownload.path(), 'utf8')); await idle(page);
   assert.equal(snapshot.snapshots[0].revision, selectedId);
 
-  await page.locator('[data-snapshot-action="restore"]').first().click(); await dialog(page, 'Restore whole vault');
+  await page.locator('[data-snapshot-action="review"]').first().click(); await page.locator('#checkpointReviewFullRestore').click(); await dialog(page, 'Restore whole vault');
   assert.equal(await page.locator('#operationFields input[type="password"]').count(), 0);
   assert.match(await page.locator('#operationDescription').textContent(), /master password.*stay the same/);
   await page.locator('#operationConfirm').click(); await idle(page);
