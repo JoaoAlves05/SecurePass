@@ -25,9 +25,6 @@ const entryModalTitle = document.getElementById('entryModalTitle');
 const newMasterInput = document.getElementById('newMaster');
 const confirmMasterInput = document.getElementById('confirmMaster');
 const vaultPassphraseInput = document.getElementById('vaultPassphrase');
-const currentMasterInput = document.getElementById('currentMaster');
-const nextMasterInput = document.getElementById('nextMaster');
-const confirmNextMasterInput = document.getElementById('confirmNextMaster');
 
 let revealTimers = new Map();
 
@@ -408,33 +405,4 @@ export async function handleCreateMaster(event) {
   renderEntries();
   resetInactivityTimer();
   showToast('Vault created and unlocked.', 'success');
-}
-
-export async function changeMasterPassword(event) {
-  event.preventDefault();
-  if (!requireUnlockedVault()) return;
-  const current = sanitizeValue(currentMasterInput.value, 1024, false);
-  const next = sanitizeValue(nextMasterInput.value, 1024, false);
-  const confirm = sanitizeValue(confirmNextMasterInput.value, 1024, false);
-  if (!current || !next || !confirm) {
-    showToast('Complete all fields.', 'warning');
-    return;
-  }
-  if (next !== confirm) {
-    showToast('New master passwords do not match.', 'error');
-    return;
-  }
-  const response = await sendMessage('CHANGE_MASTER_PASSWORD', {
-    oldPassphrase: current,
-    newPassphrase: next
-  });
-  if (!response?.ok) {
-    showToast(response?.error || 'Unable to change master password.', 'error');
-    return;
-  }
-
-  closeModal('masterModal');
-  resetInactivityTimer();
-  document.getElementById('masterForm').reset();
-  showToast('Master password updated. Reconfigure biometric unlock.', 'success');
 }

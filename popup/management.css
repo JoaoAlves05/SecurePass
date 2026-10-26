@@ -1,0 +1,175 @@
+/* The tab shares settings behavior; its layout is independent of popup sizing. */
+body.management-mode {
+  min-width: 320px;
+  min-height: 0;
+}
+
+.management-mode .settings-surface {
+  background: var(--bg);
+  animation: none;
+}
+
+.management-mode .settings-header,
+.management-mode .settings-layout {
+  max-width: 1120px;
+}
+
+.management-mode .settings-content-wrapper {
+  max-width: 744px;
+}
+
+.management-mode .settings-section > .card {
+  background: var(--bg-subtle);
+  box-shadow: none;
+}
+
+.management-mode .master-change-flow,
+.management-mode .settings-biometric .biometric-inline-auth {
+  max-width: 520px;
+}
+
+@media (min-width: 760px) {
+  .management-mode .settings-header {
+    gap: 24px;
+    padding: 32px 28px 24px;
+  }
+
+  .management-mode .management-brand {
+    display: block;
+    flex: 0 0 240px;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  .management-mode .settings-header h2 {
+    color: var(--text);
+    font-size: 20px;
+  }
+
+  .management-mode .settings-layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    column-gap: 24px;
+    padding: 0 28px;
+  }
+
+  .management-mode .settings-navigation {
+    padding: 8px 0 24px;
+  }
+
+  .management-mode .settings-category {
+    min-height: 72px;
+    margin-bottom: 6px;
+    padding: 14px 16px;
+    border-bottom-color: transparent;
+  }
+
+  .management-mode .settings-category[aria-current='page'] {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .management-mode .settings-category > svg {
+    display: none;
+  }
+
+  .management-mode .settings-content-wrapper {
+    margin: 0;
+    padding: 8px 12px 28px 0;
+  }
+
+  .management-mode .settings-section {
+    gap: 20px;
+  }
+
+  .management-mode .settings-section .section-header,
+  .management-mode .settings-section .section-header h3 {
+    display: block;
+  }
+
+  .management-mode .settings-section .section-header h3 {
+    font-size: 18px;
+  }
+
+  .management-mode .settings-preference,
+  .management-mode .settings-panel .settings-action,
+  .management-mode .settings-panel .card-action-btn,
+  .management-mode .master-change-flow {
+    padding: 20px 24px;
+  }
+
+  .management-mode .settings-preference > .range-slider {
+    display: block;
+    max-width: 400px;
+  }
+
+  .management-mode .theme-toggle-group {
+    max-width: 420px;
+  }
+
+  .management-mode .settings-action-description,
+  .management-mode .row-sub {
+    max-width: 65ch;
+  }
+
+  .management-mode .settings-footer {
+    grid-column: 2;
+    width: 100%;
+    max-width: 744px;
+    margin: 0;
+    padding: 16px 12px 24px 0;
+  }
+}
+
+@media (min-width: 1100px) {
+  .management-mode .settings-header {
+    padding-top: 48px;
+    padding-bottom: 32px;
+  }
+
+  .management-mode .settings-layout {
+    column-gap: 48px;
+  }
+
+  .management-mode .settings-header {
+    gap: 48px;
+  }
+
+  .management-mode #securitySection .settings-preference {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+    column-gap: 32px;
+    row-gap: 4px;
+  }
+
+  .management-mode #securitySection .settings-preference-heading {
+    display: contents;
+  }
+
+  .management-mode #securitySection .settings-preference .row-label {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .management-mode #securitySection .settings-value {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  .management-mode #securitySection .settings-preference > .row-sub {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+  }
+
+  .management-mode #securitySection .settings-preference > .range-slider {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    margin: 0;
+  }
+}

@@ -1,4 +1,8 @@
 /* Settings reuse the popup palette, background and action styles. */
+.management-brand {
+  display: none;
+}
+
 .settings-panel {
   position: fixed;
   inset: 0;
@@ -173,6 +177,98 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 .legacy-card > .card-row,
 .remote-review {
   border-top: 1px solid var(--border-subtle);
+}
+
+.master-change {
+  flex-shrink: 0;
+}
+
+.master-change-flow {
+  padding: 16px;
+  animation: masterFlowIn 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.master-change-flow h4 {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.master-change-step {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  animation: masterStepIn 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.master-change-step p {
+  margin: 0;
+}
+
+.master-step-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.master-change-step .field-group {
+  margin: 0;
+}
+
+.master-change-step .field-group label {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.master-change-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.master-change-actions .compact-btn,
+.master-biometric {
+  width: auto;
+  min-height: 40px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.master-change .input-wrapper input:focus-visible {
+  outline: none;
+  transform: none;
+}
+
+.master-biometric {
+  align-self: flex-start;
+}
+
+.master-change-notice {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.master-change-error {
+  margin: 14px 0 0;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@keyframes masterFlowIn {
+  from { clip-path: inset(0 0 20% 0); transform: translateY(-6px); }
+  to { clip-path: inset(0); transform: translateY(0); }
+}
+
+@keyframes masterStepIn {
+  from { opacity: 0.5; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .settings-preference-heading {
@@ -519,53 +615,6 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
 
 body:has(.settings-panel[aria-hidden='false']) {
   min-width: 320px;
-}
-
-@media (min-width: 760px) {
-  .management-mode .settings-header {
-    padding-top: 24px;
-    padding-bottom: 18px;
-  }
-
-  .management-mode .settings-content-wrapper {
-    padding-top: 12px;
-  }
-
-  .management-mode .settings-layout {
-    display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-  }
-
-  .management-mode .settings-footer {
-    grid-column: 1 / -1;
-    max-width: none;
-  }
-
-  .management-mode .settings-navigation {
-    padding-top: 12px;
-    padding-right: 12px;
-  }
-
-  .management-mode .settings-category {
-    min-height: 76px;
-    border-bottom-color: transparent;
-    margin-bottom: 4px;
-  }
-
-  .management-mode .settings-category[aria-current='page'] {
-    background: var(--primary-soft);
-    color: var(--primary);
-  }
-
-  .management-mode .settings-category > svg {
-    display: none;
-  }
-
-  .management-mode .settings-section .section-header,
-  .management-mode .settings-section .section-header h3 {
-    display: block;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

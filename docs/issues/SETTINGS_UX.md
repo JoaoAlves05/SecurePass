@@ -1,5 +1,9 @@
 # Local issue — Settings, Sync and Data Management journeys
 
+## Inline master-password and tab proportions follow-up — 2026-10-26
+
+The user approved a continuous inline identity/new-password/success flow, password or fresh biometric authorization, a pre-save biometric revocation notice and optional reconfiguration. The same request covers proportions in the management tab. Implementation is on `feature/master-password-settings`; scope and verification are recorded in [MASTER_PASSWORD_FLOW.md](../MASTER_PASSWORD_FLOW.md). This authorizes local implementation and checks, without a requested commit or push.
+
 Opened 2026-10-25 before implementation on `feature/settings-data-management`. GitHub CLI is unavailable; this is a local work item, not a published GitHub issue. User authorized journey/screen design followed by background implementation and tests. Existing documentation/screenshot changes are preserved.
 
 ## Scope

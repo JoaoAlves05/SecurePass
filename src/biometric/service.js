@@ -4,6 +4,7 @@ import { challenge, verifyClientData, verifyAssertion } from './webauthn.js';
 import { decodeBytes, prfKey, seal, open } from '../vault/crypto.js';
 import { withVaultLock } from '../vault/queue.js';
 import { extensionPage } from '../security/origins.js';
+import { masterAuthorizationOwner } from '../vault/masterAuthorization.js';
 
 const KEY = 'securepassBiometric';
 const PREFIX = 'webauthn:';
@@ -101,9 +102,11 @@ export function finishRegistration(message, sender) {
 
 export async function startAuthentication(message, sender) {
   const clientId = owner(message, sender);
+  if (message.purpose && message.purpose !== 'change-master-password') throw new Error('Invalid authentication purpose.');
+  const authorizationOwner = message.purpose === 'change-master-password' ? masterAuthorizationOwner(message, sender) : null;
   const config = (await getStorage('local', KEY))[KEY];
   if (config?.version !== 2) throw new Error('Configure PRF biometric unlock first.');
-  return begin('get', clientId, { config });
+  return begin('get', clientId, { config, authorizationOwner });
 }
 
 export async function finishAuthentication(message, sender) {
@@ -111,6 +114,7 @@ export async function finishAuthentication(message, sender) {
   const verified = await withVaultLock(async () => {
     const epoch = vaultGeneration();
     const state = await consume(message, sender, 'get');
+    if (state.authorizationOwner && state.authorizationOwner !== masterAuthorizationOwner(message, sender)) throw new Error('Authentication belongs to another document.');
     const current = (await getStorage('local', KEY))[KEY];
     if (!current || JSON.stringify(current) !== JSON.stringify(state.config)) throw new Error('Biometric setup changed or was revoked.');
     const counter = await verifyAssertion(message.assertion, current, state.challenge, origin(), chrome.runtime.id);
@@ -118,10 +122,10 @@ export async function finishAuthentication(message, sender) {
     if (bytes.length !== 32) throw new Error('Invalid biometric key.');
     assertVaultGeneration(epoch);
     await setStorage('local', { [KEY]: { ...current, counter } });
-    return { bytes, config: current, epoch };
+    return { bytes, config: current, epoch, authorizationOwner: state.authorizationOwner };
   });
   assertVaultGeneration(verified.epoch);
-  try { await unlockWithBiometricKey(verified.bytes, verified.config.vaultId, verified.config.keyEpoch, verified.epoch, verified.config.credentialId); }
+  try { return await unlockWithBiometricKey(verified.bytes, verified.config.vaultId, verified.config.keyEpoch, verified.epoch, verified.config.credentialId, verified.authorizationOwner); }
   finally { verified.bytes.fill(0); }
 }
 

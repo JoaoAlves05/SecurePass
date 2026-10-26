@@ -7,6 +7,7 @@
   <title>SecurePass</title>
   <link rel="stylesheet" href="popup.css" />
   <link rel="stylesheet" href="settings.css" />
+  <link rel="stylesheet" href="management.css" />
 </head>
 
 <body>
@@ -309,6 +310,7 @@
         <button id="closeSettings" class="icon-btn" type="button" aria-label="Back">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
         </button>
+        <span class="management-brand" aria-hidden="true">SecurePass</span>
         <h2 id="settingsTitle" tabindex="-1">Settings</h2>
         <button id="openManagement" class="settings-open-tab" type="button" aria-label="Open settings in a tab">Open in tab
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" /></svg>
@@ -381,7 +383,58 @@
                   <p class="row-sub">Best effort. Only clears text that still matches your last SecurePass copy.</p>
                   <input id="clipboardRange" type="range" min="0" max="120" step="30" value="30" class="range-slider" aria-describedby="clipboardLabel" />
                 </div>
-                <button id="changeMasterKeyBtn" disabled class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Change master password</span><span class="settings-action-description">Authenticate and choose a new password for your vault.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+              </div>
+              <div id="masterChange" class="card master-change">
+                <button id="changeMasterKeyBtn" disabled class="settings-action" type="button" aria-expanded="false" aria-controls="masterChangeFlow"><span class="settings-action-copy"><span class="settings-action-title">Change master password</span><span class="settings-action-description">Authenticate and choose a new password for your vault.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+                <div id="masterChangeFlow" class="master-change-flow" hidden>
+                  <h4 id="masterChangeTitle">Change master password</h4>
+                  <form id="masterIdentityForm" class="master-change-step" aria-labelledby="masterIdentityTitle">
+                    <p id="masterIdentityTitle" class="master-step-title" tabindex="-1">Confirm your identity</p>
+                    <p class="row-sub">Enter your current master password to continue.</p>
+                    <div class="field-group">
+                      <label for="currentMaster">Current master password</label>
+                      <div class="input-wrapper has-toggle">
+                        <input type="password" id="currentMaster" aria-describedby="masterChangeError" autocomplete="current-password" maxlength="1024" required />
+                        <button type="button" class="icon-btn" data-toggle-password="currentMaster" aria-label="Show password">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="master-change-actions"><button type="submit" class="primary compact-btn">Continue</button><button type="button" class="secondary compact-btn" data-cancel-master>Cancel</button></div>
+                    <button id="masterUseBiometric" type="button" class="secondary compact-btn master-biometric" hidden>Use biometric unlock instead</button>
+                  </form>
+                  <form id="masterForm" class="master-change-step" aria-labelledby="masterNewTitle" hidden>
+                    <p id="masterNewTitle" class="master-step-title" tabindex="-1">Choose your new master password</p>
+                    <div class="field-group">
+                      <label for="nextMaster">New master password</label>
+                      <div class="input-wrapper has-toggle">
+                        <input type="password" id="nextMaster" aria-describedby="masterChangeError" autocomplete="new-password" maxlength="1024" required />
+                        <button type="button" class="icon-btn" data-toggle-password="nextMaster" aria-label="Show password">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                    <p class="row-sub">Use at least 16 characters. A long, unique passphrase is a good choice.</p>
+                    <div class="field-group">
+                      <label for="confirmNextMaster">Confirm new master password</label>
+                      <div class="input-wrapper has-toggle">
+                        <input type="password" id="confirmNextMaster" aria-describedby="masterChangeError" autocomplete="new-password" maxlength="1024" required />
+                        <button type="button" class="icon-btn" data-toggle-password="confirmNextMaster" aria-label="Show password">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                    <p id="masterBiometricWarning" class="master-change-notice" hidden>Biometric unlock on this device will be turned off. You can set it up again after changing your master password.</p>
+                    <div class="master-change-actions"><button type="submit" class="primary compact-btn">Save new password</button><button type="button" class="secondary compact-btn" data-cancel-master>Cancel</button></div>
+                  </form>
+                  <div id="masterChangeSuccess" class="master-change-step" role="status" hidden>
+                    <p class="master-step-title" tabindex="-1">Master password changed</p>
+                    <p class="row-sub">Use your new master password the next time you unlock with a password.</p>
+                    <div class="master-change-actions"><button id="masterReconfigureBiometric" type="button" class="primary compact-btn" hidden>Set up biometric unlock again</button><button id="masterChangeDone" type="button" class="secondary compact-btn">Done</button></div>
+                  </div>
+                  <p id="masterChangeError" class="master-change-error" role="alert" hidden></p>
+                </div>
+
               </div>
               <div class="card settings-biometric">
                 <div id="biometricSetting">
@@ -528,69 +581,6 @@
         <div class="modal-actions">
           <button type="button" data-close="entryModal" class="secondary compact-btn">Cancel</button>
           <button type="submit" class="primary compact-btn">Save</button>
-        </div>
-      </div>
-    </form>
-  </div>
-
-  <div id="masterModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="masterModalTitle">
-    <form id="masterForm" class="modal-content">
-      <header class="modal-header">
-        <button type="button" data-close="masterModal" class="icon-btn" aria-label="Back">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-        </button>
-        <div class="modal-header-title">
-          <h3 id="masterModalTitle">Change master password</h3>
-        </div>
-      </header>
-      <div class="modal-body">
-        <div class="card">
-          <div class="card-form-stack">
-            <div class="field-group">
-              <label for="currentMaster">Current password</label>
-              <div class="input-wrapper has-toggle">
-                <input type="password" id="currentMaster" autocomplete="current-password" maxlength="1024" required />
-                <button type="button" class="icon-btn" data-toggle-password="currentMaster" aria-label="Show password" tabindex="-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div class="field-group">
-              <label for="nextMaster">New password</label>
-              <div class="input-wrapper has-toggle">
-                <input type="password" id="nextMaster" autocomplete="new-password" maxlength="1024" required />
-                <button type="button" class="icon-btn" data-toggle-password="nextMaster" aria-label="Show password" tabindex="-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div class="field-group">
-              <label for="confirmNextMaster">Confirm new password</label>
-              <div class="input-wrapper has-toggle">
-                <input type="password" id="confirmNextMaster" autocomplete="new-password" maxlength="1024" required />
-                <button type="button" class="icon-btn" data-toggle-password="confirmNextMaster" aria-label="Show password" tabindex="-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button type="button" data-close="masterModal" class="secondary compact-btn">Cancel</button>
-          <button type="submit" class="primary compact-btn">Update</button>
         </div>
       </div>
     </form>

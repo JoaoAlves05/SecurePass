@@ -30,8 +30,14 @@ async function screenshot(page, name) {
   await page.screenshot({ path: fileURLToPath(new URL(`../docs/screenshots/${name}.png`, import.meta.url)), animations: 'disabled' });
 }
 async function layouts(page) {
-  for (const width of [320, 400, 740, 760, 1200]) {
+  for (const width of [320, 400, 740, 760, 1200, 1600]) {
     await page.setViewportSize({ width, height: 650 });
+    // A viewport resize returns before the media-query navigation listener runs.
+    await page.waitForFunction(() => {
+      const sidebar = document.body.classList.contains('management-mode') && innerWidth >= 760;
+      const detail = document.querySelector('#settingsPanel').dataset.settingsDetail === 'true';
+      return (!sidebar || detail) && document.querySelector('#settingsNavigation').hidden === (detail && !sidebar);
+    });
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({ colorScheme: theme });
       await page.waitForFunction(theme => document.body.dataset.theme === theme, theme);
@@ -260,21 +266,37 @@ try {
   await send(page, 'LOCK_VAULT');
   assert.equal((await send(page, 'VAULT_STATUS')).status.unlocked, false);
   await page.locator('#changeMasterKeyBtn').click();
-  await page.locator('#unlockSetupModal:not(.hidden)').waitFor();
-  await page.locator('#unlockSetupPassword').fill(PASS);
-  await page.locator('#unlockSetupForm [type="submit"]').click();
-  await page.locator('#masterModal:not(.hidden)').waitFor();
-  await page.locator('#masterModal').getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.locator('#masterIdentityForm').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#unlockSetupModal').isVisible(), false);
+  assert.equal(await page.locator('#masterModal').count(), 0);
+  await page.locator('#currentMaster').fill('Wrong fictional password');
+  await page.locator('#masterIdentityForm [type="submit"]').click();
+  await page.locator('#masterChangeError').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#masterIdentityForm').isVisible(), true);
+  await page.locator('#currentMaster').fill(PASS);
+  await page.locator('#masterIdentityForm [type="submit"]').click();
+  await page.locator('#masterForm').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#currentMaster').inputValue(), '');
+  await page.locator('#masterForm').getByRole('button', { name: 'Cancel', exact: true }).click();
   assert.equal(await page.locator('#securitySection').isVisible(), true);
   const rotatedPassword = 'Replacement fictional master 456!';
   const beforeRotation = (await send(page, 'LIST_CREDENTIALS')).entries;
   await page.locator('#changeMasterKeyBtn').click();
-  await page.locator('#masterModal:not(.hidden)').waitFor();
   await page.locator('#currentMaster').fill(PASS);
+  await page.locator('#masterIdentityForm [type="submit"]').click();
+  await page.locator('#masterForm').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#masterBiometricWarning').isVisible(), false);
   await page.locator('#nextMaster').fill(rotatedPassword);
+  await page.locator('#confirmNextMaster').fill('A mismatched fictional password');
+  await page.locator('#masterForm [type="submit"]').click();
+  await page.locator('#masterChangeError').waitFor({ state: 'visible' });
+  assert.match(await page.locator('#masterChangeError').textContent(), /do not match/);
   await page.locator('#confirmNextMaster').fill(rotatedPassword);
   await page.locator('#masterForm [type="submit"]').click();
-  await page.locator('#masterModal').waitFor({ state: 'hidden' });
+  await page.locator('#masterChangeSuccess').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#nextMaster').inputValue(), '');
+  assert.equal(await page.locator('#masterReconfigureBiometric').isVisible(), false);
+  await page.locator('#masterChangeDone').click();
   await send(page, 'LOCK_VAULT');
   const rejectedOldPassword = await page.evaluate(passphrase => chrome.runtime.sendMessage({ type: 'UNLOCK_VAULT', passphrase }), PASS);
   assert.equal(rejectedOldPassword.ok, false);
@@ -315,6 +337,59 @@ try {
   await page.waitForFunction(top => document.querySelector('.settings-scroll-container').scrollTop === top, previousScroll);
   await section(page, 'securitySection');
   await screenshot(page, 'settings-popup');
+  // Exercise the integrated popup flow with an actual Chromium virtual PRF authenticator.
+  const webauthn = await context.newCDPSession(page);
+  await webauthn.send('WebAuthn.enable', { enableUI: false });
+  await webauthn.send('WebAuthn.addVirtualAuthenticator', { options: { protocol: 'ctap2', ctap2Version: 'ctap2_1', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true, hasPrf: true } });
+  await page.bringToFront();
+  await page.evaluate(async passphrase => {
+    const { enrollBiometric } = await import('../src/biometric/client.js');
+    await enrollBiometric(passphrase);
+  }, rotatedPassword);
+  await send(page, 'LOCK_VAULT');
+  await page.locator('#changeMasterKeyBtn').click();
+  await page.locator('#masterUseBiometric').waitFor({ state: 'visible' });
+  await screenshot(page, 'settings-master-identity-popup');
+  assert.equal(await page.locator('#masterIdentityTitle').evaluate(el => { const rect = el.getBoundingClientRect(); return rect.top >= document.querySelector('.settings-scroll-container').getBoundingClientRect().top; }), true);
+  await page.locator('#masterUseBiometric').click();
+  await page.locator('#masterForm').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#masterBiometricWarning').isVisible(), true);
+  assert.equal(await page.locator('#currentMaster').inputValue(), '');
+  assert.equal(await page.locator('#unlockSetupModal').isVisible(), false);
+  await screenshot(page, 'settings-master-new-popup');
+  const masterActions = await page.locator('#masterForm .master-change-actions').boundingBox();
+  const masterScroller = await page.locator('.settings-scroll-container').boundingBox();
+  assert.ok(masterActions.y + masterActions.height <= masterScroller.y + masterScroller.height, 'New-password actions fit in the popup without a second form or overlay.');
+  const biometricPassword = 'Replacement through virtual PRF 789!';
+  await page.locator('#nextMaster').fill(biometricPassword);
+  await page.locator('#confirmNextMaster').fill(biometricPassword);
+  await page.locator('#masterForm [type="submit"]').click();
+  await page.locator('#masterChangeSuccess').waitFor({ state: 'visible' });
+  assert.equal((await send(page, 'BIOMETRIC_STATUS')).enabled, false);
+  await page.locator('#masterReconfigureBiometric').click();
+  assert.equal(await page.locator('#biometricSetupBtn').getAttribute('aria-expanded'), 'true');
+  await page.locator('#biometricInlineCancel').click();
+  await send(page, 'LOCK_VAULT');
+  const oldBiometricPassword = await page.evaluate(passphrase => chrome.runtime.sendMessage({ type: 'UNLOCK_VAULT', passphrase }), rotatedPassword);
+  assert.equal(oldBiometricPassword.ok, false);
+  await send(page, 'UNLOCK_VAULT', { passphrase: biometricPassword });
+  assert.deepEqual((await send(page, 'LIST_CREDENTIALS')).entries, beforeRotation);
+  // Escape cancels the inline flow without navigating away; leaving Security also clears secrets.
+  await page.locator('#changeMasterKeyBtn').click();
+  await page.locator('#currentMaster').fill(biometricPassword);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#securitySection').isVisible(), true);
+  assert.equal(await page.locator('#currentMaster').inputValue(), '');
+  await page.locator('#changeMasterKeyBtn').click();
+  await page.locator('#currentMaster').fill(biometricPassword);
+  await page.locator('#masterIdentityForm [type="submit"]').click();
+  await page.locator('#masterForm').waitFor({ state: 'visible' });
+  await page.locator('#nextMaster').fill('Unsaved fictional master 123!');
+  await send(page, 'LOCK_VAULT');
+  await page.locator('#masterChangeFlow').waitFor({ state: 'hidden' });
+  assert.equal(await page.locator('#nextMaster').inputValue(), '');
+  await send(page, 'UNLOCK_VAULT', { passphrase: biometricPassword });
+  await webauthn.detach();
   await layouts(page);
   await page.emulateMedia({ colorScheme: 'light' });
   await page.waitForFunction(() => document.body.dataset.theme === 'light');
@@ -350,5 +425,5 @@ try {
   await managementTab.locator('#securitySection').waitFor({ state: 'visible' });
   await managementTab.close();
   assert.deepEqual(errors, []);
-  console.log('Hierarchical Settings passed: list/detail/sidebar navigation, keyboard/back/history/scroll/focus, legacy deep links and tab transfer, light/dark layouts at 320–1200px, readable cache state, preferences/reset/cache, encrypted backup and version downloads, import/conflicts, local/archive restores and deduplication, legacy remote merge, archive/entry cleanup, device erasure and master-password rotation.');
+  console.log('Hierarchical Settings passed: list/detail/sidebar navigation, keyboard/back/history/scroll/focus, legacy deep links and tab transfer, light/dark layouts at 320–1600px, readable cache state, preferences/reset/cache, encrypted backup and version downloads, import/conflicts, local/archive restores and deduplication, legacy remote merge, archive/entry cleanup, device erasure and inline password/virtual-PRF master rotation with biometric revocation.');
 } finally { await context?.close(); await rm(profile, { recursive: true, force: true }); }

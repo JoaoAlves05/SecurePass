@@ -85,3 +85,31 @@ test('popup ceremonies work without documentId and remain bound to the popup ins
     /trusted document/
   );
 });
+
+test('fresh purpose-bound PRF authentication authorizes master rotation without the old password', async () => {
+  const { pair, prepared } = await registration();
+  const prfOutput = b64(crypto.getRandomValues(new Uint8Array(32)));
+  await service.finishRegistration(request({ sessionId: prepared.sessionId, assertion: await assertion(prepared, pair), prfOutput }), sender);
+  await vault.lockVault();
+  const start = await service.startAuthentication(request({ purpose: 'change-master-password' }), sender);
+  const grant = await service.finishAuthentication(request({ sessionId: start.sessionId, assertion: await assertion(start, pair), prfOutput }), sender);
+  assert.ok(grant.authorization);
+  const { vaultHandlers } = await import('../src/messageHandlers/vaultHandlers.js');
+  const next = 'Replacement fictional password 456!';
+  await vaultHandlers.get('CHANGE_MASTER_PASSWORD')(request({ authorization: grant.authorization, newPassphrase: next }), sender);
+  assert.equal((await service.biometricStatus()).enabled, false);
+  await vault.lockVault();
+  await vault.unlockVault(next);
+  await assert.rejects(vault.unlockVault(PASS));
+});
+
+test('ordinary biometric unlock cannot be upgraded to password-change authorization at completion', async () => {
+  const { pair, prepared } = await registration();
+  const prfOutput = b64(crypto.getRandomValues(new Uint8Array(32)));
+  await service.finishRegistration(request({ sessionId: prepared.sessionId, assertion: await assertion(prepared, pair), prfOutput }), sender);
+  const start = await service.startAuthentication(request({}), sender);
+  const result = await service.finishAuthentication(request({ sessionId: start.sessionId, purpose: 'change-master-password', assertion: await assertion(start, pair), prfOutput }), sender);
+  assert.equal(result.authorization, undefined);
+  assert.equal(Object.keys(areas.session).some(key => key.startsWith('masterAuthorization:')), false);
+  await assert.rejects(service.startAuthentication(request({ purpose: 'change-master-password' }), { ...sender, url: chrome.runtime.getURL('auth/auth.html') }), /trusted management/);
+});
