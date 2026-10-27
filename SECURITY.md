@@ -10,7 +10,7 @@ SecurePass protects stored credential contents with native Web Crypto. It does n
 - Original Trusted Device keys and plaintext biometric session seeds are removed. Legacy biometric setup must be registered again on PRF-capable hardware. Unsupported hardware uses the master password.
 - HIBP is optional and contacted only after a check request. Five hash characters leave the extension, not the password or full hash. Response padding is retained. An absent breach result does not imply a strong or safe password.
 - Clipboard access is broader than writing alone because cleanup checks ownership before erasing. Contents are transient, never written to storage, and cleanup is best effort. The clipboard listener only accepts the bundled background worker as sender.
-- Save candidates are transient, restricted to extension contexts and expire after five minutes. They are suggestions, not evidence that a site accepted the login. Confirm acceptance before saving/updating.
+- Save candidates are transient, restricted to extension contexts and expire after five minutes. They are suggestions, not evidence that a site accepted the login. Confirm acceptance before saving/updating. Review/dismiss on the website is bound to its original tab and document. Saving requires a separate trusted-window confirmation, an explicit same-origin target and the reviewed vault revision; updates preserve existing notes. Cancelling review retains the original suggestion until expiry, explicit dismissal or vault lock.
 
 ## Migration and recovery
 

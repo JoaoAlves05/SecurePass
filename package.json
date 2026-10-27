@@ -13,7 +13,8 @@
     "test:recovery-ui-browser": "node tests/recoveryDesign-browser.mjs",
     "test:sync-browser": "node tests/sync-browser.mjs",
     "package": "node scripts/package.mjs",
-    "test:sync-setup-browser": "node tests/syncSetup-browser.mjs"
+    "test:sync-setup-browser": "node tests/syncSetup-browser.mjs",
+    "test:account-prompts-browser": "node tests/accountPrompts-browser.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.4",

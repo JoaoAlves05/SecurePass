@@ -10,11 +10,11 @@ import { withVaultLock } from '../vault/queue.js';
 import { checkpointStatus, unlockCheckpoint, previewCheckpoint, recoverCheckpoint, removeCheckpoints, clearCheckpointPreviews } from '../vault/checkpoints.js';
 
 export const vaultHandlers = new Map([
-  ['VAULT_STATUS', async () => ({ status: await vault.vaultStatus() })],
+  ['VAULT_STATUS', async () => withVaultLock(async () => ({ status: await vault.vaultStatus() }))],
   ['INITIALIZE_VAULT', async m => ({ created: await vault.initializeVault(validateMaster(m.passphrase, true)) })],
   ['UNLOCK_VAULT', async m => ({ data: await vault.unlockVault(validateMaster(m.passphrase)) })],
   ['LOCK_VAULT', async () => { await vault.lockVault(); return {}; }],
-  ['LIST_CREDENTIALS', async () => ({ ...await vault.vaultStatus(), entries: await vault.listCredentials() })],
+  ['LIST_CREDENTIALS', async () => withVaultLock(async () => ({ ...await vault.vaultStatus(), entries: await vault.listCredentials() }))],
   ['STORE_CREDENTIAL', async m => ({ entry: await vault.storeCredential(validateEntry(m.entry)) })],
   ['UPDATE_CREDENTIAL', async m => ({ entry: await vault.updateCredential(validateString(m.id, 64, 'id', true), validateEntry(m.updates, true)) })],
   ['DELETE_CREDENTIAL', async m => { await vault.deleteCredential(validateString(m.id, 64, 'id', true)); return {}; }],

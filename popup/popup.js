@@ -9,7 +9,7 @@ import { attachUIListeners, setView, openSettingsPanel, closeModal, openEntryMod
 import { attachBiometricListeners, syncBiometricView } from './modules/biometricSetup.js';
 import { attachVaultUnlockListeners } from './modules/vaultUnlock.js';
 import { attachDataListeners } from './modules/dataManagement.js';
-import { refreshCandidates } from './modules/candidates.js';
+import { refreshCandidates, attachCandidateListeners } from './modules/candidates.js';
 import { attachManagementListeners } from './modules/management.js';
 import { attachSyncListeners } from './modules/sync.js';
 import { attachMasterPasswordListeners } from './modules/masterPassword.js';
@@ -29,7 +29,7 @@ async function initialise() {
   initialiseSettings(response);
   applyTheme(state.settings.theme); watchSystemTheme(() => state.settings.theme);
   document.addEventListener('vault-entries-changed', renderEntries);
-  attachUIListeners(); attachVaultUnlockListeners(); attachGeneratorListeners(); attachTesterListeners(); attachSettingsListeners(); attachBiometricListeners(); attachDataListeners(); attachSyncListeners(); attachManagementListeners(); attachSettingsNavigation(); attachMasterPasswordListeners();
+  attachCandidateListeners(); attachUIListeners(); attachVaultUnlockListeners(); attachGeneratorListeners(); attachTesterListeners(); attachSettingsListeners(); attachBiometricListeners(); attachDataListeners(); attachSyncListeners(); attachManagementListeners(); attachSettingsNavigation(); attachMasterPasswordListeners();
   $('addEntry').addEventListener('click', () => openEntryModal());
   $('lockVault').addEventListener('click', () => lockVault(true));
   $('vaultSearch').addEventListener('input', event => { state.filter = event.target.value; renderEntries(); resetInactivityTimer(); });

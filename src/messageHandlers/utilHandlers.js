@@ -11,12 +11,15 @@ import { reconfigureTimeout } from '../vault/session.js';
 import { checkSyncSetup, previewSyncGeneration, resolveSyncGeneration } from '../vault/syncService.js';
 import { masterAuthorizationOwner } from '../vault/masterAuthorization.js';
 import { startDeviceTest, inspectDeviceTest, confirmDeviceTest, deviceTestStatus } from '../syncDiagnostics.js';
+import { withVaultLock } from '../vault/queue.js';
 
 export const utilHandlers = new Map([
   ['PROPOSE_CREDENTIAL', candidates.proposeCandidate],
   ['LIST_SAVE_CANDIDATES', candidates.listCandidates],
   ['REVIEW_SAVE_CANDIDATE', candidates.reviewCandidate],
   ['DISMISS_SAVE_CANDIDATE', candidates.dismissCandidate],
+  ['REVIEW_INLINE_CANDIDATE', async (m, sender) => candidates.inlineCandidate(m, sender)],
+  ['DISMISS_INLINE_CANDIDATE', async (m, sender) => candidates.inlineCandidate(m, sender, true)],
   ['LOAD_SETTINGS', loadSettingsState],
   ['PUBLIC_SETTINGS', async () => { const s = await loadSettings(); return { settings: { theme: s.theme, clipboardTimeout: s.clipboardTimeout } }; }],
   ['SAVE_SETTINGS', async m => {
@@ -33,7 +36,7 @@ export const utilHandlers = new Map([
     if (typeof m.targetUseSync !== 'boolean') throw new Error('Invalid Sync mode.');
     return { ...await vault.changeSyncMode(m.targetUseSync, m.strategy, m.passphrase, { revision: m.revision, expectedRevision: m.expectedRevision, expectedHeads: m.expectedHeads }), settings: await loadSettings() };
   }],
-  ['SYNC_STATUS', async m => ({ status: await vault.getSyncStatus({ inspectRemote: m.inspectRemote === true }) })],
+  ['SYNC_STATUS', async m => withVaultLock(async () => ({ status: await vault.getSyncStatus({ inspectRemote: m.inspectRemote === true }) }))],
   ['SYNC_SETUP_CHECK', checkSyncSetup],
   ['OPEN_CHROME_SYNC_SETTINGS', async () => { await chrome.tabs.create({ url: 'chrome://settings/syncSetup' }); return {}; }],
   ['SYNC_PREVIEW', async (m, sender) => previewSyncGeneration(m.revision, m.passphrase, m.merge === true, masterAuthorizationOwner(m, sender))],

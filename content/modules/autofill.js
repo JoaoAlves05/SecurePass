@@ -1,143 +1,161 @@
 import { positionFloating, positionPanel, resolveThemeClass } from './ui.js';
 import { request } from './messaging.js';
 import { setFieldValue, visibleField } from './fields.js';
-
-let shadowRoot;
-let shadowHost;
-let analyzer;
-const tracked = new Map();
-const pending = new Map();
-const submitted = new WeakMap();
-
+import { icon } from './icons.js';
+let shadowRoot; let shadowHost; let analyzer; let active = null;
+const tracked = new Map(); const pending = new Map(); const submitted = new WeakMap();
+const element = (tag, text, className) => {
+  const node = document.createElement(tag); if (text) node.textContent = text; if (className) node.className = className; return node;
+};
+function action(label, name, primary = false) {
+  const button = element('button', null, `securepass-btn ${primary ? 'primary' : 'securepass-tool'}`); button.type = 'button';
+  button.dataset.action = name;
+  button.append(icon(name), element('span', label)); return button;
+}
+function createPanel(field, title, { focus = false } = {}) {
+  active?.close();
+  const entry = tracked.get(field); if (!entry || !visibleField(field)) return null;
+  const panel = element('section', null, 'securepass-panel sp-light'); panel.id = `securepass-panel-${crypto.randomUUID()}`;
+  panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', title);
+  const header = element('div', null, 'securepass-panel-header'); const brand = element('div', 'SecurePass', 'securepass-brand'); brand.prepend(icon('key', 16));
+  const dismiss = element('button', null, 'securepass-icon-btn'); dismiss.type = 'button'; dismiss.setAttribute('aria-label', 'Close SecurePass tools'); dismiss.append(icon('close'));
+  header.append(brand, dismiss); panel.append(header, element('h3', title), element('p', location.origin, 'securepass-origin'));
+  const actions = element('div', null, 'securepass-actions'); const status = element('p', null, 'securepass-status'); status.hidden = true; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+  panel.append(actions, status); shadowRoot.append(panel);
+  let timer; let closed = false;
+  const reposition = () => { if (!visibleField(field)) close(); else positionPanel(panel, field); };
+  const outside = event => { if (!event.composedPath().includes(shadowHost)) close(); };
+  const escape = event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(true); } };
+  const observer = new ResizeObserver(reposition); observer.observe(field); observer.observe(panel);
+  const close = (restoreFocus = false) => {
+    if (closed) return; closed = true; clearTimeout(timer); panel.remove(); observer.disconnect();
+    document.removeEventListener('pointerdown', outside, true); window.removeEventListener('scroll', reposition, true); window.removeEventListener('resize', reposition);
+    window.visualViewport?.removeEventListener('resize', reposition); window.visualViewport?.removeEventListener('scroll', reposition);
+    if (entry.close === close) { entry.close = null; entry.button.setAttribute('aria-expanded', 'false'); entry.button.removeAttribute('aria-controls'); }
+    if (active?.panel === panel) active = null;
+    for (const [id, target] of pending) if (target.close === close) pending.delete(id);
+    if (restoreFocus && !entry.button.hidden && entry.button.isConnected) entry.button.focus();
+  };
+  const report = (text, error = false) => { if (closed) return; status.textContent = text; status.hidden = !text; status.dataset.state = error ? 'error' : ''; reposition(); };
+  const run = async task => {
+    if (panel.getAttribute('aria-busy') === 'true') return;
+    const controls = [...panel.querySelectorAll('.securepass-btn')]; controls.forEach(button => { button.disabled = true; }); panel.setAttribute('aria-busy', 'true');
+    try { await task(); } catch (error) { report(error.message, true); }
+    finally { panel.removeAttribute('aria-busy'); if (!closed) controls.forEach(button => { button.disabled = false; }); field.dispatchEvent(new Event('securepass-refresh-actions')); }
+  };
+  entry.close = close; entry.button.setAttribute('aria-expanded', 'true'); entry.button.setAttribute('aria-controls', panel.id);
+  active = { panel, close, field }; dismiss.addEventListener('click', () => close(true)); panel.addEventListener('keydown', escape);
+  document.addEventListener('pointerdown', outside, true); window.addEventListener('scroll', reposition, true); window.addEventListener('resize', reposition);
+  window.visualViewport?.addEventListener('resize', reposition); window.visualViewport?.addEventListener('scroll', reposition);
+  resolveThemeClass().then(theme => { if (!closed) { panel.classList.remove('sp-light', 'sp-dark'); panel.classList.add(theme); } }).catch(() => {});
+  reposition(); if (focus) dismiss.focus();
+  return { panel, actions, report, close, run, expire: delay => { timer = setTimeout(close, delay); } };
+}
+function showSaveSuggestion(field, candidateId, username) {
+  const view = createPanel(field, 'Save this login?'); if (!view) return;
+  const account = element('p', username || 'No username detected', 'securepass-account'); view.actions.before(account);
+  const note = element('p', 'Detected when this form was submitted. Review only after the website accepts your login. No changes have been saved.', 'securepass-note'); view.actions.before(note);
+  const review = action('Review login', 'save', true);
+  review.addEventListener('click', () => view.run(async () => { await request('REVIEW_INLINE_CANDIDATE', { candidateId }); view.close(); }));
+  const dismiss = action('Not now', 'close');
+  dismiss.addEventListener('click', () => view.run(async () => { await request('DISMISS_INLINE_CANDIDATE', { candidateId }); view.close(true); }));
+  view.actions.append(review, dismiss); view.expire(30000); positionPanel(view.panel, field);
+}
 export async function initAutofill(deps) {
-  shadowRoot = deps.shadowRoot;
-  shadowHost = deps.shadowHost;
-  analyzer = deps.analyzer;
+  shadowRoot = deps.shadowRoot; shadowHost = deps.shadowHost; analyzer = deps.analyzer;
+  const cleanup = new MutationObserver(() => {
+    for (const [field, entry] of tracked) if (!field.isConnected) { entry.destroy(); tracked.delete(field); }
+  });
+  const observeCleanup = () => cleanup.observe(document.documentElement, { childList: true, subtree: true });
+  observeCleanup();
   chrome.runtime.onMessage.addListener((message, sender, respond) => {
     if (sender.id !== chrome.runtime.id) return;
     if (message.type === 'AUTOFILL_CHECK_DOCUMENT') { respond({ ok: true, origin: location.origin }); return; }
-    if (message.type === 'VAULT_LOCKED') {
-      pending.clear();
-      for (const entry of tracked.values()) entry.close?.();
-      return;
-    }
-    if (message.type !== 'AUTOFILL_RESULT') return;
-    const target = pending.get(message.requestId);
-    pending.delete(message.requestId);
-    if (!target || target.expires < Date.now() || message.origin !== location.origin || !visibleField(target.field)) return;
+    if (message.type === 'VAULT_LOCKED') { pending.clear(); active?.close(); return; }
+    if (!['AUTOFILL_RESULT', 'AUTOFILL_CANCELLED'].includes(message.type)) return;
+    const target = pending.get(message.requestId); pending.delete(message.requestId);
+    if (!target) return;
+    if (message.type === 'AUTOFILL_CANCELLED') { target.report('Selection cancelled. You can choose a saved login again.'); return; }
+    if (target.expires < Date.now() || message.origin !== location.origin || !visibleField(target.field)) return;
     const context = analyzer.analyzeFormContext(target.field);
     if (context.isCurrent || context.context !== 'login') return;
     setFieldValue(target.field, message.entry.password);
     if (visibleField(context.usernameField)) setFieldValue(context.usernameField, message.entry.username);
     target.close();
   });
-  document.addEventListener('submit', async event => {
+  document.addEventListener('submit', event => {
+    if (!(event.target instanceof HTMLFormElement)) return;
     const fields = [...event.target.querySelectorAll('input[type="password"]')];
-    const field = fields.find(f => f.autocomplete === 'new-password') || fields.find(f => !analyzer.analyzeFormContext(f).isCurrent);
+    const field = fields.find(input => input.autocomplete === 'new-password') || fields.find(input => !analyzer.analyzeFormContext(input).isCurrent);
     if (!field?.value || !visibleField(field)) return;
     const context = analyzer.analyzeFormContext(field);
-    const username = context.usernameField?.value || '';
-    // One suggestion per account/value per form; no credential is saved without trusted confirmation.
-    const signature = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${username}\u0000${field.value}`)))).join(',');
-    if (submitted.get(event.target) === signature) return;
-    submitted.set(event.target, signature);
-    const candidate = { site: location.origin, username, password: field.value, notes: '' };
-    request('PROPOSE_CREDENTIAL', { entry: candidate }).catch(() => {});
-    showSaveSuggestion(field, candidate);
+    const candidate = { site: location.origin, username: context.usernameField?.value || '', password: field.value };
+    const attempt = Symbol(); submitted.set(event.target, attempt);
+    // Capture before website listeners clear fields or navigate; no success is inferred.
+    request('PROPOSE_CREDENTIAL', { entry: candidate }).then(result => {
+      if (result.proposed && submitted.get(event.target) === attempt) showSaveSuggestion(field, result.candidateId, candidate.username);
+    }).catch(() => {}).finally(() => { candidate.password = ''; });
   }, true);
+  window.addEventListener('pagehide', () => { cleanup.disconnect(); pending.clear(); active?.close(); for (const entry of tracked.values()) entry.destroy(); tracked.clear(); });
+  window.addEventListener('pageshow', event => { if (event.persisted) { observeCleanup(); document.querySelectorAll('input[type="password"]').forEach(attachButton); } });
 }
-
-function element(tag, text, className) {
-  const el = document.createElement(tag);
-  if (text) el.textContent = text;
-  if (className) el.className = className;
-  return el;
-}
-function showSaveSuggestion(field, entry) {
-  const trackedField = tracked.get(field);
-  if (!trackedField) return;
-  trackedField.close?.();
-  const panel = element('div', null, 'securepass-panel');
-  panel.append(element('h3', 'Save or update this account?'));
-  const note = element('p', 'Only confirm after the website accepts your login or password change.');
-  panel.append(note);
-  const save = element('button', 'Review in SecurePass', 'securepass-btn'); save.type = 'button';
-  save.addEventListener('click', async () => {
-    try { await request('PROMPT_SAVE_CREDENTIAL', { entry }); panel.remove(); } catch (error) { note.textContent = error.message; }
-  });
-  const dismiss = element('button', 'Dismiss', 'securepass-btn'); dismiss.type = 'button';
-  dismiss.addEventListener('click', () => panel.remove());
-  panel.append(save, dismiss); shadowRoot.append(panel);
-  resolveThemeClass().then(cls => panel.classList.add(cls));
-  positionPanel(panel, field);
-  trackedField.close = () => { entry.password = ''; panel.remove(); };
-  setTimeout(() => trackedField.close?.(), 30000);
-}
-
 export function attachButton(field) {
-  // A single removal sweep replaces a MutationObserver per password field.
   for (const [input, entry] of tracked) if (!input.isConnected) { entry.destroy(); tracked.delete(input); }
   if (tracked.has(field)) return;
-  const button = element('button', '🔑', 'securepass-floating'); button.type = 'button';
-  button.setAttribute('aria-label', 'Open SecurePass tools');
-  shadowRoot.append(button);
-  const entry = { close: null };
+  const button = element('button', null, 'securepass-floating sp-light'); button.type = 'button'; button.append(icon('key', 16));
+  button.setAttribute('aria-label', 'Open SecurePass tools'); button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-expanded', 'false');
+  shadowRoot.append(button); resolveThemeClass().then(theme => { button.classList.remove('sp-light', 'sp-dark'); button.classList.add(theme); }).catch(() => {});
+  const entry = { button, close: null };
   const reposition = () => positionFloating(button, field);
   const observer = new ResizeObserver(reposition); observer.observe(field);
   window.addEventListener('scroll', reposition, true); window.addEventListener('resize', reposition);
   entry.destroy = () => { entry.close?.(); button.remove(); observer.disconnect(); window.removeEventListener('scroll', reposition, true); window.removeEventListener('resize', reposition); };
   tracked.set(field, entry); reposition();
-  button.addEventListener('click', async () => {
-    if (entry.close) { entry.close(); entry.close = null; return; }
-    const panel = element('div', null, 'securepass-panel');
-    panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'SecurePass tools');
-    const status = element('p', 'Unlock and confirm credentials in the SecurePass window.');
-    const title = element('h3', 'SecurePass');
-    panel.append(title, status);
-    const close = () => { panel.remove(); document.removeEventListener('pointerdown', outside, true); entry.close = null; };
-    const outside = e => { if (!e.composedPath().includes(shadowHost)) close(); };
-    entry.close = close;
-    document.addEventListener('pointerdown', outside, true);
+  button.addEventListener('click', () => {
+    if (entry.close) { entry.close(true); return; }
     const context = analyzer.analyzeFormContext(field);
-    const fill = element('button', 'Choose saved account', 'securepass-btn'); fill.type = 'button';
-    fill.addEventListener('click', async () => {
-      try {
-        if (analyzer.analyzeFormContext(field).context !== 'login') throw new Error('Saved passwords are only filled into login fields.');
-        const response = await request('REQUEST_AUTOFILL');
-        pending.set(response.requestId, { field, close, expires: Date.now() + 120000 });
-        status.textContent = 'Continue in the SecurePass window.';
-      } catch (error) { status.textContent = error.message; }
-    });
-    if (context.context === 'login') panel.append(fill);
-    if (!context.isCurrent) {
-      const generate = element('button', 'Generate password', 'securepass-btn'); generate.type = 'button';
-      generate.addEventListener('click', async () => {
-        try {
-          const current = analyzer.analyzeFormContext(field);
-          if (current.isCurrent) throw new Error('Do not replace the current password.');
-          const result = await request('GENERATE_PASSWORD', { constraints: analyzer.extractConstraints(field) });
-          if (!visibleField(field)) return;
-          setFieldValue(field, result.password);
-          if (visibleField(current.confirmField)) setFieldValue(current.confirmField, result.password);
-          status.textContent = 'Password generated. Save it after the website accepts it.';
-        } catch (error) { status.textContent = error.message; }
-      }); panel.append(generate);
+    const view = createPanel(field, context.context === 'login' ? 'Sign in' : context.isCurrent ? 'Current password' : 'Create a password'); if (!view) return;
+    const fill = action('Choose saved login', 'user', true); let selecting = false;
+    fill.dataset.action = 'fill';
+    if (context.context === 'login') {
+      view.actions.append(fill);
+      fill.addEventListener('click', () => view.run(async () => {
+        if (analyzer.analyzeFormContext(field).context !== 'login') throw new Error('Saved logins are only filled into login forms.');
+        view.report('Opening SecurePass…'); const response = await request('REQUEST_AUTOFILL');
+        if (!view.panel.isConnected) return;
+        selecting = true; pending.set(response.requestId, { field, close: view.close, report: text => { selecting = false; update(); view.report(text); }, expires: Date.now() + 120000 }); view.report('Choose a login in the SecurePass window. Your master password is entered there.');
+      }));
     }
-    const copy = element('button', 'Copy password', 'securepass-btn'); copy.type = 'button';
-    copy.addEventListener('click', async () => {
-      try { await request('COPY_INLINE_PASSWORD', { value: field.value }); status.textContent = 'Copied. Clipboard cleanup is best effort.'; } catch (error) { status.textContent = error.message; }
-    });
-    const save = element('button', 'Save or update account', 'securepass-btn'); save.type = 'button';
-    save.addEventListener('click', async () => {
-      try {
-        const current = analyzer.analyzeFormContext(field);
-        await request('PROMPT_SAVE_CREDENTIAL', { entry: { site: location.origin, username: current.usernameField?.value || '', password: field.value, notes: '' } });
-        status.textContent = 'Confirm in the SecurePass window.';
-      } catch (error) { status.textContent = error.message; }
-    });
-    const dismiss = element('button', 'Close', 'securepass-btn'); dismiss.type = 'button'; dismiss.addEventListener('click', close);
-    panel.append(copy, save, dismiss); shadowRoot.append(panel);
-    panel.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); button.focus(); } });
-    resolveThemeClass().then(cls => panel.classList.add(cls)); positionPanel(panel, field); fill.isConnected ? fill.focus() : dismiss.focus();
+    const tools = element('div', null, 'securepass-tools');
+    const generate = action('Generate password', 'generate', context.context !== 'login');
+    if (!context.isCurrent) {
+      (context.context === 'login' ? tools : view.actions).append(generate);
+      generate.addEventListener('click', () => view.run(async () => {
+        const current = analyzer.analyzeFormContext(field); if (current.isCurrent) throw new Error('Use the new password field to generate a replacement.');
+        const destination = current.context === 'login' ? field : current.primaryField || field;
+        const destinationContext = analyzer.analyzeFormContext(destination);
+        const result = await request('GENERATE_PASSWORD', { constraints: analyzer.extractConstraints(destination) });
+        if (!visibleField(field)) return;
+        if (visibleField(destination)) setFieldValue(destination, result.password);
+        if (visibleField(destinationContext.confirmField)) setFieldValue(destinationContext.confirmField, result.password);
+        view.report('Password generated. Save it after the website accepts it.');
+      }));
+    }
+    const copy = action('Copy password', 'copy');
+    copy.addEventListener('click', () => view.run(async () => { await request('COPY_INLINE_PASSWORD', { value: field.value }); view.report('Password copied.'); }));
+    const save = action('Save login', 'save');
+    save.addEventListener('click', () => view.run(async () => {
+      const current = analyzer.analyzeFormContext(field);
+      if (current.isCurrent) throw new Error('Use the new password field to save a password change.');
+      await request('PROMPT_SAVE_CREDENTIAL', { entry: { site: location.origin, username: current.usernameField?.value || '', password: field.value } }); view.report('Review the login in the SecurePass window before saving.');
+    }));
+    tools.append(copy); if (!context.isCurrent) tools.append(save); view.actions.after(tools);
+    const update = () => { if (view.panel.getAttribute('aria-busy') !== 'true') { copy.disabled = save.disabled = !field.value; fill.disabled = selecting; } };
+    field.addEventListener('input', update); field.addEventListener('securepass-refresh-actions', update); update();
+    // Field listeners belong to this panel and never accumulate across opens.
+    const cleanup = () => { field.removeEventListener('input', update); field.removeEventListener('securepass-refresh-actions', update); };
+    const removal = new MutationObserver(() => { if (!view.panel.isConnected) { cleanup(); removal.disconnect(); } }); removal.observe(shadowRoot, { childList: true });
+    const note = element('p', context.isCurrent ? 'Your current password will not be replaced by the generator.' : 'Passwords are only saved after you confirm in SecurePass.', 'securepass-note'); view.panel.append(note);
+    positionPanel(view.panel, field); (fill.isConnected ? fill : generate.isConnected ? generate : button).focus();
   });
 }

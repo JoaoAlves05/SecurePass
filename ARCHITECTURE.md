@@ -26,7 +26,7 @@ The [2026-10-26 backup/Advanced review](docs/REVIEW_BACKUP_ADVANCED.md) adds ide
 | `src/vault/recovery.js` | Explicit external recovery and device erasure |
 | `src/cryptoVault.js` | Vault application service: create/unlock, copy-on-write CRUD, rotation and import |
 | `src/biometric/` | WebAuthn client, proof verification, expiring owner-bound ceremonies, PRF key wrapping |
-| `src/autofill/` | Origin/document-bound confirmation requests and expiring save candidates |
+| `src/autofill/` | Origin/document-bound requests, restricted expiring candidate store and explicit revision-checked save/update |
 | `src/clipboard/` and `offscreen.js` | One offscreen clipboard owner with serialized copy/conditional cleanup |
 | `src/messageHandlers/` | Thin adapters from message DTOs to application services |
 | `popup/state.js` | Popup state and shared constant icons; no bootstrap side effects |
@@ -68,7 +68,7 @@ IndexedDB retains three previous local content states. `vault/checkpoints.js` pr
 
 UI recovery selects stable snapshot IDs and exports one encrypted snapshot per file, within the 16 MiB individual file contract. Explicit source selection keeps local and archived exports distinct. The aggregate legacy export handler remains for compatibility; large legacy archives still need the planned bounded streaming reader. Wipe reads only local data; explicit force confirmation allows deleting indecipherable records without granting access to contents.
 
-`vaultUnlock.js` authenticates within a bounded unlock form, keeps failures inline, aborts pending WebAuthn on cancellation and returns an unlock result rather than a password. `recovery.css` owns compact unlock, comparison and recovery-confirmation geometry for popup/tab sizes. `operationDialog.js` supplies native exclusive operation dialogs; `management.js` refreshes settings, vault and history state after actions. The same trusted popup pathname supports `?manage=1`; content/auth capabilities are not widened. The Drive button is disabled with an explicit availability reason. HIBP cache writes carry a generation barrier across clear/wipe, and offscreen clipboard erasure only targets still-owned content.
+`vaultUnlock.js` authenticates within a bounded unlock form, keeps failures inline, aborts pending WebAuthn on cancellation and returns an unlock result rather than a password. `recovery.css` owns compact unlock, comparison and recovery-confirmation geometry for popup/tab sizes. `operationDialog.js` supplies native exclusive operation dialogs; `management.js` refreshes settings, vault and history state after actions. The same trusted popup pathname supports `?manage=1` without granting content or authentication pages general management access. The Drive button is disabled with an explicit availability reason. HIBP cache writes carry a generation barrier across clear/wipe, and offscreen clipboard erasure only targets still-owned content.
 
 Master-password changes use the inline `masterPassword.js` flow: fresh password authentication or a purpose-bound verified PRF assertion, then new password/confirmation, then an in-place result. `vault/masterAuthorization.js` stores a random, two-minute, single-use grant in restricted session storage, bound to the management client, available browser document/tab identity, vault revision/key epoch and lock revocation nonce. The background consumes the grant under the same operation lock as rotation; an already-unlocked vault or ordinary biometric unlock is insufficient. Rotation preserves entries and removes the local biometric wrapper. `management.css` owns the tab layout independently of popup sizing. See [flow and verification](docs/MASTER_PASSWORD_FLOW.md).
 
@@ -82,6 +82,8 @@ Master-password changes use the inline `masterPassword.js` flow: fresh password 
 6. The content script checks its pending request and field, applies native input/change events, and never submits the form.
 
 Management messages are restricted to the exact bundled popup page. The confirmation window has a smaller capability set. Content scripts cannot call general vault mutations, list all entries, unlock the vault or complete biometric ceremonies. Local/session/Sync storage is restricted before the background accepts requests. Public resource exposure includes only content modules and the form analyzer.
+
+[Account suggestions and inline login tools](docs/ACCOUNT_PROMPTS.md) use the popup visual tokens in extension-owned confirmation and a closed-shadow tools menu. Submission captures values before page listeners clear/navigate, without claiming login success. Metadata-only suggestions remain available after review cancellation and are removed on save/dismiss/expiry/lock. Inline review/dismiss checks the originating tab/document. Explicit same-origin save targets preserve notes/identity, bind the reviewed destination revision and serialize consumption with commit. Public status/account/Sync reads serialize against mutations; fill remains one-shot, document-bound and never submits. No permissions changed; auth may read only existing public presentation settings.
 
 ## Biometric model
 
