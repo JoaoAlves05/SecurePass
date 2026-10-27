@@ -2,6 +2,12 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Recent authentication for checkpoint restore — 2026-10-27
+
+Whole-checkpoint restore now requires password or verified PRF authentication less than five minutes old, independently of inactivity. Backend preview and commit enforce the window; the legacy local-checkpoint endpoint also rejects stale authentication. Activity, edits, imports and recovery preserve the authentication timestamp. Individual recovery retains the active-session confirmation flow. Verification that fails or is cancelled makes no recovery changes; successful verification leads to a fresh comparison and explicit restore confirmation. Submission refreshes its scoped preview and source/destination checks, including after a long-open confirmation. The unlock/identity dialogs retain compact 320px layouts and expose biometrics only when configured. See [the authentication contract and captures](CHECKPOINT_REVIEW.md).
+
+Validation: **106 Node tests passed**, **85 JavaScript modules checked**, and recovery-UI, checkpoint, general browser/virtual-PRF, settings, backup-dialog and two-profile emulated Sync suites passed. Added regressions cover the exact five-minute boundary, missing/invalid timestamps, failed password/PRF authentication, keep-alive/write/recovery preservation, the legacy endpoint, owner/replay protections and authentication expiry at confirmation. A preview requiring verification cannot become authorized after clock rollback. Browser journeys cover password retry/cancel, PRF cancel/success, expired confirmation previews, explicit confirmation after authentication, unchanged contents on cancellation and current biometric setup preservation. Three new identity captures are retained; unrelated generated screenshots were restored. The design detector and whitespace check passed. Physical authenticators, actual toolbar popup sizing and Google-authenticated Sync remain separate manual acceptance checks.
+
 ## Authentication method row — 2026-10-27
 
 The vault unlock, scoped unlock dialog and master-password identity form now place an accessible icon-only fingerprint button beside the password field. The field and button share a 40px height and 8px gap; password reveal stays inside the field. Without configured biometrics the password field uses the whole row. Cancel/Unlock or Continue actions remain below. No authentication, authorization or key-handling code changed.

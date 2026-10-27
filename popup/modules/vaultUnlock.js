@@ -8,6 +8,7 @@ import { authenticateBiometric } from '../../src/biometric/client.js';
 const $ = id => document.getElementById(id);
 let sequence = 0;
 let controller;
+let confirmingIdentity = false;
 
 function clearPassword() {
   $('unlockSetupPassword').value = '';
@@ -21,10 +22,14 @@ function busy(method) {
   $('unlockSetupForm').setAttribute('aria-busy', String(Boolean(method)));
   for (const control of modal.querySelectorAll('input, button')) control.disabled = Boolean(method);
   modal.querySelector('[data-close]').disabled = method === 'password';
-  modal.querySelector('[type="submit"]').textContent = method === 'password' ? 'Unlocking…' : 'Unlock';
-  const biometricLabel = method === 'biometric' ? 'Verifying biometric unlock…' : 'Use biometric unlock';
-  $('unlockWithBiometric').setAttribute('aria-label', biometricLabel);
-  $('unlockWithBiometric').title = biometricLabel;
+  const label = confirmingIdentity ? 'Confirm' : 'Unlock';
+  const pendingLabel = confirmingIdentity ? 'Confirming…' : 'Unlocking…';
+  modal.querySelector('[type="submit"]').textContent = method === 'password' ? pendingLabel : label;
+  const biometricLabel = confirmingIdentity ? 'Confirm with biometrics' : 'Use biometric unlock';
+  const pendingBiometricLabel = confirmingIdentity ? 'Verifying identity…' : 'Verifying biometric unlock…';
+  const statusLabel = method === 'biometric' ? pendingBiometricLabel : biometricLabel;
+  $('unlockWithBiometric').setAttribute('aria-label', statusLabel);
+  $('unlockWithBiometric').title = statusLabel;
 }
 
 function report(message) {
@@ -32,11 +37,13 @@ function report(message) {
   $('unlockSetupError').hidden = !message;
 }
 
-export async function requestVaultUnlock(message) {
+export async function requestVaultUnlock(message, { confirmIdentity = false } = {}) {
   if (!$('unlockSetupModal').classList.contains('hidden') || $('operationDialog').open) return false;
   const expected = ++sequence;
   const status = await sendMessage('BIOMETRIC_STATUS');
   if (sequence !== expected) return false;
+  confirmingIdentity = confirmIdentity;
+  $('unlockSetupTitle').textContent = confirmIdentity ? 'Confirm identity' : 'Unlock vault';
   clearPassword(); $('unlockSetupPassword').removeAttribute('aria-invalid'); busy(null); report('');
   $('unlockSetupLead').textContent = message || 'Enter your master password to continue.';
   const biometric = Boolean(status.ok && status.enabled);

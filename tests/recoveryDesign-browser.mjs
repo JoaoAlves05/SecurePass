@@ -14,6 +14,15 @@ async function send(page, type, data = {}) {
   const response = await page.evaluate(({ type, data }) => chrome.runtime.sendMessage({ type, ...data }), { type, data });
   assert.equal(response.ok, true, response.error); return response;
 }
+async function expireAuthentication(page) {
+  await page.evaluate(async () => {
+    const { vaultSessionV2 } = await chrome.storage.session.get('vaultSessionV2');
+    await chrome.storage.session.set({ vaultSessionV2: { ...vaultSessionV2, authenticatedAt: Date.now() - 5 * 60000 } });
+  });
+}
+async function reviewIdle(page) {
+  await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent && document.querySelector('#checkpointReview').getAttribute('aria-busy') === 'false');
+}
 async function fit(page, selector) {
   const bounds = await page.locator(selector).evaluate(element => {
     const box = element.getBoundingClientRect();
@@ -82,6 +91,7 @@ try {
     await capture(page, `review-${mode}-${theme}`);
     await page.locator('[data-recover-entry="mail"]').click();
     await page.locator('#operationDialog').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#operationDialog input').count(), 0, 'Individual recovery uses the unlocked session');
     await fit(page, '#operationDialog'); await capture(page, `recover-${mode}-${theme}`);
     await page.locator('#operationCancel').click();
     await page.locator('#checkpointReviewFullRestore').click();
@@ -90,6 +100,43 @@ try {
     assert.ok(await page.locator('#operationConfirm').isVisible());
     assert.ok((await page.locator('#operationDialog').boundingBox()).height < 390, 'Full restore uses a compact confirmation');
     await page.locator('#operationCancel').click();
+    await reviewIdle(page);
+    if (width === 320) {
+      // Inactivity and recent authentication are separate. Expiry also applies after opening confirmation.
+      await page.locator('#checkpointReviewFullRestore').click();
+      await page.locator('#operationDialog').waitFor({ state: 'visible' });
+      await expireAuthentication(page);
+      await page.evaluate(async () => {
+        const stored = await chrome.storage.session.get(null);
+        const expired = Object.fromEntries(Object.entries(stored).filter(([key]) => key.startsWith('checkpointPreview:'))
+          .map(([key, value]) => [key, { ...value, expires: Date.now() - 1 }]));
+        await chrome.storage.session.set(expired);
+      });
+      await page.locator('#operationConfirm').click();
+      await page.locator('#unlockSetupModal').waitFor({ state: 'visible' });
+      assert.equal(await page.locator('#unlockSetupTitle').textContent(), 'Confirm identity');
+      assert.equal(await page.locator('#unlockWithBiometric').isVisible(), false);
+      assert.equal((await page.locator('#unlockSetupLead').textContent()).includes('biometric'), false);
+      assert.deepEqual((await send(page, 'LIST_CREDENTIALS')).entries, []);
+      await fit(page, '#unlockSetupModal'); await capture(page, 'restore-identity-password');
+      await page.locator('#unlockSetupPassword').fill('Wrong disposable password');
+      await page.locator('#unlockSetupForm [type="submit"]').click();
+      await page.locator('#unlockSetupError').waitFor({ state: 'visible' });
+      assert.equal(await page.locator('#unlockSetupPassword').inputValue(), '');
+      assert.ok((await page.locator('#unlockSetupModal').boundingBox()).height < 280);
+      await capture(page, 'restore-identity-error');
+      await page.keyboard.press('Escape'); await reviewIdle(page);
+      assert.deepEqual((await send(page, 'LIST_CREDENTIALS')).entries, []);
+      await page.locator('#checkpointReviewFullRestore').click();
+      await page.locator('#unlockSetupModal').waitFor({ state: 'visible' });
+      await page.locator('#unlockSetupPassword').fill(password);
+      await page.locator('#unlockSetupForm [type="submit"]').click();
+      await page.locator('#operationDialog').waitFor({ state: 'visible' });
+      assert.equal(await page.locator('#operationTitle').textContent(), 'Restore whole vault');
+      assert.equal(await page.locator('#operationDialog input').count(), 0);
+      assert.deepEqual((await send(page, 'LIST_CREDENTIALS')).entries, [], 'Authentication alone never commits recovery');
+      await page.locator('#operationCancel').click(); await reviewIdle(page);
+    }
     await send(page, 'LOCK_VAULT');
   }
   // A pending WebAuthn prompt can be cancelled without resuming recovery.
@@ -123,6 +170,30 @@ try {
   await page.locator(`[data-checkpoint-id="${checkpoint.id}"] [data-snapshot-action="review"]`).click();
   await page.locator('#unlockWithBiometric').click();
   await page.locator('#checkpointReview').waitFor({ state: 'visible' });
+  await reviewIdle(page);
+  await expireAuthentication(page);
+  await page.locator('#checkpointReviewFullRestore').click();
+  await page.locator('#unlockSetupModal').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#unlockSetupTitle').textContent(), 'Confirm identity');
+  assert.equal(await page.locator('#unlockWithBiometric').getAttribute('aria-label'), 'Confirm with biometrics');
+  await authRow(page, 'unlockSetupPassword', 'unlockWithBiometric', true);
+  await fit(page, '#unlockSetupModal'); await capture(page, 'restore-identity-biometric');
+  await webauthn.send('WebAuthn.setAutomaticPresenceSimulation', { authenticatorId, enabled: false });
+  await page.locator('#unlockWithBiometric').click();
+  await page.waitForFunction(() => document.querySelector('#unlockSetupModal').dataset.busy === 'biometric');
+  await page.locator('#unlockSetupModal [data-close]').click(); await reviewIdle(page);
+  assert.deepEqual((await send(page, 'LIST_CREDENTIALS')).entries, [], 'Cancelled biometric confirmation never restores');
+  await webauthn.send('WebAuthn.setAutomaticPresenceSimulation', { authenticatorId, enabled: true });
+  await page.locator('#checkpointReviewFullRestore').click();
+  await page.locator('#unlockSetupModal').waitFor({ state: 'visible' });
+  await page.locator('#unlockWithBiometric').click();
+  await page.locator('#operationDialog').waitFor({ state: 'visible' });
+  assert.deepEqual((await send(page, 'LIST_CREDENTIALS')).entries, []);
+  assert.equal(await page.locator('#operationDialog input').count(), 0);
+  await page.locator('#operationConfirm').click();
+  await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent && !document.querySelector('#operationDialog').open);
+  assert.equal((await send(page, 'LIST_CREDENTIALS')).entries[0].id, 'mail');
+  assert.equal((await send(page, 'BIOMETRIC_STATUS')).enabled, true);
   const vaultPage = await context.newPage(); await vaultPage.setViewportSize({ width: 320, height: 480 });
   await vaultPage.emulateMedia({ colorScheme: 'dark' }); await send(page, 'LOCK_VAULT');
   await vaultPage.goto(base); await vaultPage.locator('[data-view="vault"]').click();
@@ -139,5 +210,5 @@ try {
   await page.locator('#masterIdentityForm [data-cancel-master]').click();
   await webauthn.detach();
   assert.deepEqual(errors, []);
-  console.log('Recovery surfaces passed: inline password errors, retry/cancel, clear secrets, bounded unlock/recovery dialogs and popup/tab light/dark captures.');
+  console.log('Recovery surfaces passed: recent-authentication expiry, password/virtual-PRF reauthentication and cancellation, explicit restore confirmation, cleared secrets and compact popup/tab light/dark layouts.');
 } finally { await context?.close(); await rm(profile, { recursive: true, force: true }); }

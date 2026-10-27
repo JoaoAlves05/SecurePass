@@ -52,6 +52,31 @@ test('non-PRF hardware never creates an insecure fallback', async () => {
   await assert.rejects(service.finishRegistration(request({ sessionId: prepared.sessionId, assertion: await assertion(prepared, pair), prfOutput: null }), sender), /does not support PRF/);
   assert.equal((await service.biometricStatus()).enabled, false);
 });
+test('verified biometric authentication renews full-restore eligibility; a failed ceremony does not', async () => {
+  const history = await import('../src/vault/checkpoints.js');
+  await vault.storeCredential({ id: 'mail', site: 'https://mail.example', password: 'Disposable entry secret' });
+  await vault.deleteCredential('mail');
+  const selected = (await history.checkpointStatus())[0].id;
+  const { pair, prepared } = await registration();
+  const prfOutput = b64(crypto.getRandomValues(new Uint8Array(32)));
+  await service.finishRegistration(request({ sessionId: prepared.sessionId, assertion: await assertion(prepared, pair, 1), prfOutput }), sender);
+  const stale = Date.now() - 5 * 60000;
+  areas.session.vaultSessionV2.authenticatedAt = stale;
+  assert.equal((await history.previewCheckpoint(selected, 'vault', clientId)).requiresAuthentication, true);
+  const failed = await service.startAuthentication(request({}), sender);
+  await assert.rejects(service.finishAuthentication(request({ sessionId: failed.sessionId,
+    assertion: await assertion({ ...failed, challenge: 'wrong' }, pair, 2), prfOutput }), sender), /challenge/);
+  assert.equal(areas.session.vaultSessionV2.authenticatedAt, stale);
+  const startedAt = Date.now();
+  const start = await service.startAuthentication(request({}), sender);
+  await service.finishAuthentication(request({ sessionId: start.sessionId, assertion: await assertion(start, pair, 2), prfOutput }), sender);
+  assert.ok(areas.session.vaultSessionV2.authenticatedAt >= startedAt);
+  const preview = await history.previewCheckpoint(selected, 'vault', clientId);
+  assert.equal(preview.requiresAuthentication, false);
+  await history.recoverCheckpoint(preview.token, undefined, clientId);
+  assert.equal((await vault.listCredentials())[0].id, 'mail');
+  assert.equal((await service.biometricStatus()).enabled, true);
+});
 test('forged completion, wrong owner, challenge and replay are rejected', async () => {
   const { pair, prepared } = await registration(); const prfOutput = encodeKey(crypto.getRandomValues(new Uint8Array(32)));
   await assert.rejects(service.finishRegistration(otherRequest({ sessionId: prepared.sessionId }), sender), /another document/);

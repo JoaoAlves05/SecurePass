@@ -3,6 +3,7 @@ import { decodeBytes, encodeKey, decryptWithKey } from './crypto.js';
 import { loadSettings } from '../settings.js';
 
 const KEY = 'vaultSessionV2';
+const RECENT_AUTHENTICATION_MS = 5 * 60 * 1000;
 let epoch = 0;
 let memory = null;
 let writes = Promise.resolve();
@@ -31,15 +32,19 @@ export async function revokeSession() {
   await notification;
 }
 
-export async function activate(record, entries, keyBytes, expected, timeout) {
+export async function activate(record, entries, keyBytes, expected, { authenticated = false } = {}) {
   assertGeneration(expected);
-  const minutes = timeout || (await loadSettings()).vaultTimeout;
+  const minutes = (await loadSettings()).vaultTimeout;
   const lastActivity = Date.now();
   const deadline = lastActivity + minutes * 60000;
   const bytes = new Uint8Array(keyBytes);
   await schedule(async () => {
+    const previous = (await getStorage('session', KEY))[KEY];
     assertGeneration(expected);
-    await setStorage('session', { [KEY]: { revision: record.revision, keyEpoch: record.keyEpoch, key: encodeKey(bytes), deadline, lastActivity, timeoutMinutes: minutes } });
+    // Activity and writes renew inactivity only. Fresh identity verification renews authentication.
+    const authenticatedAt = authenticated ? lastActivity
+      : previous?.vaultId === record.vaultId && previous.keyEpoch === record.keyEpoch ? previous.authenticatedAt ?? null : null;
+    await setStorage('session', { [KEY]: { vaultId: record.vaultId, revision: record.revision, keyEpoch: record.keyEpoch, key: encodeKey(bytes), deadline, lastActivity, timeoutMinutes: minutes, authenticatedAt } });
     assertGeneration(expected);
     memory = { record, entries: structuredClone(entries), bytes, deadline };
   });
@@ -64,9 +69,16 @@ export async function current(record, { touch = false } = {}) {
   }
   if (stored.deadline <= Date.now()) { await revokeSession(); throw new Error('Vault is locked'); }
   assertGeneration(expected);
-  const snapshot = { record, entries: structuredClone(memory.entries), bytes: new Uint8Array(memory.bytes), epoch: expected };
+  const snapshot = { record, entries: structuredClone(memory.entries), bytes: new Uint8Array(memory.bytes), epoch: expected, authenticatedAt: stored.authenticatedAt };
   if (touch) await activate(record, snapshot.entries, snapshot.bytes, expected);
   return snapshot;
+}
+
+export function hasRecentAuthentication(state) {
+  const now = Date.now();
+  const authenticatedAt = state.authenticatedAt;
+  return Number.isFinite(authenticatedAt) && authenticatedAt > 0 && authenticatedAt <= now &&
+    now - authenticatedAt < RECENT_AUTHENTICATION_MS;
 }
 
 export async function sessionStatus(record) {

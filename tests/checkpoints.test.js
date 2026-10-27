@@ -103,6 +103,92 @@ test('full restore retains the current password, key and biometric setup; curren
   assert.equal((await loadSettings()).useSync, false);
 });
 
+test('full restore requires authentication within five minutes, even while the vault remains unlocked', async () => {
+  await vault.storeCredential(entry('a')); await vault.storeCredential(entry('b'));
+  const selected = await firstId();
+  const record = await storage.readLocalVaultRecordRaw();
+  const checkpoints = await storage.readRecoveryRecords();
+  areas.session.vaultSessionV2.authenticatedAt = Date.now() - 5 * 60000;
+  const preview = await history.previewCheckpoint(selected, 'vault', OWNER);
+  assert.equal(preview.requiresAuthentication, true);
+  assert.equal((await vault.vaultStatus()).unlocked, true);
+  assert.deepEqual(await history.recoverCheckpoint(preview.token, undefined, OWNER), { requiresAuthentication: true });
+  assert.deepEqual(await storage.readLocalVaultRecordRaw(), record);
+  assert.deepEqual(await storage.readRecoveryRecords(), checkpoints);
+  await assert.rejects(vault.restoreRecovery(selected, PASS, record.revision), /Confirm your identity/);
+  assert.deepEqual(await storage.readLocalVaultRecordRaw(), record);
+  await assert.rejects(history.recoverCheckpoint(preview.token, undefined, OWNER), /Review/);
+  await assert.rejects(vault.unlockVault('Wrong fictional password'));
+  assert.equal((await history.previewCheckpoint(selected, 'vault', OWNER)).requiresAuthentication, true);
+  await vault.unlockVault(PASS);
+  const fresh = await history.previewCheckpoint(selected, 'vault', OWNER);
+  assert.equal(fresh.requiresAuthentication, false);
+  await history.recoverCheckpoint(fresh.token, undefined, OWNER);
+  assert.deepEqual((await vault.listCredentials()).map(item => item.id), ['a']);
+});
+
+test('keep-alive, writes, timeout changes and recovery do not renew the authentication window', async () => {
+  const session = await import('../src/vault/session.js');
+  const authenticatedAt = Date.now() - 4 * 60000;
+  areas.session.vaultSessionV2.authenticatedAt = authenticatedAt;
+  await vault.keepAlive();
+  await vault.storeCredential(entry('a')); await vault.storeCredential(entry('b'));
+  await session.reconfigureTimeout(30);
+  assert.equal(areas.session.vaultSessionV2.authenticatedAt, authenticatedAt);
+  const preview = await history.previewCheckpoint(await firstId(), 'vault', OWNER);
+  assert.equal(preview.requiresAuthentication, false);
+  await history.recoverCheckpoint(preview.token, undefined, OWNER);
+  assert.equal(areas.session.vaultSessionV2.authenticatedAt, authenticatedAt);
+});
+
+test('the five-minute boundary is strict and a required verification survives clock rollback', async () => {
+  const session = await import('../src/vault/session.js');
+  await vault.storeCredential(entry('a'));
+  const selected = await firstId();
+  const originalNow = Date.now;
+  let now = originalNow();
+  Date.now = () => now;
+  try {
+    assert.equal(session.hasRecentAuthentication({ authenticatedAt: now - 5 * 60000 + 1 }), true);
+    assert.equal(session.hasRecentAuthentication({ authenticatedAt: now - 5 * 60000 }), false);
+    areas.session.vaultSessionV2.authenticatedAt = now - 5 * 60000;
+    const preview = await history.previewCheckpoint(selected, 'vault', OWNER);
+    assert.equal(preview.requiresAuthentication, true);
+    now -= 1000;
+    assert.deepEqual(await history.recoverCheckpoint(preview.token, undefined, OWNER), { requiresAuthentication: true });
+    assert.equal((await vault.listCredentials())[0].id, 'a');
+  } finally { Date.now = originalNow; }
+});
+
+test('full restore rechecks authentication at confirmation; individual recovery uses the active session', async () => {
+  await vault.storeCredential(entry('a')); await vault.deleteCredential('a');
+  const selected = await firstId();
+  const preview = await history.previewCheckpoint(selected, 'vault', OWNER);
+  assert.equal(preview.requiresAuthentication, false);
+  areas.session.vaultSessionV2.authenticatedAt = Date.now() - 5 * 60000;
+  assert.deepEqual(await history.recoverCheckpoint(preview.token, undefined, OWNER), { requiresAuthentication: true });
+  assert.deepEqual(await vault.listCredentials(), []);
+  const individual = await history.previewCheckpoint(selected, 'entry', OWNER);
+  assert.equal(individual.requiresAuthentication, false);
+  await history.recoverCheckpoint(individual.token, 'a', OWNER);
+  assert.equal((await vault.listCredentials())[0].id, 'a');
+  assert.ok(areas.session.vaultSessionV2.authenticatedAt <= Date.now() - 5 * 60000);
+});
+
+test('sessions without valid authentication metadata require identity verification for full restore', async () => {
+  await vault.storeCredential(entry('a'));
+  const selected = await firstId();
+  for (const value of [undefined, null, 'invalid', Date.now() + 60000]) {
+    areas.session.vaultSessionV2.authenticatedAt = value;
+    const preview = await history.previewCheckpoint(selected, 'vault', OWNER);
+    assert.equal(preview.requiresAuthentication, true);
+    assert.deepEqual(await history.recoverCheckpoint(preview.token, undefined, OWNER), { requiresAuthentication: true });
+  }
+  delete areas.session.vaultSessionV2.vaultId;
+  await vault.keepAlive();
+  assert.equal((await history.previewCheckpoint(selected, 'vault', OWNER)).requiresAuthentication, true);
+});
+
 test('external recovery contents do not replace an existing vault password', async () => {
   const external = await crypt.createRecord([entry('older')], OLD);
   await restoreExternalRecord(external.record, OLD, (await vault.vaultStatus()).revision);

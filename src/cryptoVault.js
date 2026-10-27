@@ -29,7 +29,7 @@ export function initializeVault(passphrase) {
     const { record, bytes } = await createRecord([], passphrase);
     session.assertGeneration(epoch);
     await commitRecord(record, null);
-    await session.activate(record, [], bytes, epoch);
+    await session.activate(record, [], bytes, epoch, { authenticated: true });
     return true;
   });
 }
@@ -57,7 +57,7 @@ export function unlockVault(passphrase, authorizationOwner) {
       decrypted.bytes = migrated.bytes;
     }
     await setStorage('session', { unlockAttempts: { count: 0, until: 0 } });
-    await session.activate(record, decrypted.entries, decrypted.bytes, epoch);
+    await session.activate(record, decrypted.entries, decrypted.bytes, epoch, { authenticated: true });
     await removeStorage('local', ['securepassMeta', 'securepassTrustedDeviceKey']);
     const authorization = authorizationOwner ? await issueMasterAuthorization(record, authorizationOwner) : {};
     session.assertGeneration(epoch);
@@ -202,7 +202,7 @@ async function rotateMasterPassword(state, newPassphrase, epoch) {
   session.assertGeneration(epoch);
   await commitRecord(rotated.record, state.record.revision, { recoveryRecords: protectedHistory, expectedRecoveryRecords: history });
   await removeStorage('local', ['securepassBiometric', 'securepassTrustedDeviceKey']);
-  await session.activate(rotated.record, state.entries, rotated.bytes, epoch);
+  await session.activate(rotated.record, state.entries, rotated.bytes, epoch, { authenticated: true });
 }
 
 export function unlockWithBiometricKey(bytes, vaultId, keyEpoch, expectedEpoch, credentialId, authorizationOwner) {
@@ -213,7 +213,7 @@ export function unlockWithBiometricKey(bytes, vaultId, keyEpoch, expectedEpoch, 
     const record = await loadRecord();
     if (record?.vaultId !== vaultId || record.keyEpoch !== keyEpoch) throw new Error('Biometric setup was revoked. Use the master password.');
     const entries = await decryptWithKey(record, bytes);
-    await session.activate(record, entries, bytes, epoch);
+    await session.activate(record, entries, bytes, epoch, { authenticated: true });
     const authorization = authorizationOwner ? await issueMasterAuthorization(record, authorizationOwner) : {};
     session.assertGeneration(epoch);
     return authorization;
@@ -234,6 +234,7 @@ export function restoreRecovery(identity, passphrase, expectedRevision) {
     const current = await readLocalVaultRecordRaw();
     if (expectedRevision !== undefined && recordRevision(current) !== expectedRevision) throw new Error('Vault changed. Review the restore again.');
     const active = current ? await session.current(current) : null;
+    if (active && !session.hasRecentAuthentication(active)) throw new Error('Confirm your identity again before restoring the whole vault.');
     const next = active
       ? { record: await encryptEntries(active.record, recovered.entries, active.bytes), bytes: active.bytes }
       : await createRecord(recovered.entries, passphrase, { vaultId: record.vaultId });

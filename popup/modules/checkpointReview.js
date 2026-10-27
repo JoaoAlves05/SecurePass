@@ -1,6 +1,7 @@
 import { state } from '../state.js';
 import { checked, runManagement } from './management.js';
 import { ensureVaultAccessible } from './vault.js';
+import { requestVaultUnlock } from './vaultUnlock.js';
 import { requestOperation } from './operationDialog.js';
 import { showToast } from './toast.js';
 
@@ -113,7 +114,7 @@ async function unlockOlder(selected) {
 
 export async function reviewCheckpoint(selected, options = {}) {
   const expected = ++generation;
-  if (!await ensureVaultAccessible('Unlock with biometrics or your master password to review this checkpoint.')) return;
+  if (!await ensureVaultAccessible('Unlock to review this checkpoint.')) return;
   if (expected !== generation) return;
   let latest = (await checked('RECOVERY_ARCHIVE_STATUS')).snapshots.find(item => item.id === selected.id && item.source === 'Local');
   if (!latest) throw new Error('This checkpoint is no longer available. Return to the saved checkpoints.');
@@ -149,12 +150,24 @@ async function freshPreview(current, mode) {
   let preview;
   try { preview = await request('PREVIEW_CHECKPOINT', { id: current.selected.id, mode }); }
   catch (error) { warn(current, error.message); return null; }
+  if (mode === 'vault' && typeof preview.requiresAuthentication !== 'boolean') {
+    await request('CANCEL_CHECKPOINT_PREVIEW', { token: preview.token }).catch(() => {});
+    warn(current, 'Reload SecurePass before restoring the whole vault.');
+    return null;
+  }
   if (review !== current || current.data.revision !== preview.revision || current.data.sourceDigest !== preview.sourceDigest) {
     await request('CANCEL_CHECKPOINT_PREVIEW', { token: preview.token }).catch(() => {});
     if (review === current) warn(current, 'Your vault or checkpoint changed. Refresh this comparison before recovering anything.');
     return null;
   }
   return preview;
+}
+
+async function submitRecovery(current, mode, entryId) {
+  // A long-open confirmation must still match what was reviewed, with a fresh single-use token.
+  const preview = await freshPreview(current, mode); if (!preview) return;
+  try { return await request('RECOVER_CHECKPOINT', { token: preview.token, entryId }); }
+  finally { await request('CANCEL_CHECKPOINT_PREVIEW', { token: preview.token }).catch(() => {}); }
 }
 
 async function recoverEntry(current, entry) {
@@ -167,11 +180,11 @@ async function recoverEntry(current, entry) {
       try {
         return await requestOperation({
           layout: 'checkpoint', title: entry.change === 'missing' ? 'Recover deleted entry' : 'Restore saved entry',
-          description: 'Only this entry changes. Other entries stay the same. Review the account and fields above before continuing.',
+          description: 'Only this entry changes. Other entries stay the same.',
           details: [{ label: 'Website', value: entry.site }, { label: 'Account', value: entry.username || 'No username' }, ...(entry.change === 'changed' ? [{ label: 'Restore', value: changedFields(entry) }] : [])],
           notice: { text: 'Current contents saved in a checkpoint. Your Sync setting stays the same.' },
           confirmLabel: entry.change === 'missing' ? 'Recover entry' : 'Restore saved details', busyLabel: 'Recovering…',
-          submit: () => request('RECOVER_CHECKPOINT', { token: preview.token, entryId: entry.id })
+          submit: () => submitRecovery(current, 'entry', entry.id)
         });
       } finally { await request('CANCEL_CHECKPOINT_PREVIEW', { token: preview.token }).catch(() => {}); }
     });
@@ -201,17 +214,23 @@ async function restoreWhole(current) {
   setBusy(current, true);
   try {
     const result = await runManagement(async () => {
-      const preview = await freshPreview(current, 'vault'); if (!preview) return;
-      try {
-        return await requestOperation({
-          layout: 'checkpoint', title: 'Restore whole vault',
-          description: 'Replace all entries in your current vault. The counts below show what will be restored and removed. Your master password and biometric setup stay the same.',
-          details: [{ label: 'Restore', value: entryCount(preview.count) }, { label: 'To remove', value: entryCount(preview.newer), danger: preview.newer > 0 }],
-          notice: { text: 'Current contents kept in a checkpoint. Sync turns off; remote copies stay unchanged.' },
-          confirmLabel: 'Restore vault', busyLabel: 'Restoring…', danger: true,
-          submit: () => request('RECOVER_CHECKPOINT', { token: preview.token })
-        });
-      } finally { await request('CANCEL_CHECKPOINT_PREVIEW', { token: preview.token }).catch(() => {}); }
+      while (review === current && !current.stale) {
+        const preview = await freshPreview(current, 'vault'); if (!preview) return;
+        let result;
+        try {
+          if (!preview.requiresAuthentication) result = await requestOperation({
+            layout: 'checkpoint', title: 'Restore whole vault',
+            description: 'Replace all entries. Your master password and biometrics stay the same.',
+            details: [{ label: 'Restore', value: entryCount(preview.count) }, { label: 'To remove', value: entryCount(preview.newer), danger: preview.newer > 0 }],
+            notice: { text: 'Current contents kept in a checkpoint. Sync turns off; remote copies stay unchanged.' },
+            confirmLabel: 'Restore vault', busyLabel: 'Restoring…', danger: true,
+            submit: () => submitRecovery(current, 'vault')
+          });
+        } finally { await request('CANCEL_CHECKPOINT_PREVIEW', { token: preview.token }).catch(() => {}); }
+        if (!preview.requiresAuthentication && !result?.requiresAuthentication) return result;
+        if (!await requestVaultUnlock('Confirm to restore the whole vault.', { confirmIdentity: true })) return;
+        // Authentication never commits recovery. Recheck the comparison and ask for explicit confirmation.
+      }
     });
     if (result && review === current) {
       closeReview(true);

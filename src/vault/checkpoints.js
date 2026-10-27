@@ -98,12 +98,13 @@ export function previewCheckpoint(id, mode, owner) {
     if (Object.keys(all).filter(key => key.startsWith(PREFIX) && !obsolete.includes(key)).length >= 16) throw new Error('Too many recovery previews. Try again shortly.');
     const token = crypto.randomUUID();
     const sourceDigest = await digest(checkpoint);
+    const requiresAuthentication = mode === 'vault' && !session.hasRecentAuthentication(active);
     await setStorage('session', { [`${PREFIX}${token}`]: {
       owner, id, mode, digest: sourceDigest, revision: active.record.revision,
-      expires: Date.now() + 120000, revocation: all.vaultRevocation || null
+      expires: Date.now() + 120000, revocation: all.vaultRevocation || null, requiresAuthentication
     } });
     session.assertGeneration(epoch);
-    return { token, revision: active.record.revision, sourceDigest, ...compare(entries, active.entries) };
+    return { token, revision: active.record.revision, sourceDigest, requiresAuthentication, ...compare(entries, active.entries) };
   });
 }
 
@@ -121,6 +122,11 @@ export function recoverCheckpoint(token, entryId, owner) {
     }
     const checkpoint = await findCheckpoint(preview.id);
     if (await digest(checkpoint) !== preview.digest) throw new Error('Checkpoint changed. Review it again.');
+    // Recheck at confirmation: authentication may expire while the dialog is open.
+    // The consumed preview cannot authorize a retry; the UI must authenticate and review again.
+    if (preview.mode === 'vault' && (preview.requiresAuthentication !== false || !session.hasRecentAuthentication(active))) {
+      return { requiresAuthentication: true };
+    }
     const historical = await decryptWithKey(checkpoint, active.bytes);
     let entries = historical;
     if (preview.mode === 'entry') {
