@@ -6,6 +6,8 @@
 
 Each local checkpoint card has one primary **Review checkpoint** action (or **Unlock to review** while locked), with Export/Remove secondary. The same entry point handles explicit migration of older protection before opening the comparison. Archived Sync copies retain their separate existing workflow.
 
+Cards show only the date, relative state and aggregate saved/deleted/different/newer counts. Website, username and changed-field examples appear only after **Review checkpoint**. Differences are described as **with different details**, without implying that the current details are incorrect. Review labels changed fields explicitly and identifies entries added since the checkpoint as removed by a full restore; the full-restore section also explains this consequence before confirmation.
+
 Review is an in-section view rather than an operation dialog. It shows the checkpoint date, saved/deleted/different/newer counts, a website/username search and the differing entries. Every missing or changed entry has its own **Recover entry** or **Restore saved details** action. A short confirmation identifies only that entry and its changed fields; there is no entry-selection dropdown. Unchanged and current-only entries have no recovery action. Matching saved entries can be shown explicitly. Lists render 50 rows at a time and support loading more without hiding entries from search.
 
 A separated **Restore the whole checkpoint** area at the bottom leads to **Review full restore**, then the existing explicit full-restore confirmation with removal counts and effects. Master-password/biometric preservation, automatic checkpoint creation and Sync behavior remain those of the checkpoint implementation. Empty/matching checkpoints disable full restore.

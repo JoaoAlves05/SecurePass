@@ -735,11 +735,6 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   line-height: 1.6;
 }
 
-.snapshot-item .checkpoint-examples {
-  margin: 10px 0 0;
-  overflow-wrap: anywhere;
-}
-
 .checkpoint-section-heading {
   display: flex;
   flex-wrap: wrap;

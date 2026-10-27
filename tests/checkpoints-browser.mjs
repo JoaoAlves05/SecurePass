@@ -46,7 +46,8 @@ try {
   await page.waitForFunction(() => document.querySelector('#snapshotList').textContent.includes('deleted entry'));
   assert.equal(await page.locator('.snapshot-item').count(), 3);
   assert.match(await card.textContent(), /1 deleted entry available to recover/);
-  assert.match(await card.textContent(), /1 entry with older details/);
+  assert.match(await card.textContent(), /1 entry with different details/);
+  assert.doesNotMatch(await card.textContent(), /mail\.example|mail-account|work\.example|work-account|username|password/);
   assert.equal((await page.locator('#snapshotList').textContent()).includes('Fictional mail password'), false);
   await capture(page, 'management-light');
   await page.emulateMedia({ colorScheme: 'dark' }); await page.waitForFunction(() => document.body.dataset.theme === 'dark');
@@ -55,6 +56,8 @@ try {
   await card.locator('[data-snapshot-action="review"]').click(); await page.locator('#checkpointReview').waitFor({ state: 'visible' }); await idle(page);
   assert.equal(await page.locator('#operationDialog').isVisible(), false);
   assert.equal(await page.locator('#checkpointReviewEntries [data-recover-entry]').count(), 2);
+  assert.match(await page.locator('[data-review-entry-id="work"]').textContent(), /work\.example.*work-account.*Different fields: password/);
+  assert.match(await page.locator('.checkpoint-review-full').textContent(), /Entries added since this checkpoint will be removed/);
   await capture(page, 'review-management-dark');
   await page.locator('#checkpointReviewSearch').fill('BANK');
   assert.equal(await page.locator('#checkpointReviewEntries article').count(), 0);
@@ -98,6 +101,7 @@ try {
   assert.equal(await page.locator('#operationDialog').isVisible(), false);
   await page.locator('#checkpointReviewRefresh').click(); await idle(page);
   await page.locator('[data-review-entry-id="later"]').waitFor({ state: 'visible' });
+  assert.match(await page.locator('[data-review-entry-id="later"]').textContent(), /Added since this checkpoint · removed by full restore/);
   assert.equal(await page.locator('[data-review-entry-id="later"] button').count(), 0);
   await send(page, 'LOCK_VAULT');
   await page.locator('#checkpointReview').waitFor({ state: 'hidden' });

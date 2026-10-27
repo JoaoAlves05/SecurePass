@@ -8,7 +8,6 @@ import { reviewCheckpoint, attachCheckpointReviewListeners } from './checkpointR
 const $ = id => document.getElementById(id);
 const date = value => value && Number.isFinite(new Date(value).getTime()) ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' }).format(new Date(value)) : 'Date unavailable';
 const plural = (count, word) => `${count} ${count === 1 ? word : word.endsWith('entry') ? word.replace(/entry$/, 'entries') : `${word}s`}`;
-const account = entry => `${entry.site}${entry.username ? ` · ${entry.username}` : ''}`;
 
 export function renderCheckpoints(snapshots) {
   const list = $('snapshotList');
@@ -44,14 +43,10 @@ export function renderCheckpoints(snapshots) {
     row.append(heading, description);
     if (local && !locked && !item.needsPassword) {
       const differences = document.createElement('ul'); differences.className = 'checkpoint-differences';
-      const lines = [item.missing ? `${plural(item.missing, 'deleted entry')} available to recover` : '', item.changed ? `${plural(item.changed, 'entry')} with older details` : '', item.newer ? `${plural(item.newer, 'entry')} added since this checkpoint` : ''].filter(Boolean);
+      const lines = [item.missing ? `${plural(item.missing, 'deleted entry')} available to recover` : '', item.changed ? `${plural(item.changed, 'entry')} with different details` : '', item.newer ? `${plural(item.newer, 'entry')} added since this checkpoint` : ''].filter(Boolean);
       if (!lines.length) lines.push('Same contents as your current vault');
       for (const line of lines) { const li = document.createElement('li'); li.textContent = line; differences.append(li); }
       row.append(differences);
-      if (item.examples?.length) {
-        const examples = document.createElement('p'); examples.className = 'checkpoint-examples row-sub';
-        examples.textContent = item.examples.map(entry => `${account(entry)}${entry.change === 'changed' ? ` (${entry.fields.join(', ')})` : ''}`).join(' · '); row.append(examples);
-      }
     }
     const actions = document.createElement('div'); actions.className = 'snapshot-actions';
     const choices = local

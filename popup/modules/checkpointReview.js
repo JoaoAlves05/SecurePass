@@ -82,8 +82,8 @@ function renderEntries(current) {
     const username = document.createElement('p'); username.className = 'row-sub'; username.textContent = entry.username || 'No username';
     const description = document.createElement('p'); description.className = 'checkpoint-entry-state';
     description.textContent = entry.change === 'missing' ? 'Deleted entry'
-      : entry.change === 'changed' ? `Different ${changedFields(entry)}`
-        : entry.change === 'newer' ? 'Added later · removed by full restore' : 'Matches your current vault';
+      : entry.change === 'changed' ? `Different fields: ${changedFields(entry)}`
+        : entry.change === 'newer' ? 'Added since this checkpoint · removed by full restore' : 'Matches your current vault';
     copy.append(title, username, description); row.append(copy);
     if (['missing', 'changed'].includes(entry.change)) {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'secondary compact-btn'; button.dataset.recoverEntry = entry.id;

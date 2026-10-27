@@ -2,6 +2,10 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Checkpoint card summaries — 2026-10-27
+
+Checkpoint cards now show aggregate counts without website, username or changed-field examples. Account identities and explicit **Different fields** labels remain inside **Review checkpoint**. The full-restore section and current-only rows explain removal of entries added since the checkpoint. **npm run check** passed for 93 JavaScript modules; **npm run test:checkpoints-browser** passed, including summary/detail separation, per-entry and whole-vault recovery, stale comparisons, lock cleanup, search/pagination and light/dark layouts down to 320 × 480. The nine checkpoint-review captures were refreshed and visually inspected. **git diff --check** passed. This copy/layout change does not add evidence of physical-authenticator or actual toolbar compatibility.
+
 ## Account suggestions and inline tools — 2026-10-27
 
 [The account-prompt contract](ACCOUNT_PROMPTS.md) explains submission-triggered proposals and the redesigned popup suggestion, closed-shadow key menu and extension-owned confirmation. Proposals remain temporary and never establish login success. Save/update is explicit, same-origin and revision-checked, with notes/identity preserved. Cancellation retains the proposal; dismissal, successful save, expiry and vault lock remove it. Known identical logins are suppressed, including redundant proposals discovered after unlock. Master input and PRF remain outside the visited page. Public presentation settings are available to auth; private management and whole-vault disclosure remain forbidden.
