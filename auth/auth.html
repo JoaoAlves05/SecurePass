@@ -1,22 +1,33 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SecurePass confirmation</title><link rel="stylesheet" href="auth.css"></head>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SecurePass · Confirm login</title>
+  <link rel="stylesheet" href="../popup/popup.css"><link rel="stylesheet" href="auth.css">
+</head>
 <body>
-  <main>
-    <h1>SecurePass</h1>
-    <p id="origin" class="origin">Secure confirmation</p>
-    <p id="status" role="status" aria-live="polite"></p>
+  <main class="auth-shell">
+    <header class="auth-brand"><span id="brandIcon" aria-hidden="true"></span><span>SecurePass</span></header>
+    <h1 id="heading">Review login</h1>
+    <p id="status" class="auth-lead" role="status" aria-live="polite">Opening your request…</p>
+    <div class="auth-site"><span>Website</span><strong id="origin">Checking website…</strong></div>
     <form id="unlockForm" hidden>
-      <label for="passphrase">Master password</label>
-      <input id="passphrase" type="password" autocomplete="current-password" maxlength="1024" required>
-      <label id="confirmLabel" for="confirm" hidden>Confirm new master password (at least 12 characters)</label>
-      <input id="confirm" type="password" autocomplete="new-password" maxlength="1024" hidden>
-      <button id="unlock" type="submit">Unlock</button>
+      <div class="auth-field">
+        <label for="passphrase">Master password</label>
+        <div class="auth-method-row"><div class="input-wrapper"><input id="passphrase" type="password" autocomplete="current-password" maxlength="1024" required><button id="revealPassword" class="auth-reveal" type="button" aria-label="Show master password" aria-pressed="false"></button></div><button id="biometric" class="secondary auth-biometric" type="button" aria-label="Use biometric unlock" title="Use biometric unlock" hidden></button></div>
+      </div>
+      <div id="confirmGroup" class="auth-field" hidden><label id="confirmLabel" for="confirm">Confirm master password</label><div class="input-wrapper"><input id="confirm" type="password" autocomplete="new-password" maxlength="1024"></div><p class="auth-hint">Choose at least 16 characters for a new vault.</p></div>
     </form>
-    <button id="biometric" type="button" hidden>Unlock with authenticator</button>
-    <section id="accounts" aria-label="Select account"></section>
-    <button id="save" type="button" hidden>Confirm save or update</button>
-    <button id="cancel" type="button">Cancel</button>
+    <section id="saveReview" aria-label="Review captured login" hidden>
+      <div class="auth-field"><label for="saveUsername">Username <span class="auth-optional">(optional)</span></label><div class="input-wrapper"><input id="saveUsername" type="text" maxlength="255" autocomplete="off"></div></div>
+      <div id="targetGroup" class="auth-field" hidden><label for="saveTarget">Save to</label><select id="saveTarget"></select></div>
+      <p id="saveActionHelp" class="auth-hint"></p>
+      <p class="auth-hint">Confirm only after this login or password change worked on the website.</p>
+    </section>
+    <section id="accounts" aria-label="Choose a saved login"></section>
+    <p id="error" class="auth-error" role="alert" hidden></p>
+    <button id="refreshReview" class="auth-refresh" type="button" hidden>Review accounts again</button>
+    <footer class="auth-actions"><button id="cancel" class="secondary compact-btn" type="button">Cancel</button><button id="unlock" class="primary compact-btn" type="submit" form="unlockForm" hidden>Unlock</button><button id="save" class="primary compact-btn" type="button" hidden>Save login</button></footer>
   </main>
   <script type="module" src="auth.js"></script>
 </body>

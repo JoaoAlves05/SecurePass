@@ -2948,3 +2948,13 @@ body[data-theme='dark'] .alert-box.warning {
   .operation-dialog h2 { font-size: 20px; }
 }
 .destructive { background: var(--danger) !important; color: white !important; }
+
+#saveCandidates { display: grid; gap: 10px; max-height: 300px; overflow-y: auto; margin-bottom: 16px; }
+#saveCandidates:empty { display: none; }
+.save-candidate { padding: 16px; margin: 0; }
+.save-candidate h2 { margin: 0 0 10px; font-size: 15px; line-height: 1.3; font-weight: 650; }
+.save-candidate-site { margin: 0 0 4px; font-size: 12px; line-height: 1.5; color: var(--text-muted); overflow-wrap: anywhere; }
+.save-candidate-account { margin: 0 0 10px; font-size: 14px; line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
+.save-candidate-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.save-candidate-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.save-candidate-actions .compact-btn { width: auto; padding: 8px 14px; min-height: 36px; font-size: 12px; }

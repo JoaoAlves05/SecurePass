@@ -4,13 +4,14 @@ import { vaultHandlers } from '../src/messageHandlers/vaultHandlers.js';
 import { biometricHandlers } from '../src/messageHandlers/biometricHandlers.js';
 import { utilHandlers } from '../src/messageHandlers/utilHandlers.js';
 import { lockVault, onVaultLock, vaultStatus } from '../src/cryptoVault.js';
-import { clearRequests, expireRequests } from '../src/autofill/requests.js';
+import { clearRequests, expireRequests, closeRequestsForTab } from '../src/autofill/requests.js';
 import { clearCandidates, listCandidates } from '../src/autofill/candidates.js';
 import { cancelCeremonies, expireCeremonies } from '../src/biometric/service.js';
 import { retryPendingSync } from '../src/vault/retry.js';
 import { removeStorage } from '../src/utils/storage.js';
 import { cancelMasterAuthorization } from '../src/vault/masterAuthorization.js';
 import { clearCheckpointPreviews } from '../src/vault/checkpoints.js';
+import { withVaultLock } from '../src/vault/queue.js';
 
 const handlers = new Map([...vaultHandlers, ...biometricHandlers, ...utilHandlers]);
 // Set access levels before processing even the first request after a worker restart.
@@ -53,8 +54,9 @@ chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === 'authRequestCleanup') expireRequests().catch(() => {});
   if (alarm.name === 'webauthnCleanup') expireCeremonies().catch(() => {});
   if (alarm.name === 'candidateCleanup') listCandidates().catch(() => {});
-  if (alarm.name === 'vaultAutoLock') vaultStatus().then(status => { if (!status.unlocked) return lockVault(); }).catch(() => lockVault());
+  if (alarm.name === 'vaultAutoLock') withVaultLock(() => vaultStatus()).then(status => { if (!status.unlocked) return lockVault(); }).catch(() => lockVault());
 });
+chrome.tabs.onRemoved.addListener(tabId => closeRequestsForTab(tabId).catch(() => {}));
 chrome.idle.onStateChanged.addListener(state => { if (state === 'locked') lockVault().catch(() => {}); });
 chrome.windows.onRemoved.addListener(async () => {
   if (!(await chrome.windows.getAll()).length) await lockVault();
