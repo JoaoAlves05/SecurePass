@@ -8,6 +8,9 @@ import * as candidates from '../autofill/candidates.js';
 import { copyInBackground } from '../clipboard/service.js';
 
 import { reconfigureTimeout } from '../vault/session.js';
+import { checkSyncSetup, previewSyncGeneration, resolveSyncGeneration } from '../vault/syncService.js';
+import { masterAuthorizationOwner } from '../vault/masterAuthorization.js';
+import { startDeviceTest, inspectDeviceTest, confirmDeviceTest, deviceTestStatus } from '../syncDiagnostics.js';
 
 export const utilHandlers = new Map([
   ['PROPOSE_CREDENTIAL', candidates.proposeCandidate],
@@ -28,12 +31,20 @@ export const utilHandlers = new Map([
   ['HIBP_CHECK', async m => ({ result: await checkPassword(validateString(m.password, 1024, 'password', true)) })],
   ['SET_SYNC_MODE_SAFE', async m => {
     if (typeof m.targetUseSync !== 'boolean') throw new Error('Invalid Sync mode.');
-    return { ...await vault.changeSyncMode(m.targetUseSync, m.strategy, m.passphrase, { revision: m.revision, expectedRevision: m.expectedRevision }), settings: await loadSettings() };
+    return { ...await vault.changeSyncMode(m.targetUseSync, m.strategy, m.passphrase, { revision: m.revision, expectedRevision: m.expectedRevision, expectedHeads: m.expectedHeads }), settings: await loadSettings() };
   }],
   ['SYNC_STATUS', async m => ({ status: await vault.getSyncStatus({ inspectRemote: m.inspectRemote === true }) })],
+  ['SYNC_SETUP_CHECK', checkSyncSetup],
+  ['OPEN_CHROME_SYNC_SETTINGS', async () => { await chrome.tabs.create({ url: 'chrome://settings/syncSetup' }); return {}; }],
+  ['SYNC_PREVIEW', async (m, sender) => previewSyncGeneration(m.revision, m.passphrase, m.merge === true, masterAuthorizationOwner(m, sender))],
+  ['SYNC_COMMIT_REVIEW', async (m, sender) => resolveSyncGeneration(m.revision, m.passphrase, m.merge === true, m.expectedRevision, { token: m.token, owner: masterAuthorizationOwner(m, sender) })],
+  ['SYNC_DEVICE_TEST_START', startDeviceTest],
+  ['SYNC_DEVICE_TEST_INSPECT', inspectDeviceTest],
+  ['SYNC_DEVICE_TEST_CONFIRM', async m => confirmDeviceTest(m.id)],
+  ['SYNC_DEVICE_TEST_STATUS', deviceTestStatus],
   ['SYNC_RETRY', async () => { await vault.retrySync(); return {}; }],
   ['SYNC_RESOLVE', async m => { return vault.resolveSyncGeneration(m.revision, m.passphrase, Boolean(m.merge), m.expectedRevision); }],
-  ['SYNC_COMPACT', vault.compactSync],
+  ['SYNC_COMPACT', async m => vault.compactSync({ manual: m.manual === true })],
   ['SYNC_CLEAR_ARCHIVE', async m => { await vault.clearSyncArchive(m.passphrase); return {}; }],
   ['LIST_SITE_CREDENTIALS', requests.listForOrigin],
   ['REQUEST_AUTOFILL', requests.createRequest],

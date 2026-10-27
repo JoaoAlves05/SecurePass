@@ -304,7 +304,7 @@
           <a href="#generalSection" class="settings-category" data-settings-section="generalSection" data-settings-title="Appearance"><span class="settings-category-copy"><span class="settings-category-title">Appearance</span><span class="settings-category-description">Theme and preferences</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></a>
           <a href="#securitySection" class="settings-category" data-settings-section="securitySection" data-settings-title="Security"><span class="settings-category-copy"><span class="settings-category-title">Security</span><span class="settings-category-description">Locking, master password and biometrics</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></a>
           <a href="#backupsSection" class="settings-category" data-settings-section="backupsSection" data-settings-title="Backups &amp; recovery"><span class="settings-category-copy"><span class="settings-category-title">Backups &amp; recovery</span><span class="settings-category-description">Export, import and earlier versions</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></a>
-          <a href="#advancedSection" class="settings-category" data-settings-section="advancedSection" data-settings-title="Advanced"><span class="settings-category-copy"><span class="settings-category-title">Advanced</span><span class="settings-category-description">Chrome Sync compatibility and maintenance</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></a>
+          <a href="#advancedSection" class="settings-category" data-settings-section="advancedSection" data-settings-title="Advanced"><span class="settings-category-copy"><span class="settings-category-title">Advanced</span><span class="settings-category-description">Chrome Sync setup and local maintenance</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></a>
         </nav>
         <div class="settings-scroll-container">
           <div class="settings-content-wrapper">
@@ -485,17 +485,37 @@
             </section>
             <section id="advancedSection" class="settings-section" aria-labelledby="advancedHeading" hidden>
               <div class="section-header"><h3 id="advancedHeading" tabindex="-1">Advanced</h3></div>
-              <div class="settings-group-heading"><h4>Chrome Sync compatibility</h4><p class="row-sub">For existing Chrome Sync installations. Unlock is requested when an operation needs it.</p></div>
+              <div class="settings-group-heading"><h4>Chrome Sync</h4><p class="row-sub">Make encrypted vault copies available through Chrome. Restoring or combining copies on another device is manual.</p></div>
               <div class="card legacy-card">
-                <p id="syncStatus" class="settings-status" role="status" aria-live="polite">Checking Sync state…</p>
-                <button id="refreshSync" class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Find existing Chrome Sync copies</span><span class="settings-action-description">Inspect old remote versions, including when automatic publication is off.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
+                <p id="syncStatus" class="settings-status" role="status" aria-live="polite">Checking automatic sending…</p>
+                <button id="configureSync" class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Configure Chrome Sync</span><span class="settings-action-description">Prepare Chrome, check existing copies and space, then choose whether to send changes automatically.</span></span></button>
+                <section id="syncSetupPanel" class="sync-setup" aria-labelledby="syncSetupTitle" hidden>
+                  <h5 id="syncSetupTitle" tabindex="-1">Prepare Chrome</h5>
+                  <div id="syncSetupPreparation">
+                    <p class="row-sub">Use the same Google account and the same SecurePass extension on your devices. In Chrome settings, allow extension data to sync. SecurePass cannot change or fully verify these browser settings.</p>
+                    <p class="row-sub">Your vault stays encrypted. Unlock is requested before inspecting its contents. This setup check does not send vault data.</p>
+                    <button id="openChromeSyncSettings" class="secondary compact-btn" type="button">Open Chrome settings</button>
+                  </div>
+                  <p id="syncSetupSummary" class="row-sub" role="status" hidden></p>
+                  <div class="management-button-row"><button id="checkSyncSetup" class="primary compact-btn" type="button">Check copies and space</button><button id="enableSyncSending" class="primary compact-btn" type="button" hidden>Enable automatic sending</button><button id="cancelSyncSetup" class="secondary compact-btn" type="button">Cancel setup</button></div>
+                </section>
+                <label id="syncSendingControl" class="card-row clickable" for="syncToggle" hidden><span class="row-info"><span class="row-label">Send changes automatically</span><span class="row-sub">Uses Chrome’s sync storage. Delivery to another device is confirmed separately.</span></span><span class="toggle-switch"><input id="syncToggle" type="checkbox"><span class="slider"></span></span></label>
+                <button id="refreshSync" class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Find existing Chrome Sync copies</span><span class="settings-action-description">Check available copies without enabling automatic sending or changing your vault.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
                 <div id="remoteVersionReview" class="remote-review" hidden>
                   <label class="sync-version-field" for="syncVersions">Existing version<select id="syncVersions" disabled></select></label>
                   <div class="management-button-row"><button id="downloadSync" class="secondary compact-btn" type="button" disabled>Restore on this device</button><button id="mergeSync" class="secondary compact-btn" type="button" disabled>Combine with local vault</button></div>
                   <p class="settings-info">Restoring turns Sync off and keeps remote copies. Combining keeps the local master password.</p>
                 </div>
-                <label class="card-row clickable" for="syncToggle"><span class="row-info"><span class="row-label">Legacy automatic publication</span><span class="row-sub">Limited capacity. Export a backup before enabling.</span></span><span class="toggle-switch"><input id="syncToggle" type="checkbox"><span class="slider"></span></span></label>
+                <p id="syncDiscoveryStatus" class="settings-info" role="status" hidden></p>
                 <p id="syncCapacity" class="settings-info"></p>
+                <button id="showSyncDeviceTest" class="settings-action" type="button" aria-expanded="false" aria-controls="syncDeviceTestPanel"><span class="settings-action-copy"><span class="settings-action-title">Test between devices</span><span class="settings-action-description">Confirm a test exchange with another SecurePass installation.</span></span></button>
+                <section id="syncDeviceTestPanel" class="sync-setup" aria-labelledby="syncDeviceTestTitle" hidden>
+                  <h5 id="syncDeviceTestTitle" tabindex="-1">Exchange a test code</h5>
+                  <p class="row-sub">Start here, then choose Receive test in SecurePass on your other device. Compare the codes before confirming. The test exchanges temporary identifiers, never passwords.</p>
+                  <div class="management-button-row"><button id="startSyncDeviceTest" class="secondary compact-btn" type="button">Start test here</button><button id="receiveSyncDeviceTest" class="secondary compact-btn" type="button">Receive test</button><button id="checkSyncDeviceTest" class="secondary compact-btn" type="button">Check confirmation</button></div>
+                  <p id="syncDeviceTestStatus" class="settings-info" role="status" aria-live="polite">No test started.</p>
+                </section>
+                <p id="syncReceiptStatus" class="settings-info" role="status" hidden></p>
                 <div id="syncMaintenance" class="management-button-row" hidden><button id="retrySync" class="secondary compact-btn" type="button" disabled hidden>Retry pending upload</button><button id="compactSync" class="secondary compact-btn" type="button" disabled hidden>Clean old remote history</button></div>
                 <button id="clearSyncArchive" disabled hidden class="settings-action" type="button"><span class="settings-action-copy"><span class="settings-action-title">Clear archived Sync copies</span><span class="settings-action-description">Delete the extra local conflict archive. Other versions are kept.</span></span><span class="settings-action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span></button>
               </div>

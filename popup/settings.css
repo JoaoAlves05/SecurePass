@@ -925,3 +925,35 @@ body:has(.settings-panel[aria-hidden='false']) {
     transition: none !important;
   }
 }
+
+/* Guided Chrome Sync setup uses the existing settings hierarchy. */
+.sync-setup {
+  padding: 16px;
+  border-block: 1px solid var(--border-subtle);
+}
+.sync-setup h5 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sync-setup .row-sub {
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+.sync-setup .management-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.sync-setup .compact-btn {
+  width: auto;
+  flex: 0 1 auto;
+  white-space: normal;
+  min-height: 36px;
+}
+.sync-setup .settings-info {
+  padding: 12px 0 0;
+  margin: 0;
+}

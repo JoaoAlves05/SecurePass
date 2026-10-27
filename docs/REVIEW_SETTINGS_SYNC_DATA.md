@@ -8,6 +8,8 @@ Este é o registo atual para estes fluxos. [REVIEW_PHASE1.md](REVIEW_PHASE1.md) 
 
 Foi implementado um [incremento local/legacy](SETTINGS_UX_IMPLEMENTATION.md) com novo [desenho e matriz de ecrãs](SETTINGS_UX_DESIGN.md). As descrições SD abaixo preservam a revisão original; não são uma afirmação de que os defeitos mitigados continuam inalterados no working tree. O estado atual e os limites de aceitação estão no relatório do incremento. A nova Sync Drive e o plano completo continuam por concluir.
 
+A [configuração guiada de Chrome Sync de 27/10/2026](CHROME_SYNC_SETUP.md) acrescenta confirmação explícita, comparação antes de restaurar/combinar, diagnóstico entre instalações e verificação conservadora de capacidade. Corrige o bloqueio de restauro local de uma cópia completa por outra incompleta. Os SD abaixo continuam a descrever a baseline histórica.
+
 ## Evidência e limites
 
 - **R:** reproduzido com dados descartáveis, Web Crypto real e Chrome/IndexedDB simulados, salvo indicação explícita de Chromium.

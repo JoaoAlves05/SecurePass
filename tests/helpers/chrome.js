@@ -1,4 +1,5 @@
 import { webcrypto } from 'node:crypto';
+import { performance } from 'node:perf_hooks';
 import { IDBFactory } from 'fake-indexeddb';
 export const areas = { local: {}, sync: {}, session: {} };
 export const alarms = new Map();
@@ -6,6 +7,10 @@ export let fault = null;
 export function failWhen(predicate) { fault = predicate; }
 const event = () => ({ addListener() {}, removeListener() {} });
 export function installChrome() {
+  // Keep simulated sessions stable if the host adjusts its wall clock. Tests
+  // exercising rollback/expiry override Date.now explicitly and still cover it.
+  const timeOrigin = Date.now(); const monotonicOrigin = performance.now();
+  Date.now = () => timeOrigin + Math.floor(performance.now() - monotonicOrigin);
   globalThis.crypto = webcrypto;
   globalThis.indexedDB = new IDBFactory();
   const area = name => ({

@@ -12,7 +12,8 @@
     "test:backup-dialogs-browser": "node tests/backupDialogs-browser.mjs",
     "test:recovery-ui-browser": "node tests/recoveryDesign-browser.mjs",
     "test:sync-browser": "node tests/sync-browser.mjs",
-    "package": "node scripts/package.mjs"
+    "package": "node scripts/package.mjs",
+    "test:sync-setup-browser": "node tests/syncSetup-browser.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.4",
