@@ -8,6 +8,7 @@ const $ = id => document.getElementById(id);
 const clientId = crypto.randomUUID();
 const request = (type, data = {}) => checked(type, { ...data, clientId });
 const account = entry => `${entry.site}${entry.username ? ` · ${entry.username}` : ''}`;
+const website = value => { try { return new URL(value).hostname; } catch { return value; } };
 const date = value => value && Number.isFinite(new Date(value).getTime()) ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' }).format(new Date(value)) : 'Date unavailable';
 const changedFields = entry => entry.fields.join(', ');
 let review = null;
@@ -75,16 +76,16 @@ function renderEntries(current) {
   for (const entry of entries.slice(0, current.limit)) {
     const row = document.createElement('article'); row.className = 'checkpoint-review-entry'; row.dataset.reviewEntryId = entry.id; row.dataset.change = entry.change;
     const copy = document.createElement('div'); copy.className = 'checkpoint-review-entry-copy';
-    const title = document.createElement('h5'); title.textContent = entry.site; title.tabIndex = -1;
+    const title = document.createElement('h5'); title.textContent = website(entry.site); title.title = entry.site; title.tabIndex = -1;
     const username = document.createElement('p'); username.className = 'row-sub'; username.textContent = entry.username || 'No username';
     const description = document.createElement('p'); description.className = 'checkpoint-entry-state';
-    description.textContent = entry.change === 'missing' ? 'Deleted from your current vault'
+    description.textContent = entry.change === 'missing' ? 'Deleted entry'
       : entry.change === 'changed' ? `Different ${changedFields(entry)}`
-        : entry.change === 'newer' ? 'Added after this checkpoint · removed only by a full restore' : 'Matches your current vault';
+        : entry.change === 'newer' ? 'Added later · removed by full restore' : 'Matches your current vault';
     copy.append(title, username, description); row.append(copy);
     if (['missing', 'changed'].includes(entry.change)) {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'secondary compact-btn'; button.dataset.recoverEntry = entry.id;
-      button.textContent = entry.change === 'missing' ? 'Recover entry' : 'Restore saved details';
+      button.textContent = entry.change === 'missing' ? 'Recover entry' : 'Restore details';
       button.setAttribute('aria-label', `${button.textContent} for ${account(entry)}`);
       button.disabled = current.stale || current.busy;
       button.addEventListener('click', () => recoverEntry(current, entry)); row.append(button);
@@ -101,10 +102,10 @@ function renderEntries(current) {
 async function unlockOlder(selected) {
   const { status } = await checked('VAULT_STATUS');
   return requestOperation({
-    title: 'Unlock older checkpoint', description: 'Use its previous master password once to update its protection. You can then review it with your current vault.',
+    layout: 'recovery', title: 'Unlock older checkpoint', description: 'Use its previous master password once to update its protection. You can then review it with your current vault.',
     details: [{ label: 'Checkpoint', value: date(selected.updatedAt) }],
-    fields: [{ name: 'password', label: 'Checkpoint’s previous master password', type: 'password' }],
-    confirmLabel: 'Update checkpoint protection', busyLabel: 'Updating protection…',
+    fields: [{ name: 'password', label: 'Previous master password', type: 'password' }],
+    confirmLabel: 'Unlock checkpoint', busyLabel: 'Updating protection…',
     submit: values => checked('UNLOCK_CHECKPOINT', { id: selected.id, passphrase: values.password, expectedRevision: status.revision })
   });
 }
@@ -130,7 +131,7 @@ export async function reviewCheckpoint(selected, options = {}) {
     review = { selected: latest, data, query: options.query || '', matching: Boolean(options.matching), limit: options.limit || 50, returnScroll, busy: false, stale: false, openingManaged: Boolean(options.managed) };
     $('backupsSection').dataset.checkpointReview = 'true'; $('checkpointReview').hidden = false;
     $('checkpointReviewDate').textContent = date(latest.updatedAt);
-    $('checkpointReviewSummary').textContent = `${data.count} saved · ${data.missing} deleted · ${data.changed} with different details · ${data.newer} added later`;
+    $('checkpointReviewSummary').textContent = [`${data.count} saved`, data.missing && `${data.missing} deleted`, data.changed && `${data.changed} with different details`, data.newer && `${data.newer} added later`].filter(Boolean).join(' · ');
     $('checkpointReviewWarning').hidden = true;
     $('checkpointReviewSearch').value = review.query;
     const matching = data.entries.filter(entry => entry.change === 'unchanged').length;
@@ -204,7 +205,7 @@ async function restoreWhole(current) {
         return await requestOperation({
           layout: 'checkpoint', title: 'Restore whole vault',
           description: 'Replace all current entries with this checkpoint. Your master password and biometric setup stay the same.',
-          details: [{ label: 'Checkpoint', value: date(current.selected.updatedAt) }, { label: 'Saved entries', value: String(preview.count) }, { label: 'To recover', value: String(preview.missing) }, { label: 'Older details', value: String(preview.changed) }, { label: 'To remove', value: String(preview.newer) }],
+          details: [{ label: 'Checkpoint', value: date(current.selected.updatedAt) }, { label: 'Saved entries', value: String(preview.count) }, { label: 'To recover', value: String(preview.missing) }, { label: 'Older details', value: String(preview.changed) }, { label: 'To remove', value: String(preview.newer), danger: preview.newer > 0 }],
           changes: [...preview.entries.filter(entry => entry.change !== 'unchanged').map(entry => ({ title: account(entry), text: entry.change === 'missing' ? 'Will be recovered' : `Will restore saved ${changedFields(entry)}` })), ...preview.newerEntries.map(entry => ({ title: account(entry), text: 'Will be removed by full restore' }))].slice(0, 20),
           notice: { title: 'Before you restore', text: 'Your current contents become a checkpoint. Automatic Sync turns off; remote copies stay unchanged.' },
           confirmLabel: 'Restore whole vault', busyLabel: 'Restoring…', danger: true,

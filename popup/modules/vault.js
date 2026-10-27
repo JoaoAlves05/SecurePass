@@ -2,9 +2,8 @@ import { sendMessage } from './messaging.js';
 import { showToast } from './toast.js';
 import { state, ICONS, sanitizeValue } from '../state.js';
 import { resetInactivityTimer, renderVaultState, clearSensitiveUI } from './vaultSession.js';
-import { setView, openModal, closeModal, detectActiveOrigin, openEntryModal } from './ui.js';
-import { resolveUnlockSetup, setUnlockResolver } from './modalResolver.js';
-export { resolveUnlockSetup };
+import { setView, closeModal, detectActiveOrigin, openEntryModal } from './ui.js';
+import { requestVaultUnlock } from './vaultUnlock.js';
 import { copyToClipboard } from '../../src/utils/clipboard.js';
 
 const vaultList = document.getElementById('vaultList');
@@ -189,26 +188,6 @@ export function clearEntryForm() {
   if (entryNotesInput) entryNotesInput.value = '';
 }
 
-export async function promptForMasterPassword(message = 'Enter your master password to continue.', { allowBiometric = false } = {}) {
-  const unlockSetupLead = document.getElementById('unlockSetupLead');
-  const unlockSetupForm = document.getElementById('unlockSetupForm');
-  const biometricButton = document.getElementById('unlockWithBiometric');
-  if (unlockSetupLead) unlockSetupLead.textContent = message;
-  if (unlockSetupForm) unlockSetupForm.reset();
-  if (biometricButton) {
-    biometricButton.hidden = true;
-    if (allowBiometric) {
-      const status = await sendMessage('BIOMETRIC_STATUS');
-      if (!status?.ok) showToast(status?.error || 'Could not check biometric unlock status.', 'error');
-      else biometricButton.hidden = !status.enabled;
-    }
-  }
-  openModal('unlockSetupModal');
-  return new Promise(resolve => {
-    setUnlockResolver(resolve);
-  });
-}
-
 export function requireUnlockedVault() {
   if (state.vaultUnlocked) {
     resetInactivityTimer();
@@ -231,31 +210,7 @@ export async function ensureVaultAccessible(promptLabel = 'Enter your master pas
     return true;
   }
 
-  while (true) {
-    const typed = await promptForMasterPassword(promptLabel, { allowBiometric: true });
-    if (typed === true) return state.vaultUnlocked;
-    if (typed === null) return false;
-    const passphrase = typed || '';
-    if (!passphrase) {
-      showToast('Master password is required.', 'warning');
-      continue;
-    }
-
-    const timeoutMinutes = state.settings?.vaultTimeout || 15;
-    const response = await sendMessage('UNLOCK_VAULT', { passphrase, timeoutMinutes });
-    if (!response?.ok) {
-      showToast(response?.error || 'Unable to unlock vault.', 'error');
-      continue;
-    }
-
-    state.vaultUnlocked = true;
-    state.vaultInitialized = true;
-    state.entries = response.data?.entries || [];
-    renderVaultState();
-    renderEntries();
-    resetInactivityTimer();
-    return true;
-  }
+  return requestVaultUnlock(promptLabel);
 }
 
 export async function lockVault(showMessage = false) {

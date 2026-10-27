@@ -4,10 +4,10 @@ import { applyTheme, watchSystemTheme } from './modules/theme.js';
 import { attachGeneratorListeners, syncGeneratorControls } from './modules/generator.js';
 import { attachTesterListeners } from './modules/tester.js';
 import { attachSettingsListeners, syncSettingsView, initialiseSettings } from './modules/settings.js';
-import { renderEntries, handleEntrySubmit, handleUnlock, handleCreateMaster, lockVault, resolveUnlockSetup } from './modules/vault.js';
+import { renderEntries, handleEntrySubmit, handleUnlock, handleCreateMaster, lockVault } from './modules/vault.js';
 import { attachUIListeners, setView, openSettingsPanel, closeModal, openEntryModal } from './modules/ui.js';
 import { attachBiometricListeners, syncBiometricView } from './modules/biometricSetup.js';
-import { authenticateBiometric } from '../src/biometric/client.js';
+import { attachVaultUnlockListeners } from './modules/vaultUnlock.js';
 import { attachDataListeners } from './modules/dataManagement.js';
 import { refreshCandidates } from './modules/candidates.js';
 import { attachManagementListeners } from './modules/management.js';
@@ -29,7 +29,7 @@ async function initialise() {
   initialiseSettings(response);
   applyTheme(state.settings.theme); watchSystemTheme(() => state.settings.theme);
   document.addEventListener('vault-entries-changed', renderEntries);
-  attachUIListeners(); attachGeneratorListeners(); attachTesterListeners(); attachSettingsListeners(); attachBiometricListeners(); attachDataListeners(); attachSyncListeners(); attachManagementListeners(); attachSettingsNavigation(); attachMasterPasswordListeners();
+  attachUIListeners(); attachVaultUnlockListeners(); attachGeneratorListeners(); attachTesterListeners(); attachSettingsListeners(); attachBiometricListeners(); attachDataListeners(); attachSyncListeners(); attachManagementListeners(); attachSettingsNavigation(); attachMasterPasswordListeners();
   $('addEntry').addEventListener('click', () => openEntryModal());
   $('lockVault').addEventListener('click', () => lockVault(true));
   $('vaultSearch').addEventListener('input', event => { state.filter = event.target.value; renderEntries(); resetInactivityTimer(); });
@@ -47,22 +47,6 @@ async function initialise() {
     submit.disabled = true;
     try { await handler(event); } catch (error) { showToast(error.message, 'error'); }
     finally { submit.disabled = false; }
-  });
-  $('unlockSetupForm').addEventListener('submit', event => { event.preventDefault(); const pass = $('unlockSetupPassword').value; if (pass) { resolveUnlockSetup(pass); closeModal('unlockSetupModal'); } });
-  $('unlockWithBiometric').addEventListener('click', async event => {
-    const button = event.currentTarget;
-    button.disabled = true;
-    try {
-      await authenticateBiometric();
-      await refreshState();
-      if (!state.vaultUnlocked) throw new Error('Biometric authentication did not unlock the vault.');
-      resolveUnlockSetup(true);
-      closeModal('unlockSetupModal');
-    } catch (error) {
-      showToast(error.name === 'NotAllowedError' ? 'Authentication cancelled. You can use your master password instead.' : error.message, error.name === 'NotAllowedError' ? 'warning' : 'error');
-    } finally {
-      button.disabled = false;
-    }
   });
   syncGeneratorControls(); syncSettingsView();
   $('openManagement').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL(`popup/popup.html?manage=1${location.hash}`) }));

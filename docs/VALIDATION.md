@@ -2,6 +2,12 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Recovery surfaces — 2026-10-26
+
+The unlock form now stays open on authentication errors, clears submitted passwords, prevents duplicate submissions and cancels pending biometric ceremonies on dismissal. Checkpoint comparison uses a compact header, domain/account rows, nonzero summary counts and a lower-priority full restore. Recovery, legacy-checkpoint unlock, history removal and saved-version dialogs share bounded geometry; full restore highlights nonzero removals and keeps its actions outside the scrolling body.
+
+Validation: **100 Node tests passed**, **85 JavaScript modules checked**, and general browser (virtual PRF), checkpoint, settings, backup-dialog and new `npm run test:recovery-ui-browser` suites passed. The new scenario exercises wrong-password retry, cancel, cleared secrets, actual virtual-PRF cancellation/success and light/dark popup/tab layouts, including 320 × 480. Captures are under `screenshots/recovery-ui/`; unrelated generated fixtures were restored. The Impeccable detector ran: broader existing palette/font/contrast findings remain; its dialog-padding finding is checked visually against the padded header/body/footer. No backend cryptography, recovery authorization or Sync transport contract changed. Physical authenticator/toolbar checks and signed-in Sync acceptance remain outstanding as below.
+
 ## Checkpoint review interaction — 2026-10-26
 
 The [review refinement](CHECKPOINT_REVIEW.md) gives each local card one Review checkpoint entry point. An inline comparison offers per-entry recovery with short confirmation, search, optional matching entries and pagination. Full restore is a secondary action at the bottom with its own confirmation. Actions acquire fresh scope-specific tokens and compare source/destination identity with the displayed state; stale views require refresh. Lock/close clears the comparison.

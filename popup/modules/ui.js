@@ -44,13 +44,22 @@ export function openModal(id) {
   $('modalBackdrop').classList.remove('hidden'); $(id).classList.remove('hidden'); manageFocus();
   $(id).querySelector('input, textarea, button')?.focus();
 }
-export function closeModal(id) {
+export function closeModal(id, { force = false } = {}) {
+  if (id === 'unlockSetupModal' && !force && $(id).dataset.busy === 'password') return;
+  const wasVisible = !$(id).classList.contains('hidden');
+  const target = previousFocus;
   if (id === 'unlockSetupModal') resolveUnlockSetup(null);
   const modal = $(id);
   modal.classList.add('hidden');
   modal.querySelectorAll('input, textarea').forEach(input => { input.value = ''; });
   const any = ['entryModal', 'unlockSetupModal'].some(key => !$(key).classList.contains('hidden'));
   $('modalBackdrop').classList.toggle('hidden', !any); manageFocus();
+  if (id === 'unlockSetupModal') {
+    document.dispatchEvent(new CustomEvent('unlock-dialog-closed'));
+    if (wasVisible) requestAnimationFrame(() => {
+      if (!any && !$('operationDialog').open && target?.isConnected && target.getClientRects().length && !target.closest('[hidden], [inert]')) target.focus({ preventScroll: true });
+    });
+  }
 }
 export async function detectActiveOrigin() {
   try {
@@ -68,7 +77,7 @@ export async function openEntryModal(entry) {
   openModal('entryModal'); resetInactivityTimer();
 }
 export function attachUIListeners() {
-  document.addEventListener('vault-ui-locked', () => { for (const id of ['entryModal', 'unlockSetupModal']) closeModal(id); });
+  document.addEventListener('vault-ui-locked', () => { for (const id of ['entryModal', 'unlockSetupModal']) closeModal(id, { force: true }); });
   $('settingsPanel').inert = true;
   document.querySelectorAll('.nav-item[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   $('openSettings').addEventListener('click', openSettingsPanel); $('closeSettings').addEventListener('click', backFromSettings);

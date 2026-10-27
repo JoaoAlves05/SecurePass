@@ -80,6 +80,7 @@ async function deleteHistory(selected) {
   if (!await ensureVaultAccessible('Unlock your vault before removing recovery history.')) return;
   const { status } = await checked('VAULT_STATUS');
   const result = await requestOperation({
+    layout: 'recovery',
     title: selected ? 'Remove checkpoint' : 'Clear checkpoint history',
     description: selected ? 'Delete this local recovery point. Your current vault is kept.' : 'Delete all local checkpoints. Your current vault, exported backups and archived Sync copies are kept. Future changes will create new checkpoints.',
     fields: [{ name: 'password', label: 'Current master password', type: 'password' }], danger: true,

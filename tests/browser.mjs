@@ -171,7 +171,9 @@ try {
   assert.equal(await popup.locator('#unlockWithBiometric').isVisible(), false, 'Biometric unlock is hidden when it is not configured.');
   await popup.locator('#unlockSetupPassword').fill('Incorrect fictional password');
   await popup.locator('#unlockSetupForm [type="submit"]').click();
-  await popup.waitForFunction(() => document.querySelector('#toast').classList.contains('error') && !document.querySelector('#unlockSetupModal').classList.contains('hidden'));
+  await popup.locator('#unlockSetupError').waitFor({ state: 'visible' });
+  assert.equal(await popup.locator('#unlockSetupModal').isVisible(), true);
+  assert.equal(await popup.locator('#unlockSetupPassword').inputValue(), '');
   await popup.locator('#unlockSetupPassword').fill(passphrase);
   await popup.locator('#unlockSetupForm [type="submit"]').click();
   await popup.waitForFunction(() => document.querySelector('#unlockSetupModal').classList.contains('hidden') && document.querySelector('#syncToggle').checked && !document.querySelector('#syncToggle').disabled);

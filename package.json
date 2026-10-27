@@ -10,6 +10,7 @@
     "test:settings-browser": "node tests/settings-browser.mjs",
     "test:checkpoints-browser": "node tests/checkpoints-browser.mjs",
     "test:backup-dialogs-browser": "node tests/backupDialogs-browser.mjs",
+    "test:recovery-ui-browser": "node tests/recoveryDesign-browser.mjs",
     "test:sync-browser": "node tests/sync-browser.mjs",
     "package": "node scripts/package.mjs"
   },

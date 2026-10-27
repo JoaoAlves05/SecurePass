@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="popup.css" />
   <link rel="stylesheet" href="settings.css" />
   <link rel="stylesheet" href="management.css" />
+  <link rel="stylesheet" href="recovery.css" />
 </head>
 
 <body>
@@ -492,11 +493,11 @@
               <div id="snapshotList" class="snapshot-list" aria-label="Recovery checkpoints and archived copies"></div>
               <section id="checkpointReview" class="checkpoint-review" aria-labelledby="checkpointReviewTitle" hidden>
                 <button id="checkpointReviewBack" type="button" class="settings-text-action checkpoint-review-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>Back to checkpoints</button>
-                <header class="checkpoint-review-header"><h4 id="checkpointReviewTitle" tabindex="-1">Review checkpoint</h4><p id="checkpointReviewDate" class="row-sub"></p></header>
+                <header class="checkpoint-review-header"><h4 id="checkpointReviewTitle" tabindex="-1">Checkpoint</h4><p id="checkpointReviewDate" class="row-sub"></p></header>
                 <p id="checkpointReviewSummary" class="checkpoint-review-summary"></p>
                 <div id="checkpointReviewWarning" class="checkpoint-review-warning" role="alert" hidden><p id="checkpointReviewWarningText"></p><button id="checkpointReviewRefresh" type="button" class="secondary compact-btn">Refresh comparison</button></div>
                 <div class="checkpoint-review-filters">
-                  <label class="checkpoint-search" for="checkpointReviewSearch">Find an entry<input id="checkpointReviewSearch" type="search" placeholder="Website or username" autocomplete="off" maxlength="255" /></label>
+                  <label class="checkpoint-search" for="checkpointReviewSearch"><span class="visually-hidden">Search entries</span><input id="checkpointReviewSearch" type="search" placeholder="Search website or username" autocomplete="off" maxlength="255" /></label>
                   <label id="checkpointMatchingLabel" class="checkpoint-matching" for="checkpointShowMatching"><input id="checkpointShowMatching" type="checkbox" />Show matching entries <span id="checkpointMatchingCount"></span></label>
                 </div>
                 <p id="checkpointReviewEmpty" class="row-sub" role="status" hidden></p>
@@ -599,43 +600,20 @@
     </form>
   </div>
 
-  <div id="unlockSetupModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="unlockSetupTitle">
-    <form id="unlockSetupForm" class="modal-content">
-      <header class="modal-header">
-        <button type="button" data-close="unlockSetupModal" class="icon-btn" aria-label="Back">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-        </button>
-        <div class="modal-header-title">
-          <h3 id="unlockSetupTitle">Unlock Vault</h3>
-        </div>
-      </header>
-      <div class="modal-body">
-        <div class="card">
-          <div class="card-form-stack">
-            <p id="unlockSetupLead" class="modal-lead">Enter your master password to continue.</p>
-            <div class="field-group">
-              <label for="unlockSetupPassword">Master password</label>
-              <div class="input-wrapper has-toggle">
-                <input type="password" id="unlockSetupPassword" autocomplete="current-password" required />
-                <button type="button" class="icon-btn" data-toggle-password="unlockSetupPassword" aria-label="Show password" tabindex="-1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button type="button" id="unlockWithBiometric" class="secondary compact-btn unlock-biometric-option" hidden>Use biometric unlock</button>
-        <div class="modal-actions">
-          <button type="button" data-close="unlockSetupModal" class="secondary compact-btn">Cancel</button>
-          <button type="submit" class="primary compact-btn">Unlock</button>
-        </div>
+  <div id="unlockSetupModal" class="modal hidden unlock-dialog" role="dialog" aria-modal="true" aria-labelledby="unlockSetupTitle" aria-describedby="unlockSetupLead">
+    <form id="unlockSetupForm" class="modal-content unlock-content">
+      <header class="unlock-heading"><h3 id="unlockSetupTitle">Unlock vault</h3><p id="unlockSetupLead">Enter your master password to continue.</p></header>
+      <div class="unlock-body">
+        <div class="field-group"><label for="unlockSetupPassword">Master password</label><div class="input-wrapper has-toggle">
+          <input type="password" id="unlockSetupPassword" autocomplete="current-password" maxlength="1024" aria-describedby="unlockSetupError" required />
+          <button type="button" class="icon-btn" data-toggle-password="unlockSetupPassword" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
+        </div></div>
+        <p id="unlockSetupError" class="unlock-error" role="alert" hidden></p>
+      </div>
+      <div class="unlock-actions">
+        <button type="submit" class="primary">Unlock vault</button>
+        <div id="unlockBiometricAlternative" class="unlock-alternative" hidden><span class="unlock-or">or</span><button type="button" id="unlockWithBiometric" class="secondary">Use biometric unlock</button></div>
+        <button type="button" data-close="unlockSetupModal" class="unlock-cancel">Cancel</button>
       </div>
     </form>
   </div>

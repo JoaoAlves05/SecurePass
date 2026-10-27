@@ -11,12 +11,14 @@ export function requestOperation({ title, description, fields = [], details = []
   if (active) return Promise.reject(new Error('Finish or cancel the current operation first.'));
   const dialog = document.getElementById('operationDialog');
   dialog.classList.toggle('checkpoint-operation', layout === 'checkpoint');
+  dialog.classList.toggle('recovery-operation', ['checkpoint', 'recovery'].includes(layout));
   const form = dialog.querySelector('form'); const body = document.getElementById('operationFields');
   document.getElementById('operationTitle').textContent = title;
   document.getElementById('operationDescription').textContent = description;
   const summary = document.getElementById('operationSummary'); summary.replaceChildren(); summary.hidden = !details.length;
   for (const detail of details) {
     const row = document.createElement('div'); const label = document.createElement('dt'); const value = document.createElement('dd');
+    row.classList.toggle('operation-removal', Boolean(detail.danger));
     label.textContent = detail.label; value.textContent = detail.value; row.append(label, value); summary.append(row);
   }
   document.getElementById('operationNotice').hidden = !notice;

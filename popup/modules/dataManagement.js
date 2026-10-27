@@ -28,7 +28,7 @@ async function accessibleDestination() {
 }
 async function restoreRecord(record, selected = record) {
   const status = await accessibleDestination(); if (!status) return;
-  const result = await requestOperation({ title: 'Restore saved version', description: 'Restore the selected version on this device.', details: versionDetails(selected), notice: restoreNotice(status.initialized), fields: [versionPassword()], confirmLabel: 'Restore version', busyLabel: 'Restoring…', failureMessage: restoreFailure, submit: values => checked('IMPORT_RECOVERY', { record, passphrase: values.password, expectedRevision: status.revision || null }) });
+  const result = await requestOperation({ layout: 'recovery', title: 'Restore saved version', description: 'Restore the selected version on this device.', details: versionDetails(selected), notice: restoreNotice(status.initialized), fields: [versionPassword()], confirmLabel: 'Restore version', busyLabel: 'Restoring…', failureMessage: restoreFailure, submit: values => checked('IMPORT_RECOVERY', { record, passphrase: values.password, expectedRevision: status.revision || null }) });
   if (result) showToast('Snapshot restored locally. Sync is off.', 'success');
 }
 async function importFile(input) {
@@ -97,7 +97,7 @@ export function attachDataListeners() {
       const selected = snapshots.find(item => item.id === id && (!source || item.source === source));
       if (!selected) throw new Error('This version is no longer available. Review the updated history.');
       if (action === 'export') {
-        const result = await requestOperation({ title: 'Export saved version', description: 'Download this encrypted version as a recovery file.', details: versionDetails(selected), notice: { title: selected.source === 'Local' && !selected.locked && !selected.needsPassword ? 'Uses your current master password' : 'May require an older master password', text: 'The exported file keeps its current encryption. Later password changes in SecurePass will not update downloaded files.' }, confirmLabel: 'Download version', busyLabel: 'Preparing…', submit: () => checked('EXPORT_RECOVERY_SNAPSHOT', { id, source: selected.source }) });
+        const result = await requestOperation({ layout: 'recovery', title: 'Export saved version', description: 'Download this encrypted version as a recovery file.', details: versionDetails(selected), notice: { title: selected.source === 'Local' && !selected.locked && !selected.needsPassword ? 'Uses your current master password' : 'May require an older master password', text: 'The exported file keeps its current encryption. Later password changes in SecurePass will not update downloaded files.' }, confirmLabel: 'Download version', busyLabel: 'Preparing…', submit: () => checked('EXPORT_RECOVERY_SNAPSHOT', { id, source: selected.source }) });
         if (result) {
           downloadJSON(result.data, `securepass-snapshot-${id.slice(0, 8)}.json`);
           showToast('Encrypted version download requested.', 'success');
