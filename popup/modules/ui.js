@@ -8,6 +8,8 @@ let previousFocus;
 let settingsTrigger;
 function manageFocus() {
   const modals = ['entryModal', 'unlockSetupModal'].map($).filter(el => !el.classList.contains('hidden'));
+  // Keep the same backdrop while it fades out; the next modal selects its style.
+  if (modals.length) $('modalBackdrop').classList.toggle('unlock-backdrop', !$('unlockSetupModal').classList.contains('hidden'));
   const settings = $('settingsPanel').classList.contains('visible');
   const active = modals.at(-1) || (settings ? $('settingsPanel') : null);
   document.querySelector('.app-container')?.toggleAttribute('inert', Boolean(active));

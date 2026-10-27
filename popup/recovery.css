@@ -1,16 +1,16 @@
 /* Recovery uses bounded task surfaces in both the popup and management tab. */
 .unlock-dialog {
   inset: 50% auto auto 50%;
-  width: min(400px, calc(100vw - 24px));
+  width: min(336px, calc(100vw - 32px));
   height: auto;
   max-height: calc(100dvh - 24px);
   transform: translate(-50%, -50%);
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--bg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .16);
 }
 .unlock-dialog .unlock-content {
   display: flex;
@@ -22,16 +22,19 @@
   overflow-y: auto;
   background: var(--bg);
 }
-.unlock-heading { padding: 24px 24px 0; }
-.unlock-heading h3 { margin: 0 0 8px; font-size: 20px; line-height: 1.3; }
-.unlock-heading p { margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
-.unlock-body { padding: 20px 24px 0; }
+.unlock-heading { padding: 18px 18px 0; }
+.unlock-heading h3 { margin: 0 0 4px; font-size: 17px; line-height: 1.3; font-weight: 650; }
+.unlock-heading p { margin: 0; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.unlock-body { padding: 16px 18px 0; }
 .unlock-body .field-group { margin: 0; }
-.unlock-actions { display: grid; gap: 12px; padding: 16px 24px 20px; }
-.unlock-actions button { min-height: 42px; }
-.unlock-alternative { display: grid; gap: 12px; }
-.unlock-or { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 12px; }
-.unlock-or::before, .unlock-or::after { content: ''; flex: 1; border-top: 1px solid var(--border); }
+.unlock-body label { font-size: 12px; }
+.unlock-body input { min-height: 40px; box-shadow: none; }
+.unlock-actions { display: flex; align-items: center; gap: 8px; padding: 16px 18px 18px; }
+.unlock-actions button { width: auto; min-height: 40px; padding: 8px 14px; border-radius: var(--radius-sm); box-shadow: none; font-size: 13px; }
+.unlock-actions .unlock-cancel { margin-right: auto; padding: 8px 0; }
+.unlock-actions .biometric-auth { display: grid; place-items: center; width: 40px; height: 40px; padding: 8px; border: 1px solid var(--border); background: var(--bg-subtle); }
+.biometric-auth svg { width: 22px; height: 22px; }
+.unlock-alternative { display: flex; }
 .unlock-cancel { border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 13px; cursor: pointer; }
 .unlock-cancel:hover { color: var(--text); background: var(--bg-subtle); }
 .unlock-dialog button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -57,22 +60,28 @@
 .checkpoint-review-entry[data-change='unchanged'] { opacity: .85; }
 .checkpoint-review-full { gap: 10px; padding: 20px 0 8px; }
 
-.recovery-operation .operation-header { padding: 20px 20px 0; }
-.recovery-operation h2 { font-size: 20px; margin-bottom: 6px; }
-.recovery-operation .operation-body { gap: 16px; padding: 16px 20px 20px; }
+.recovery-operation { width: min(352px, calc(100vw - 32px)); border-radius: var(--radius-md); box-shadow: 0 12px 32px rgba(0, 0, 0, .16); }
+.recovery-operation .operation-header { padding: 18px 18px 0; }
+.recovery-operation h2 { font-size: 17px; margin-bottom: 6px; font-weight: 650; }
+.recovery-operation .operation-body { gap: 12px; padding: 12px 18px 16px; }
 .recovery-operation .operation-summary { gap: 0; padding: 0; border-radius: 0; background: transparent; }
-.recovery-operation .operation-summary > div { grid-template-columns: minmax(85px, .8fr) minmax(0, 1.6fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.recovery-operation .operation-summary > div { grid-template-columns: minmax(85px, .8fr) minmax(0, 1.6fr); gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
 .recovery-operation .operation-summary > div:last-child { border-bottom: 0; }
 .recovery-operation .operation-removal :is(dt, dd) { color: color-mix(in srgb, var(--danger) 65%, var(--text)); font-weight: 650; }
-.recovery-operation .operation-actions { padding: 14px 20px; }
+.recovery-operation .operation-actions { padding: 12px 18px; grid-template-columns: auto minmax(0, 1fr); }
+.recovery-operation .operation-actions button { min-height: 40px; padding: 8px 12px; box-shadow: none; font-weight: 600; }
+.recovery-operation .operation-actions #operationCancel { background: transparent; border-color: transparent; }
+.recovery-operation p { font-size: 12px; line-height: 1.5; }
+.recovery-operation .operation-summary dd { font-size: 12px; font-weight: 600; }
 .recovery-operation .checkpoint-review-changes { max-height: 180px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
 .recovery-operation .operation-notice { padding-top: 12px; border-top: 1px solid var(--border); }
-@media (max-height: 520px) {
-  .unlock-heading { padding: 18px 20px 0; }
-  .unlock-body { padding: 16px 20px 0; }
-  .unlock-actions { padding: 14px 20px 16px; gap: 8px; }
-  .unlock-alternative { gap: 8px; }
-  .recovery-operation .checkpoint-review-changes { max-height: 120px; }
-}
+/* Preserve extension context under both custom and native dialogs. */
+#modalBackdrop.unlock-backdrop,
+.recovery-operation::backdrop { background: rgba(9, 12, 18, .42); background-image: none; backdrop-filter: blur(2px); }
+body:has(#unlockSetupModal:not(.hidden), #operationDialog[open]) #managementActivity { visibility: hidden; }
+#masterUseBiometric { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+#masterUseBiometric[hidden] { display: none; }
+#masterUseBiometric svg { width: 20px; height: 20px; }
+#biometricUnlockBtn svg { width: 20px; height: 20px; }
 
 .checkpoint-search .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }

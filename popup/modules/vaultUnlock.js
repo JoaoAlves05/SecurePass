@@ -21,8 +21,10 @@ function busy(method) {
   $('unlockSetupForm').setAttribute('aria-busy', String(Boolean(method)));
   for (const control of modal.querySelectorAll('input, button')) control.disabled = Boolean(method);
   modal.querySelector('[data-close]').disabled = method === 'password';
-  modal.querySelector('[type="submit"]').textContent = method === 'password' ? 'Unlocking…' : 'Unlock vault';
-  $('unlockWithBiometric').textContent = method === 'biometric' ? 'Verifying…' : 'Use biometric unlock';
+  modal.querySelector('[type="submit"]').textContent = method === 'password' ? 'Unlocking…' : 'Unlock';
+  const biometricLabel = method === 'biometric' ? 'Verifying biometric unlock…' : 'Use biometric unlock';
+  $('unlockWithBiometric').setAttribute('aria-label', biometricLabel);
+  $('unlockWithBiometric').title = biometricLabel;
 }
 
 function report(message) {

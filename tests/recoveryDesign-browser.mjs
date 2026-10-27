@@ -45,6 +45,8 @@ try {
     await page.locator(`[data-checkpoint-id="${checkpoint.id}"] [data-snapshot-action="review"]`).click();
     await page.locator('#unlockSetupModal').waitFor({ state: 'visible' });
     await fit(page, '#unlockSetupModal');
+    assert.ok((await page.locator('#unlockSetupModal').boundingBox()).height < 280, 'Unlock stays compact');
+    assert.equal(await page.locator('#modalBackdrop').evaluate(node => node.classList.contains('unlock-backdrop')), true);
     await capture(page, `unlock-${mode}-${theme}`);
     await page.locator('#unlockSetupPassword').fill('Wrong disposable password');
     await page.locator('#unlockSetupForm [type="submit"]').click();
@@ -52,6 +54,8 @@ try {
     assert.equal(await page.locator('#unlockSetupPassword').inputValue(), '');
     assert.equal(await page.locator('#unlockSetupPassword').getAttribute('aria-invalid'), 'true');
     await fit(page, '#unlockSetupModal');
+    assert.ok((await page.locator('#unlockSetupModal').boundingBox()).height < 280, 'Unlock stays compact');
+    assert.equal(await page.locator('#modalBackdrop').evaluate(node => node.classList.contains('unlock-backdrop')), true);
     await capture(page, `unlock-error-${mode}-${theme}`);
     await page.keyboard.press('Escape');
     await page.locator('#unlockSetupModal').waitFor({ state: 'hidden' });
@@ -69,6 +73,7 @@ try {
     await page.locator('#operationDialog').waitFor({ state: 'visible' });
     await fit(page, '#operationDialog'); await capture(page, `restore-${mode}-${theme}`);
     assert.ok(await page.locator('#operationConfirm').isVisible());
+    assert.ok((await page.locator('#operationDialog').boundingBox()).height < 390, 'Full restore uses a compact confirmation');
     await page.locator('#operationCancel').click();
     await send(page, 'LOCK_VAULT');
   }
@@ -84,10 +89,15 @@ try {
   await page.goto(`${base}?manage=1#backupsSection`); await page.reload();
   await page.locator(`[data-checkpoint-id="${checkpoint.id}"] [data-snapshot-action="review"]`).click();
   await page.locator('#unlockWithBiometric').waitFor({ state: 'visible' });
-  await fit(page, '#unlockSetupModal'); await capture(page, 'unlock-biometric-dark');
+  await fit(page, '#unlockSetupModal');
+  assert.ok((await page.locator('#unlockSetupModal').boundingBox()).height < 280);
+  assert.equal(await page.locator('#unlockWithBiometric svg').count(), 1);
+  assert.equal(await page.locator('#unlockWithBiometric').getAttribute('aria-label'), 'Use biometric unlock');
+  await capture(page, 'unlock-biometric-dark');
   await webauthn.send('WebAuthn.setAutomaticPresenceSimulation', { authenticatorId, enabled: false });
   await page.locator('#unlockWithBiometric').click();
   await page.waitForFunction(() => document.querySelector('#unlockSetupModal').dataset.busy === 'biometric');
+  assert.equal(await page.locator('#unlockWithBiometric svg').count(), 1, 'Fingerprint survives pending state');
   await page.locator('#unlockSetupModal [data-close]').click();
   await page.locator('#unlockSetupModal').waitFor({ state: 'hidden' });
   assert.equal((await send(page, 'VAULT_STATUS')).status.unlocked, false);

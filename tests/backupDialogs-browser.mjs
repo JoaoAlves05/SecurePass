@@ -59,7 +59,7 @@ try {
       assert.ok(await page.getByLabel('Backup password', { exact: true }).getAttribute('aria-describedby'));
       await fit(page); await capture(page, `export-${theme}-${width}`); await cancel(page);
       await page.locator('[data-snapshot-action="review"]').first().click(); await page.locator('#checkpointReviewFullRestore').click(); await dialog(page, 'Restore whole vault');
-      assert.equal(await page.locator('#operationSummary dd').count(), 5);
+      assert.equal(await page.locator('#operationSummary dd').count(), 2);
       assert.match(await page.locator('#operationNotice').textContent(), /Sync turns off/);
       await fit(page); await capture(page, `restore-${theme}-${width}`); await page.keyboard.press('Escape'); await idle(page); await page.locator('#checkpointReviewBack').click();
     }

@@ -23,6 +23,7 @@ export function requestOperation({ title, description, fields = [], details = []
   }
   document.getElementById('operationNotice').hidden = !notice;
   document.getElementById('operationNoticeTitle').textContent = notice?.title || '';
+  document.getElementById('operationNoticeTitle').hidden = !notice?.title;
   document.getElementById('operationNoticeText').textContent = notice?.text || '';
   const error = document.getElementById('operationError'); error.textContent = ''; error.hidden = true;
   body.replaceChildren();

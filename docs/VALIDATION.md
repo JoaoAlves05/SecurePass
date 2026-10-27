@@ -2,6 +2,12 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Compact recovery presentation — 2026-10-27
+
+User feedback requested smaller, cleaner extension cards. Unlock now has a single action row with Cancel, Unlock and a labelled fingerprint icon; the same fingerprint symbol appears in the other biometric controls. Pending state preserves the icon. Both unlock and recovery confirmations retain the extension context beneath a consistent dimmed backdrop; the old full-screen gradient is removed for unlock. Full restore confirms the saved-entry total and removal count, without repeating the comparison list or date. Password/biometric preservation and checkpoint/Sync effects remain explicit.
+
+Validation: 85-module check and general browser, checkpoint, backup-dialog and recovery-UI suites passed. The recovery scenario also asserts compact card heights, fingerprint retention while verifying, cancellation, cleared secrets and popup/tab light/dark layouts at 320 × 480 and above. Captures in `screenshots/recovery-ui/` were refreshed; unrelated generated baseline captures were restored. The design detector ran with existing broader popup findings. Backend code is unchanged; the earlier 100-test Node evidence is historical and was not rerun for this presentation-only pass. Hardware authenticator and actual toolbar sizing remain manual acceptance checks.
+
 ## Recovery surfaces — 2026-10-26
 
 The unlock form now stays open on authentication errors, clears submitted passwords, prevents duplicate submissions and cancels pending biometric ceremonies on dismissal. Checkpoint comparison uses a compact header, domain/account rows, nonzero summary counts and a lower-priority full restore. Recovery, legacy-checkpoint unlock, history removal and saved-version dialogs share bounded geometry; full restore highlights nonzero removals and keeps its actions outside the scrolling body.
