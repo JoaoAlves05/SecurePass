@@ -149,7 +149,7 @@ try {
   assert.equal(await page.locator('#operationFields input[type="password"]').count(), 0);
   assert.match(await page.locator('#operationDescription').textContent(), /master password.*stay the same/);
   await submit(page);
-  await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#syncToggle').checked && document.querySelector('#syncStatus').textContent.startsWith('Sync is off.'));
+  await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#syncToggle').checked && document.querySelector('#syncStatus').textContent.startsWith('Automatic sending is off.'));
   assert.equal((await send(page, 'LOAD_SETTINGS')).settings.useSync, false);
   assert.equal(await page.locator('#retrySync').isDisabled(), true);
   await section(page, 'advancedSection');
@@ -168,11 +168,12 @@ try {
   await page.locator('#refreshSync').click();
   await page.locator('#syncVersions:not([disabled])').waitFor();
   await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent);
-  await page.locator('#downloadSync').click(); await title(page, 'Restore this version locally');
+  await page.locator('#downloadSync').click(); await title(page, 'Unlock Chrome Sync copy');
   await page.locator('#operationCancel').click();
   await page.waitForFunction(() => !document.querySelector('#managementActivity').textContent);
-  await page.locator('#mergeSync').click(); await title(page, 'Combine into the local vault');
+  await page.locator('#mergeSync').click(); await title(page, 'Unlock Chrome Sync copy');
   await fill(page, 'password', PASS); await submit(page);
+  await title(page, 'Combine into the local vault'); await submit(page);
   await page.waitForFunction(() => !document.querySelector('#operationDialog').open && !document.querySelector('#managementActivity').textContent);
   await section(page, 'backupsSection');
   await page.locator('#exportVault').click();

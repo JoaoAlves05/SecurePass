@@ -11,6 +11,8 @@ export async function retryPendingSync(now = Date.now()) {
     await reconcileLocalRecovery();
     if (!(await loadSettings()).useSync) return;
     const outbox = await readSyncOutbox(); if (!outbox) return;
+    const failure = (await getStorage('local', 'syncStatus')).syncStatus;
+    if (failure?.revision === outbox.revision && failure.errorCode === 'capacity') return;
     const previous = (await getStorage('local', 'syncRetryState')).syncRetryState;
     if (previous?.revision === outbox.revision && previous.nextAttempt > now) return;
     const epoch = generation();

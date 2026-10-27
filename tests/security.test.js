@@ -34,7 +34,7 @@ test('sender origin ignores long paths and queries but rejects unsafe origins', 
 test('SC56: new backup/cache/recovery management handlers remain forbidden to content and auth contexts', () => {
   const content = { id: chrome.runtime.id, url: 'https://example.com/', origin: 'https://example.com', tab: { id: 1 }, frameId: 0, documentId: 'document' };
   const auth = { id: chrome.runtime.id, url: chrome.runtime.getURL('auth/auth.html'), tab: { id: 2 } };
-  for (const type of ['PREVIEW_BACKUP', 'COMMIT_BACKUP', 'EXPORT_RECOVERY_SNAPSHOT', 'RECOVERY_ARCHIVE_STATUS', 'HIBP_CACHE_STATUS', 'HIBP_CLEAR_CACHE', 'WIPE_DEVICE']) {
+  for (const type of ['PREVIEW_BACKUP', 'COMMIT_BACKUP', 'EXPORT_RECOVERY_SNAPSHOT', 'RECOVERY_ARCHIVE_STATUS', 'HIBP_CACHE_STATUS', 'HIBP_CLEAR_CACHE', 'WIPE_DEVICE', 'SYNC_SETUP_CHECK', 'OPEN_CHROME_SYNC_SETTINGS', 'SYNC_PREVIEW', 'SYNC_COMMIT_REVIEW', 'SYNC_DEVICE_TEST_START', 'SYNC_DEVICE_TEST_INSPECT', 'SYNC_DEVICE_TEST_CONFIRM', 'SYNC_DEVICE_TEST_STATUS']) {
     assert.throws(() => authorizeMessage({ type }, content), /Forbidden/);
     assert.throws(() => authorizeMessage({ type }, auth), /Forbidden/);
   }

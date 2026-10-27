@@ -159,8 +159,8 @@ export async function readRecoveryRecords() {
 }
 
 // Read-only migration support for the original unversioned Sync layout.
-export async function readLegacySyncRecord() {
-  const items = await getStorage('sync', null);
+export async function readLegacySyncRecord(snapshot) {
+  const items = snapshot || await getStorage('sync', null);
   const manifest = items[`${VAULT_KEY}_manifest`];
   if (!manifest) return null;
   if (!Number.isInteger(manifest.chunks) || manifest.chunks < 1 || manifest.chunks > 100) throw new Error('Invalid legacy Sync manifest.');
