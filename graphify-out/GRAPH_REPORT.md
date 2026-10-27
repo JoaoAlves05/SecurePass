@@ -1,17 +1,17 @@
 # Graph Report - SecurePass  (2026-10-27)
 
 ## Corpus Check
-- 173 files · ~84,411 words
+- 175 files · ~84,777 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: .css 5, (none) 3)
 
 ## Summary
-- 1379 nodes · 3188 edges · 111 communities (75 shown, 36 thin omitted)
+- 1384 nodes · 3195 edges · 111 communities (75 shown, 36 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a1824553`
+- Built from commit: `db0bb3bc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -47,17 +47,6 @@
 - Captura do cofre
 - REVIEW_BACKUP_ADVANCED.md
 - 2026-10-25T22-07-51Z__popup-popup-html.md
-- Popup HTML semantic surfaces
-- Light popup bounded deleted-entry recovery confirmation
-- Light tab bounded deleted-entry recovery confirmation
-- Light popup bounded whole-vault restore confirmation
-- Light popup compact checkpoint comparison
-- Dark popup bounded vault unlock with biometric alternative
-- Dark popup bounded vault unlock with inline error
-- Light popup bounded vault unlock with inline error
-- Light tab bounded vault unlock with inline error
-- Light popup bounded vault unlock
-- Light tab bounded vault unlock
 - backupCrypto.js
 - Modelo de segurança
 - Settings UX — journeys, screens and acceptance map
@@ -86,9 +75,7 @@
 - Documentação de Sync e dados
 - popup.js
 - Revisão funcional histórica
-- Settings category links and labelled navigation
 - Management inline checkpoint review in dark theme
-- Security settings area
 - Popup inline checkpoint review in dark theme
 - Popup inline checkpoint review in light theme
 - Dark management checkpoint cards with one Review action
@@ -97,12 +84,7 @@
 - Short account-specific deleted-entry confirmation
 - Separate whole-vault restore confirmation from inline review
 - Recovery-surface presentation and unlock-controller refinement
-- Dark popup bounded whole-vault restore confirmation
-- Light tab bounded whole-vault restore confirmation
-- Dark popup compact checkpoint comparison
-- Light tab compact checkpoint comparison
 - Light popup checkpoint card with one Review action
-- Dark popup bounded deleted-entry recovery confirmation
 - Documentação de Sync e dados
 - export dark 320 extension dialog screenshot
 - export dark 400 extension dialog screenshot
@@ -116,6 +98,24 @@
 - restore light 320 extension dialog screenshot
 - restore light 400 extension dialog screenshot
 - Recovery checkpoints
+- Popup HTML semantic surfaces
+- Light popup bounded deleted-entry recovery confirmation
+- Light tab bounded deleted-entry recovery confirmation
+- Light popup bounded whole-vault restore confirmation
+- Light popup compact checkpoint comparison
+- Dark popup bounded vault unlock with biometric alternative
+- Dark popup bounded vault unlock with inline error
+- Light popup bounded vault unlock with inline error
+- Light tab bounded vault unlock with inline error
+- Light popup bounded vault unlock
+- Light tab bounded vault unlock
+- Settings category links and labelled navigation
+- Security settings area
+- Dark popup bounded whole-vault restore confirmation
+- Light tab bounded whole-vault restore confirmation
+- Dark popup compact checkpoint comparison
+- Light tab compact checkpoint comparison
+- Dark popup bounded deleted-entry recovery confirmation
 
 ## God Nodes (most connected - your core abstractions)
 1. `Comprehensive recommended v2 settings Sync devices and data plan` - 66 edges
@@ -191,7 +191,7 @@ Nodes (10): files(), visit(), done, graph, js, manifest, pkg, root (+2 more)
 
 ### Community 27 - "vaultUnlock.js"
 Cohesion: 0.27
-Nodes (17): resolveUnlockSetup(), setUnlockResolver(), attachVaultUnlockListeners(), busy(), clearPassword(), report(), requestVaultUnlock(), verify() (+9 more)
+Nodes (17): resolveUnlockSetup(), setUnlockResolver(), attachUIListeners(), backFromSettings(), closeModal(), closeSettingsPanel(), manageFocus(), openModal() (+9 more)
 
 ### Community 29 - "Evidência visual das definições"
 Cohesion: 0.29
@@ -226,7 +226,7 @@ Cohesion: 0.29
 Nodes (20): account(), attachCheckpointReviewListeners(), changedFields(), checkFreshness(), closeReview(), date(), entryCount(), freshPreview() (+12 more)
 
 ### Community 81 - "recoveryDesign-browser.mjs"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (6): test:recovery-ui-browser, captures, errors, root, Recovery-surface checks recorded in validation evidence, Dedicated recovery UI browser command
 
 ### Community 9 - "Edição do cofre"
@@ -263,55 +263,11 @@ Nodes (9): Backups & recovery — export and restore dialogs, Delivered interact
 
 ### Community 83 - "2026-10-25T22-07-51Z__popup-popup-html.md"
 Cohesion: 0.29
-Nodes (6): Reproduced cache status layout defect, Recovery discovery and terminology concerns, Historical navigation and dialog recommendations, Readable cache row layout correction, Breach-check cache management, Visual critique and accessibility limits
-
-### Community 10 - "Popup HTML semantic surfaces"
-Cohesion: 0.11
-Nodes (26): Popup toast live status, Backups, checkpoint cards and inline review settings area, Scoped entry clearing and local device erasure, Vault create unlock and management states, Legacy Chrome Sync controls, Encrypted backup import and export controls, Advanced compatibility maintenance and local data, Explicit legacy remote version review (+18 more)
-
-### Community 100 - "Light popup bounded deleted-entry recovery confirmation"
-Cohesion: 0.40
-Nodes (5): Short one-entry and checkpoint/Sync effects, Website and Account identify the one entry to recover, Actual extension visible under a shared dimmed blurred backdrop, Cancel and Recover entry remain in the footer, Light popup bounded deleted-entry recovery confirmation
-
-### Community 101 - "Light tab bounded deleted-entry recovery confirmation"
-Cohesion: 0.40
-Nodes (5): Short one-entry and checkpoint/Sync effects, Website and Account identify the one entry to recover, Actual extension visible under a shared dimmed blurred backdrop, Cancel and Recover entry remain in the footer, Light tab bounded deleted-entry recovery confirmation
-
-### Community 102 - "Light popup bounded whole-vault restore confirmation"
-Cohesion: 0.33
-Nodes (6): Short checkpoint and Sync effects notice, Restore total and To remove counts only, Actual extension visible under a shared dimmed blurred backdrop, Cancel and Restore vault remain visible in a compact footer, Short current-password and biometric preservation statement, Light popup bounded whole-vault restore confirmation
-
-### Community 103 - "Light popup compact checkpoint comparison"
-Cohesion: 0.50
-Nodes (4): Checkpoint date and nonzero saved/deleted summary, Domain, account and Deleted entry row with Recover entry, Light popup compact checkpoint comparison, Search website or username field
-
-### Community 104 - "Dark popup bounded vault unlock with biometric alternative"
-Cohesion: 0.40
-Nodes (5): Fingerprint-only shortcut beside Unlock, Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Compact Unlock vault heading, current-password field and reveal control, Dark popup bounded vault unlock with biometric alternative
-
-### Community 105 - "Dark popup bounded vault unlock with inline error"
-Cohesion: 0.40
-Nodes (5): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Inline Invalid master password or corrupted vault error with empty password field, Compact Unlock vault heading, current-password field and reveal control, Dark popup bounded vault unlock with inline error
-
-### Community 106 - "Light popup bounded vault unlock with inline error"
-Cohesion: 0.40
-Nodes (5): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Inline Invalid master password or corrupted vault error with empty password field, Compact Unlock vault heading, current-password field and reveal control, Light popup bounded vault unlock with inline error
-
-### Community 107 - "Light tab bounded vault unlock with inline error"
-Cohesion: 0.40
-Nodes (5): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Inline Invalid master password or corrupted vault error with empty password field, Compact Unlock vault heading, current-password field and reveal control, Light tab bounded vault unlock with inline error
-
-### Community 108 - "Light popup bounded vault unlock"
-Cohesion: 0.50
-Nodes (4): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Compact Unlock vault heading, current-password field and reveal control, Light popup bounded vault unlock
-
-### Community 109 - "Light tab bounded vault unlock"
-Cohesion: 0.50
-Nodes (4): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Compact Unlock vault heading, current-password field and reveal control, Light tab bounded vault unlock
+Nodes (6): Reproduced cache status layout defect, Recovery discovery and terminology concerns, Historical navigation and dialog recommendations, Readable cache row layout correction, Visual critique and accessibility limits, Breach-check cache management
 
 ### Community 15 - "backupCrypto.js"
 Cohesion: 0.08
-Nodes (27): Previous hierarchical navigation validation, Compact presentation: 85 modules, four browser suites and historical Node evidence, Historical implementation evidence, Earlier settings/data increment evidence, Emulated Chromium Sync is not authenticated transport, Exercised automated regression boundaries, Journey scope and unconfigured OAuth, Previous Settings frontend validation (+19 more)
+Nodes (28): Journey scope and unconfigured OAuth, Local Settings Sync and Data Management work item, Local workflow acceptance requirements, Historical approved four-area revision on main, Historical frontend cleanup follow-up, Historical approved hierarchical implementation scope, Authorization contract, Delivered behavior (+20 more)
 
 ### Community 21 - "Settings UX — journeys, screens and acceptance map"
 Cohesion: 0.15
@@ -331,7 +287,7 @@ Nodes (8): Comprehensive recommended v2 settings Sync devices and data plan, Chr
 
 ### Community 30 - "Checkpoint review interaction and scoped action authorization"
 Cohesion: 0.15
-Nodes (13): Read-only comparison discards its token; actions acquire fresh scoped tokens, Back, Escape, lock and navigation preserve context or clear private state, Short entry-specific confirmation replaces entry-selection dropdown, 100 tests, 83 modules and checkpoint/settings/backup-dialog browser evidence, Successful recovery refreshes or returns to retained checkpoint list, One primary Review checkpoint action per local card, Checkpoint review interaction and scoped action authorization, Full restore is secondary at the comparison bottom (+5 more)
+Nodes (13): Read-only comparison discards its token; actions acquire fresh scoped tokens, Back, Escape, lock and navigation preserve context or clear private state, Short entry-specific confirmation replaces entry-selection dropdown, Successful recovery refreshes or returns to retained checkpoint list, One primary Review checkpoint action per local card, Checkpoint review interaction and scoped action authorization, Full restore is secondary at the comparison bottom, Stale comparison disables actions and offers Refresh comparison (+5 more)
 
 ### Community 34 - "Confirmação de autofill"
 Cohesion: 0.20
@@ -343,7 +299,7 @@ Nodes (7): Explicit account selection section, Authenticator unlock button, Canc
 
 ### Community 41 - "Recovery checkpoints behavior, protection and verification"
 Cohesion: 0.04
-Nodes (48): Secondary full-restore review preserves current authentication, Recovery checkpoints behavior, protection and verification, Archived Sync copies stay separate and exports are source-specific, Content recovery preserves existing master password and biometric setup, Existing-vault external and selected-remote restores preserve active authentication, Previous checkpoint implementation: 100 tests, 82 modules and five browser suites, Remove one checkpoint or verify current password to clear local history, Searchable fifty-row comparison with bounded full-restore examples (+40 more)
+Nodes (48): Secondary full-restore review preserves current authentication, Recovery checkpoints behavior, protection and verification, Archived Sync copies stay separate and exports are source-specific, Content recovery preserves existing master password and biometric setup, Existing-vault external and selected-remote restores preserve active authentication, Remove one checkpoint or verify current password to clear local history, Searchable fifty-row comparison with bounded full-restore examples, Current checkpoint review refines presentation while preserving recovery semantics (+40 more)
 
 ### Community 44 - "Evidência visual das definições"
 Cohesion: 0.33
@@ -371,23 +327,15 @@ Nodes (3): Timestamped encrypted local-version backup cards with Restore and Exp
 
 ### Community 7 - "popup.js"
 Cohesion: 0.06
-Nodes (35): Clear secrets and revoke the exact grant on leaving the inline flow, Fresh identity confirmation replaces preliminary unlock and modal, New master password and confirmation with inline errors, Management footer aligned with the content column, 84 Node tests, 78 modules and browser evidence for inline master rotation, Two-minute single-use revision-bound password-change grant, Pre-save biometric revocation notice and optional setup again, Tab stylesheet separates desktop layout from compact popup presentation (+27 more)
+Nodes (35): Clear secrets and revoke the exact grant on leaving the inline flow, Fresh identity confirmation replaces preliminary unlock and modal, New master password and confirmation with inline errors, Management footer aligned with the content column, Two-minute single-use revision-bound password-change grant, Pre-save biometric revocation notice and optional setup again, Tab stylesheet separates desktop layout from compact popup presentation, Ordinary biometric unlock cannot become a password-change grant (+27 more)
 
 ### Community 8 - "Revisão funcional histórica"
 Cohesion: 0.08
 Nodes (20): Preenchimento confirmado por origem e documento, Backups cifrados com pré-visualização de importação, Desbloqueio WebAuthn com PRF, Limites de capacidade e importação, Desenvolvimento e verificações, Chrome122 e âmbito de compatibilidade, Contribuições e licença MIT, Cofre cifrado com Web Crypto (+12 more)
 
-### Community 80 - "Settings category links and labelled navigation"
-Cohesion: 0.33
-Nodes (6): Stale review warning and refresh action, Compact in-section checkpoint comparison, Checkpoint cards and inline review with separate archived copies, Recovery checkpoints heading, Clear history and local/archive inventory, Secondary whole-checkpoint review with preserved authentication copy, Accessible compact comparison search and matching controls
-
 ### Community 82 - "Management inline checkpoint review in dark theme"
 Cohesion: 0.29
 Nodes (7): Changed account offers Restore saved details, Back to checkpoints remains part of the in-section view, Show matching entries checkbox includes matching count, Account rows offer a specific Recover entry action, Management inline checkpoint review in dark theme, Website or username search within the review, Review title/date and saved/deleted/different/newer counts
-
-### Community 84 - "Security settings area"
-Cohesion: 0.29
-Nodes (7): Inline current-password or biometric identity form, Security settings area, Inline master-password identity, new-password and success forms, New-password confirmation with biometric revocation warning, Ownership-aware clipboard timeout explanation, Auto-lock inactivity preference, Consistent fingerprint symbol for biometric entry points
 
 ### Community 85 - "Popup inline checkpoint review in dark theme"
 Cohesion: 0.40
@@ -419,7 +367,67 @@ Nodes (4): Cancel and Restore whole vault in the confirmation footer, Copy prese
 
 ### Community 92 - "Recovery-surface presentation and unlock-controller refinement"
 Cohesion: 0.14
-Nodes (14): Single Cancel and Unlock row with compact spacing, Compact comparison header and account rows, Recovery-surface presentation and unlock-controller refinement, 85 modules and four browser suites; Node evidence remains historical, Previous recovery surfaces evidence: 100 tests, 85 modules and five browser suites, Full restore confirms only restored total and removals, Actual extension visible under a shared dimmed blurred backdrop, Cancel, Unlock and icon-only fingerprint share one action row (+6 more)
+Nodes (14): Compact comparison header and account rows, Recovery-surface presentation and unlock-controller refinement, 85 modules and four browser suites; Node evidence remains historical, Full restore confirms only restored total and removals, Cancel, Unlock and icon-only fingerprint share one action row, Same dimmed and 2px-blurred extension context under unlock and recovery, Smaller cards and a shared contextual dimmed backdrop, Compact recovery presentation and consistent fingerprint entry points (+6 more)
+
+### Community 98 - "Light popup checkpoint card with one Review action"
+Cohesion: 0.50
+Nodes (4): Review checkpoint primary action with secondary Export and Remove, Dated checkpoint with sequence, recoverable-entry and later-entry counts, Backups header, Open in tab and fixed version/GitHub footer remain visible, Light popup checkpoint card with one Review action
+
+### Community 93 - "Recovery checkpoints"
+Cohesion: 0.22
+Nodes (7): Behavior and presentation, Encryption and rotation, Evidence, Recovery checkpoints, Recovery integrity, Recovery checkpoints, Verification
+
+### Community 10 - "Popup HTML semantic surfaces"
+Cohesion: 0.10
+Nodes (29): Compact vault unlock card with biometric shortcut beside password, Compact unlock password and optional biometric method row, Accessible fingerprint-only shortcut beside password, Popup toast live status, Backups, checkpoint cards and inline review settings area, Scoped entry clearing and local device erasure, Vault create unlock and management states, Legacy Chrome Sync controls (+21 more)
+
+### Community 100 - "Light popup bounded deleted-entry recovery confirmation"
+Cohesion: 0.40
+Nodes (5): Short one-entry and checkpoint/Sync effects, Website and Account identify the one entry to recover, Actual extension visible under a shared dimmed blurred backdrop, Cancel and Recover entry remain in the footer, Light popup bounded deleted-entry recovery confirmation
+
+### Community 101 - "Light tab bounded deleted-entry recovery confirmation"
+Cohesion: 0.40
+Nodes (5): Short one-entry and checkpoint/Sync effects, Website and Account identify the one entry to recover, Actual extension visible under a shared dimmed blurred backdrop, Cancel and Recover entry remain in the footer, Light tab bounded deleted-entry recovery confirmation
+
+### Community 102 - "Light popup bounded whole-vault restore confirmation"
+Cohesion: 0.33
+Nodes (6): Short checkpoint and Sync effects notice, Restore total and To remove counts only, Actual extension visible under a shared dimmed blurred backdrop, Cancel and Restore vault remain visible in a compact footer, Short current-password and biometric preservation statement, Light popup bounded whole-vault restore confirmation
+
+### Community 103 - "Light popup compact checkpoint comparison"
+Cohesion: 0.50
+Nodes (4): Checkpoint date and nonzero saved/deleted summary, Domain, account and Deleted entry row with Recover entry, Light popup compact checkpoint comparison, Search website or username field
+
+### Community 104 - "Dark popup bounded vault unlock with biometric alternative"
+Cohesion: 0.40
+Nodes (5): Fingerprint-only shortcut beside password, Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Compact Unlock vault heading, current-password field and reveal control, Dark popup bounded vault unlock with biometric alternative
+
+### Community 105 - "Dark popup bounded vault unlock with inline error"
+Cohesion: 0.40
+Nodes (5): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Inline Invalid master password or corrupted vault error with empty password field, Compact Unlock vault heading, current-password field and reveal control, Dark popup bounded vault unlock with inline error
+
+### Community 106 - "Light popup bounded vault unlock with inline error"
+Cohesion: 0.40
+Nodes (5): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Inline Invalid master password or corrupted vault error with empty password field, Compact Unlock vault heading, current-password field and reveal control, Light popup bounded vault unlock with inline error
+
+### Community 107 - "Light tab bounded vault unlock with inline error"
+Cohesion: 0.40
+Nodes (5): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Inline Invalid master password or corrupted vault error with empty password field, Compact Unlock vault heading, current-password field and reveal control, Light tab bounded vault unlock with inline error
+
+### Community 108 - "Light popup bounded vault unlock"
+Cohesion: 0.50
+Nodes (4): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Compact Unlock vault heading, current-password field and reveal control, Light popup bounded vault unlock
+
+### Community 109 - "Light tab bounded vault unlock"
+Cohesion: 0.50
+Nodes (4): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Compact Unlock vault heading, current-password field and reveal control, Light tab bounded vault unlock
+
+### Community 80 - "Settings category links and labelled navigation"
+Cohesion: 0.33
+Nodes (6): Stale review warning and refresh action, Compact in-section checkpoint comparison, Checkpoint cards and inline review with separate archived copies, Recovery checkpoints heading, Clear history and local/archive inventory, Secondary whole-checkpoint review with preserved authentication copy, Accessible compact comparison search and matching controls
+
+### Community 84 - "Security settings area"
+Cohesion: 0.29
+Nodes (7): Inline identity form with biometric shortcut beside current password, Security settings area, Inline master-password identity, new-password and success forms, New-password confirmation with biometric revocation warning, Ownership-aware clipboard timeout explanation, Auto-lock inactivity preference, Consistent fingerprint symbol for biometric entry points
 
 ### Community 94 - "Dark popup bounded whole-vault restore confirmation"
 Cohesion: 0.33
@@ -437,39 +445,30 @@ Nodes (5): Lower-priority full-checkpoint area and Review full restore action, C
 Cohesion: 0.40
 Nodes (5): Lower-priority full-checkpoint area and Review full restore action, Checkpoint date and nonzero saved/deleted summary, Domain, account and Deleted entry row with Recover entry, Light tab compact checkpoint comparison, Search website or username field
 
-### Community 98 - "Light popup checkpoint card with one Review action"
-Cohesion: 0.50
-Nodes (4): Review checkpoint primary action with secondary Export and Remove, Dated checkpoint with sequence, recoverable-entry and later-entry counts, Backups header, Open in tab and fixed version/GitHub footer remain visible, Light popup checkpoint card with one Review action
-
 ### Community 99 - "Dark popup bounded deleted-entry recovery confirmation"
 Cohesion: 0.40
 Nodes (5): Short one-entry and checkpoint/Sync effects, Website and Account identify the one entry to recover, Actual extension visible under a shared dimmed blurred backdrop, Cancel and Recover entry remain in the footer, Dark popup bounded deleted-entry recovery confirmation
 
-### Community 93 - "Recovery checkpoints"
-Cohesion: 0.22
-Nodes (7): Behavior and presentation, Encryption and rotation, Evidence, Recovery checkpoints, Recovery integrity, Recovery checkpoints, Verification
-
 ## Knowledge Gaps
-- **293 isolated node(s):** `Independent management-tab layout with shared trusted pathname`, `Popup toast live status`, `Vault create unlock and management states`, `Native labelled operation dialog`, `Password tester and explicit breach action` (+288 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 680 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **295 isolated node(s):** `Independent management-tab layout with shared trusted pathname`, `Local workflow acceptance requirements`, `Historical approved four-area revision on main`, `Historical frontend cleanup follow-up`, `Historical four-area executed validation and limits` (+290 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 683 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **36 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Current architecture with implemented local and legacy increment` connect `biometric/service.js` to `cryptoVault.js`, `Ferramentas de desenvolvimento`, `Documentação de Sync e dados`, `Ferramentas de desenvolvimento`, `Arquitetura documentada`, `Revisão funcional histórica`, `REVIEW_BACKUP_ADVANCED.md`, `Evidência visual das definições`, `backupCrypto.js`, `Modelo de segurança`, `Settings UX — journeys, screens and acceptance map`, `Navegação e validação Settings`, `Recovery-surface presentation and unlock-controller refinement`, `Checkpoint review interaction and scoped action authorization`?**
-  _High betweenness centrality (0.239) - this node is a cross-community bridge._
-- **What connects `Independent management-tab layout with shared trusted pathname`, `Popup toast live status`, `Vault create unlock and management states` to the rest of the system?**
-  _293 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.278) - this node is a cross-community bridge._
+- **What connects `Independent management-tab layout with shared trusted pathname`, `Local workflow acceptance requirements`, `Historical approved four-area revision on main` to the rest of the system?**
+  _295 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `cryptoVault.js` be split into smaller, more focused modules?**
   _Cohesion score 0.06717444197609225 - nodes in this community are weakly interconnected._
-- **Why does `Dated validation evidence and missing acceptance` connect `backupCrypto.js` to `Ferramentas de desenvolvimento`, `Confirmação de autofill`, `Ferramentas de desenvolvimento`, `Documentação de Sync e dados`, `popup.js`, `Revisão funcional histórica`, `Recovery checkpoints behavior, protection and verification`, `REVIEW_BACKUP_ADVANCED.md`, `Recovery-surface presentation and unlock-controller refinement`, `Documentação de Sync e dados`, `Modelo de segurança`, `Settings UX — journeys, screens and acceptance map`, `modules/settings.js`, `Navegação e validação Settings`, `Implementação e migração`, `Navegação e composição popup`, `Checkpoint review interaction and scoped action authorization`?**
-  _High betweenness centrality (0.140) - this node is a cross-community bridge._
+- **Why does `Checkpoint recovery with inline comparison and fresh scoped confirmation` connect `Checkpoint review interaction and scoped action authorization` to `cryptoVault.js`, `Recovery checkpoints behavior, protection and verification`, `biometric/service.js`?**
+  _High betweenness centrality (0.158) - this node is a cross-community bridge._
 - **Should `biometric/service.js` be split into smaller, more focused modules?**
   _Cohesion score 0.09676044330775789 - nodes in this community are weakly interconnected._
-- **Why does `Checkpoint recovery with inline comparison and fresh scoped confirmation` connect `Checkpoint review interaction and scoped action authorization` to `cryptoVault.js`, `Recovery checkpoints behavior, protection and verification`, `biometric/service.js`?**
-  _High betweenness centrality (0.135) - this node is a cross-community bridge._
+- **Why does `Dated validation evidence and missing acceptance` connect `backupCrypto.js` to `Ferramentas de desenvolvimento`, `Confirmação de autofill`, `Ferramentas de desenvolvimento`, `Documentação de Sync e dados`, `popup.js`, `Revisão funcional histórica`, `Recovery checkpoints behavior, protection and verification`, `REVIEW_BACKUP_ADVANCED.md`, `Recovery-surface presentation and unlock-controller refinement`, `Documentação de Sync e dados`, `Modelo de segurança`, `Settings UX — journeys, screens and acceptance map`, `modules/settings.js`, `Navegação e validação Settings`, `Implementação e migração`, `Navegação e composição popup`, `Checkpoint review interaction and scoped action authorization`?**
+  _High betweenness centrality (0.154) - this node is a cross-community bridge._
 - **Should `Criptografia e armazenamento` be split into smaller, more focused modules?**
   _Cohesion score 0.10507246376811594 - nodes in this community are weakly interconnected._
-
-Compact-recovery maintenance note (2026-10-27): current code plus three changed text sources and sixteen refreshed recovery-ui captures are current. The final ui.js backdrop-fade correction was extracted separately. Current evidence is 85 modules and four browser suites; earlier 100 Node tests were not rerun. Existing communities were retained; semantic token usage is unavailable and zero counters are placeholders.
+Semantic maintenance is scoped to the authentication method row and 18 recovery UI captures. Token counters are placeholders; semantic extraction cost was not measured. Existing community assignments and names are preserved.

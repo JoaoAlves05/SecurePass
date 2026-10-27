@@ -21,6 +21,20 @@ async function fit(page, selector) {
   });
   assert.ok(bounds.x >= 0 && bounds.y >= 0 && bounds.right <= bounds.width && bounds.bottom <= bounds.height && !bounds.overflow, JSON.stringify(bounds));
 }
+async function authRow(page, inputId, buttonId, enabled) {
+  await page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
+  const layout = await page.locator(`#${inputId}`).evaluate((input, buttonId) => {
+    const row = input.closest('.auth-method-row').getBoundingClientRect();
+    const field = input.closest('.input-wrapper').getBoundingClientRect();
+    const button = document.getElementById(buttonId).getBoundingClientRect();
+    return { rowWidth: row.width, fieldWidth: field.width, fieldHeight: field.height, gap: button.x - field.right, top: button.y - field.y, width: button.width, height: button.height, inputWidth: input.getBoundingClientRect().width };
+  }, buttonId);
+  assert.ok(layout.inputWidth >= 100, 'Password remains usable on narrow screens');
+  if (enabled) {
+    assert.equal(layout.width, 40); assert.equal(layout.height, 40);
+    assert.equal(layout.fieldHeight, 40); assert.equal(layout.top, 0); assert.equal(layout.gap, 8);
+  } else assert.equal(layout.fieldWidth, layout.rowWidth, 'Password fills the row without biometrics');
+}
 async function capture(page, name) {
   await page.screenshot({ path: fileURLToPath(new URL(`${name}.png`, captures)), animations: 'disabled' });
 }
@@ -47,6 +61,7 @@ try {
     await fit(page, '#unlockSetupModal');
     assert.ok((await page.locator('#unlockSetupModal').boundingBox()).height < 280, 'Unlock stays compact');
     assert.equal(await page.locator('#modalBackdrop').evaluate(node => node.classList.contains('unlock-backdrop')), true);
+    await authRow(page, 'unlockSetupPassword', 'unlockWithBiometric', false);
     await capture(page, `unlock-${mode}-${theme}`);
     await page.locator('#unlockSetupPassword').fill('Wrong disposable password');
     await page.locator('#unlockSetupForm [type="submit"]').click();
@@ -93,6 +108,8 @@ try {
   assert.ok((await page.locator('#unlockSetupModal').boundingBox()).height < 280);
   assert.equal(await page.locator('#unlockWithBiometric svg').count(), 1);
   assert.equal(await page.locator('#unlockWithBiometric').getAttribute('aria-label'), 'Use biometric unlock');
+  await authRow(page, 'unlockSetupPassword', 'unlockWithBiometric', true);
+  assert.equal(await page.locator('.unlock-actions #unlockWithBiometric').count(), 0);
   await capture(page, 'unlock-biometric-dark');
   await webauthn.send('WebAuthn.setAutomaticPresenceSimulation', { authenticatorId, enabled: false });
   await page.locator('#unlockWithBiometric').click();
@@ -106,6 +123,20 @@ try {
   await page.locator(`[data-checkpoint-id="${checkpoint.id}"] [data-snapshot-action="review"]`).click();
   await page.locator('#unlockWithBiometric').click();
   await page.locator('#checkpointReview').waitFor({ state: 'visible' });
+  const vaultPage = await context.newPage(); await vaultPage.setViewportSize({ width: 320, height: 480 });
+  await vaultPage.emulateMedia({ colorScheme: 'dark' }); await send(page, 'LOCK_VAULT');
+  await vaultPage.goto(base); await vaultPage.locator('[data-view="vault"]').click();
+  await vaultPage.locator('#biometricUnlockBtn').waitFor({ state: 'visible' });
+  await authRow(vaultPage, 'vaultPassphrase', 'biometricUnlockBtn', true);
+  await capture(vaultPage, 'vault-unlock-biometric-dark');
+  await vaultPage.close();
+  await page.goto(`${base}?manage=1#securitySection`);
+  await page.locator('#changeMasterKeyBtn').click();
+  await page.locator('#masterUseBiometric').waitFor({ state: 'visible' });
+  await authRow(page, 'currentMaster', 'masterUseBiometric', true);
+  assert.equal(await page.locator('#masterUseBiometric').innerText(), '');
+  await capture(page, 'master-identity-biometric-dark');
+  await page.locator('#masterIdentityForm [data-cancel-master]').click();
   await webauthn.detach();
   assert.deepEqual(errors, []);
   console.log('Recovery surfaces passed: inline password errors, retry/cancel, clear secrets, bounded unlock/recovery dialogs and popup/tab light/dark captures.');

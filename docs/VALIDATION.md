@@ -2,6 +2,12 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Authentication method row — 2026-10-27
+
+The vault unlock, scoped unlock dialog and master-password identity form now place an accessible icon-only fingerprint button beside the password field. The field and button share a 40px height and 8px gap; password reveal stays inside the field. Without configured biometrics the password field uses the whole row. Cancel/Unlock or Continue actions remain below. No authentication, authorization or key-handling code changed.
+
+Validation: 85-module check plus general browser, settings and recovery-UI suites passed. Recovery checks verify actual rendered dimensions/alignment and full-width fallback, retain at least 100px for password text at 320px viewport width, exercise virtual-PRF unlock/cancel, and inspect all three authentication surfaces. Captures in `screenshots/recovery-ui/` include the moved modal shortcut and new main-vault/master-identity views. Unrelated generated fixtures were restored. The design detector ran with existing broader popup findings. Earlier Node/security evidence remains historical; physical authenticators and real toolbar sizing remain manual acceptance checks.
+
 ## Compact recovery presentation — 2026-10-27
 
 User feedback requested smaller, cleaner extension cards. Unlock now has a single action row with Cancel, Unlock and a labelled fingerprint icon; the same fingerprint symbol appears in the other biometric controls. Pending state preserves the icon. Both unlock and recovery confirmations retain the extension context beneath a consistent dimmed backdrop; the old full-screen gradient is removed for unlock. Full restore confirms the saved-entry total and removal count, without repeating the comparison list or date. Password/biometric preservation and checkpoint/Sync effects remain explicit.

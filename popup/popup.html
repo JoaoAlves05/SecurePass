@@ -197,11 +197,7 @@
                       <input type="password" id="newMaster" autocomplete="new-password" maxlength="1024" required
                         placeholder="Choose a strong password" />
                       <button type="button" class="icon-btn" data-toggle-password="newMaster" aria-label="Show password" tabindex="-1">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                          stroke-linejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"> <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path> <circle cx="12" cy="12" r="3"></circle> </svg>
                       </button>
                     </div>
                 </div>
@@ -228,26 +224,17 @@
               <form id="unlockForm" class="form-stack">
                 <div class="field-group">
                   <label for="vaultPassphrase">Master password</label>
+                  <div class="auth-method-row">
                     <div class="input-wrapper has-toggle">
-                      <input type="password" id="vaultPassphrase" autocomplete="current-password" maxlength="1024" required
-                        placeholder="Enter password" />
-                      <button type="button" class="icon-btn" data-toggle-password="vaultPassphrase" aria-label="Show password" tabindex="-1">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                          stroke-linejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                      </button>
+                      <input type="password" id="vaultPassphrase" autocomplete="current-password" maxlength="1024" required placeholder="Enter password" />
+                      <button type="button" class="icon-btn" data-toggle-password="vaultPassphrase" aria-label="Show password"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"> <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path> <circle cx="12" cy="12" r="3"></circle> </svg></button>
                     </div>
+                    <div id="biometricUnlockContainer" class="hidden">
+                      <button type="button" id="biometricUnlockBtn" class="secondary biometric-auth" aria-label="Use biometric unlock" title="Use biometric unlock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 0-2 2c0 3.1-.4 5.6-1.3 8M14 13c0 3.5-.3 6.1-.9 8M7 17c.3-1.4.3-2.7.3-4a4.7 4.7 0 0 1 9.4 0c0 2.6-.1 5.1-.6 7.5M4 15v-2a8 8 0 0 1 16 0v3M5.7 5.5a10 10 0 0 1 12.6 0M4 19l.5-1.5M20 19v-1" /></svg></button>
+                    </div>
+                  </div>
                 </div>
                 <button type="submit" class="primary">Unlock vault</button>
-                <div id="biometricUnlockContainer" class="hidden">
-                  <div class="auth-divider"><span>OR</span></div>
-                  <button type="button" id="biometricUnlockBtn" class="secondary glass-btn biometric-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 0-2 2c0 3.1-.4 5.6-1.3 8M14 13c0 3.5-.3 6.1-.9 8M7 17c.3-1.4.3-2.7.3-4a4.7 4.7 0 0 1 9.4 0c0 2.6-.1 5.1-.6 7.5M4 15v-2a8 8 0 0 1 16 0v3M5.7 5.5a10 10 0 0 1 12.6 0M4 19l.5-1.5M20 19v-1" /></svg>
-                    <span>Biometric Unlock</span>
-                  </button>
-                </div>
               </form>
             </div>
           </div>
@@ -389,15 +376,15 @@
                     <p class="row-sub">Enter your current master password to continue.</p>
                     <div class="field-group">
                       <label for="currentMaster">Current master password</label>
-                      <div class="input-wrapper has-toggle">
-                        <input type="password" id="currentMaster" aria-describedby="masterChangeError" autocomplete="current-password" maxlength="1024" required />
-                        <button type="button" class="icon-btn" data-toggle-password="currentMaster" aria-label="Show password">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                        </button>
+                      <div class="auth-method-row">
+                        <div class="input-wrapper has-toggle">
+                          <input type="password" id="currentMaster" aria-describedby="masterChangeError" autocomplete="current-password" maxlength="1024" required />
+                          <button type="button" class="icon-btn" data-toggle-password="currentMaster" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
+                        </div>
+                        <button type="button" id="masterUseBiometric" class="secondary biometric-auth" aria-label="Use biometric unlock" title="Use biometric unlock" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 0-2 2c0 3.1-.4 5.6-1.3 8M14 13c0 3.5-.3 6.1-.9 8M7 17c.3-1.4.3-2.7.3-4a4.7 4.7 0 0 1 9.4 0c0 2.6-.1 5.1-.6 7.5M4 15v-2a8 8 0 0 1 16 0v3M5.7 5.5a10 10 0 0 1 12.6 0M4 19l.5-1.5M20 19v-1" /></svg></button>
                       </div>
                     </div>
                     <div class="master-change-actions"><button type="submit" class="primary compact-btn">Continue</button><button type="button" class="secondary compact-btn" data-cancel-master>Cancel</button></div>
-                    <button id="masterUseBiometric" type="button" class="secondary compact-btn master-biometric" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 0-2 2c0 3.1-.4 5.6-1.3 8M14 13c0 3.5-.3 6.1-.9 8M7 17c.3-1.4.3-2.7.3-4a4.7 4.7 0 0 1 9.4 0c0 2.6-.1 5.1-.6 7.5M4 15v-2a8 8 0 0 1 16 0v3M5.7 5.5a10 10 0 0 1 12.6 0M4 19l.5-1.5M20 19v-1" /></svg><span>Use biometric unlock</span></button>
                   </form>
                   <form id="masterForm" class="master-change-step" aria-labelledby="masterNewTitle" hidden>
                     <p id="masterNewTitle" class="master-step-title" tabindex="-1">Choose your new master password</p>
@@ -594,16 +581,23 @@
     <form id="unlockSetupForm" class="modal-content unlock-content">
       <header class="unlock-heading"><h3 id="unlockSetupTitle">Unlock vault</h3><p id="unlockSetupLead">Enter your master password to continue.</p></header>
       <div class="unlock-body">
-        <div class="field-group"><label for="unlockSetupPassword">Master password</label><div class="input-wrapper has-toggle">
-          <input type="password" id="unlockSetupPassword" autocomplete="current-password" maxlength="1024" aria-describedby="unlockSetupError" required />
-          <button type="button" class="icon-btn" data-toggle-password="unlockSetupPassword" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
-        </div></div>
+        <div class="field-group">
+          <label for="unlockSetupPassword">Master password</label>
+          <div class="auth-method-row">
+            <div class="input-wrapper has-toggle">
+              <input type="password" id="unlockSetupPassword" autocomplete="current-password" maxlength="1024" aria-describedby="unlockSetupError" required />
+              <button type="button" class="icon-btn" data-toggle-password="unlockSetupPassword" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
+            </div>
+            <div id="unlockBiometricAlternative" class="unlock-alternative" hidden>
+              <button type="button" id="unlockWithBiometric" class="secondary biometric-auth" aria-label="Use biometric unlock" title="Use biometric unlock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 0-2 2c0 3.1-.4 5.6-1.3 8M14 13c0 3.5-.3 6.1-.9 8M7 17c.3-1.4.3-2.7.3-4a4.7 4.7 0 0 1 9.4 0c0 2.6-.1 5.1-.6 7.5M4 15v-2a8 8 0 0 1 16 0v3M5.7 5.5a10 10 0 0 1 12.6 0M4 19l.5-1.5M20 19v-1" /></svg></button>
+            </div>
+          </div>
+        </div>
         <p id="unlockSetupError" class="unlock-error" role="alert" hidden></p>
       </div>
       <div class="unlock-actions">
         <button type="button" data-close="unlockSetupModal" class="unlock-cancel">Cancel</button>
         <button type="submit" class="primary">Unlock</button>
-        <div id="unlockBiometricAlternative" class="unlock-alternative" hidden><button type="button" id="unlockWithBiometric" class="secondary biometric-auth" aria-label="Use biometric unlock" title="Use biometric unlock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 0-2 2c0 3.1-.4 5.6-1.3 8M14 13c0 3.5-.3 6.1-.9 8M7 17c.3-1.4.3-2.7.3-4a4.7 4.7 0 0 1 9.4 0c0 2.6-.1 5.1-.6 7.5M4 15v-2a8 8 0 0 1 16 0v3M5.7 5.5a10 10 0 0 1 12.6 0M4 19l.5-1.5M20 19v-1" /></svg></button></div>
       </div>
     </form>
   </div>

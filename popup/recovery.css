@@ -32,9 +32,16 @@
 .unlock-actions { display: flex; align-items: center; gap: 8px; padding: 16px 18px 18px; }
 .unlock-actions button { width: auto; min-height: 40px; padding: 8px 14px; border-radius: var(--radius-sm); box-shadow: none; font-size: 13px; }
 .unlock-actions .unlock-cancel { margin-right: auto; padding: 8px 0; }
-.unlock-actions .biometric-auth { display: grid; place-items: center; width: 40px; height: 40px; padding: 8px; border: 1px solid var(--border); background: var(--bg-subtle); }
-.biometric-auth svg { width: 22px; height: 22px; }
 .unlock-alternative { display: flex; }
+.auth-method-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.auth-method-row > .input-wrapper { flex: 1 1 0; min-width: 0; border-radius: var(--radius-sm); }
+.auth-method-row > .input-wrapper:focus-within { transform: none; }
+.auth-method-row .input-wrapper input { height: 40px; min-height: 40px; min-width: 0; }
+.auth-method-row .biometric-auth { display: grid; place-items: center; flex: 0 0 40px; width: 40px; min-width: 40px; height: 40px; min-height: 40px; padding: 8px; margin: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-subtle); color: var(--text); box-shadow: none; transform: none; }
+.auth-method-row .biometric-auth:hover { background: var(--primary-soft); border-color: var(--primary); }
+.auth-method-row .biometric-auth:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.auth-method-row .biometric-auth[hidden] { display: none; }
+.auth-method-row .biometric-auth svg { width: 22px; height: 22px; }
 .unlock-cancel { border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 13px; cursor: pointer; }
 .unlock-cancel:hover { color: var(--text); background: var(--bg-subtle); }
 .unlock-dialog button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -43,7 +50,6 @@
 .unlock-dialog [hidden] { display: none; }
 #unlockMaster .card { padding: 20px; }
 #unlockMaster .form-stack { gap: 16px; }
-#unlockMaster .auth-divider { margin: 0 0 16px; }
 
 #backupsSection[data-checkpoint-review='true'] > .section-header { display: none; }
 .checkpoint-review { gap: 14px; }
@@ -79,9 +85,5 @@
 #modalBackdrop.unlock-backdrop,
 .recovery-operation::backdrop { background: rgba(9, 12, 18, .42); background-image: none; backdrop-filter: blur(2px); }
 body:has(#unlockSetupModal:not(.hidden), #operationDialog[open]) #managementActivity { visibility: hidden; }
-#masterUseBiometric { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-#masterUseBiometric[hidden] { display: none; }
-#masterUseBiometric svg { width: 20px; height: 20px; }
-#biometricUnlockBtn svg { width: 20px; height: 20px; }
 
 .checkpoint-search .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }

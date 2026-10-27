@@ -97,9 +97,9 @@
   },
   "popup/modules/settings.js": {
     "mtime": 1793061088.223773,
-    "seen": 1793061117.756823,
+    "seen": 1793066199.345567,
     "ast_hash": "d39a0c444034d962ba10c99682087900",
-    "semantic_hash": ""
+    "semantic_hash": "d39a0c444034d962ba10c99682087900"
   },
   "popup/modules/sync.js": {
     "mtime": 1793051672.769238,
@@ -444,10 +444,10 @@
     "semantic_hash": "52fa42d087caf2bf7c6e47c007eb087f"
   },
   "docs/VALIDATION.md": {
-    "mtime": 1793059920.7454834,
-    "seen": 1793060096.7581327,
-    "ast_hash": "c1d88cd18febfb5c8280d40bb588f263",
-    "semantic_hash": "c1d88cd18febfb5c8280d40bb588f263"
+    "mtime": 1793065984.1080728,
+    "seen": 1793066199.411996,
+    "ast_hash": "d84fc637a861c2d2a1ee5cb7d19f642a",
+    "semantic_hash": "d84fc637a861c2d2a1ee5cb7d19f642a"
   },
   "offscreen.html": {
     "mtime": 1775164609.297193,
@@ -456,26 +456,26 @@
     "semantic_hash": "393df8c52a43b6fcca4fc5cae51f23cc"
   },
   "popup/popup.html": {
-    "mtime": 1793059812.495954,
-    "seen": 1793060096.7581449,
-    "ast_hash": "146e587bc8b7c7939a8c9477e8b21915",
-    "semantic_hash": "146e587bc8b7c7939a8c9477e8b21915"
+    "mtime": 1793065984.0996408,
+    "seen": 1793066199.4119873,
+    "ast_hash": "79c2737c2e3c8d0e719436da7cca2acb",
+    "semantic_hash": "79c2737c2e3c8d0e719436da7cca2acb"
   },
   "docs/screenshots/phase1-recovery.png": {
-    "mtime": 1793059925.6791282,
-    "seen": 1793059985.2709224,
+    "mtime": 1793066025.217401,
+    "seen": 1793066124.599897,
     "ast_hash": "22ceb04a051532586bb241df6f73a9eb",
     "semantic_hash": ""
   },
   "docs/screenshots/phase1-settings.png": {
-    "mtime": 1793059925.6849582,
-    "seen": 1793059985.2709265,
+    "mtime": 1793066025.2231677,
+    "seen": 1793066124.5998993,
     "ast_hash": "625887c90662488c4e4527f076f44610",
     "semantic_hash": ""
   },
   "docs/screenshots/phase1-vault.png": {
-    "mtime": 1793059925.6906943,
-    "seen": 1793059985.2709308,
+    "mtime": 1793066025.2283983,
+    "seen": 1793066124.5999014,
     "ast_hash": "9fec435da0904afeca4d5d8bad9f2190",
     "semantic_hash": ""
   },
@@ -547,9 +547,9 @@
   },
   "tests/settings-browser.mjs": {
     "mtime": 1793061088.2249985,
-    "seen": 1793061117.7570767,
+    "seen": 1793066199.345736,
     "ast_hash": "8f6ff18bd9ecebf767050cf7c3d6545d",
-    "semantic_hash": ""
+    "semantic_hash": "8f6ff18bd9ecebf767050cf7c3d6545d"
   },
   "tests/settingsData.test.js": {
     "mtime": 1793051672.773238,
@@ -576,26 +576,26 @@
     "semantic_hash": "529910f7d6432f3b89e70f6726a6e168"
   },
   "docs/screenshots/settings-erasure-review.png": {
-    "mtime": 1793059122.1489842,
-    "seen": 1793059153.7706482,
+    "mtime": 1793066025.2393436,
+    "seen": 1793066124.599948,
     "ast_hash": "9e2a3ceec021ece8157a3f151587681f",
     "semantic_hash": ""
   },
   "docs/screenshots/settings-management-dark.png": {
-    "mtime": 1793059122.1565344,
-    "seen": 1793059153.7706509,
+    "mtime": 1793066025.2452981,
+    "seen": 1793066124.5999508,
     "ast_hash": "b0a51a50ee922fed3501fc3eb0a99625",
     "semantic_hash": ""
   },
   "docs/screenshots/settings-management-light.png": {
-    "mtime": 1793059122.1648362,
-    "seen": 1793059153.7706535,
+    "mtime": 1793066025.2509792,
+    "seen": 1793066124.5999534,
     "ast_hash": "8a764e95f84e1b8fc0b046901640b423",
     "semantic_hash": ""
   },
   "docs/screenshots/settings-popup.png": {
-    "mtime": 1793059122.1806295,
-    "seen": 1793059153.7706652,
+    "mtime": 1793066025.2730193,
+    "seen": 1793066124.5999644,
     "ast_hash": "a4029c374d76401006d9bf2a673c7b8f",
     "semantic_hash": ""
   },
@@ -606,14 +606,14 @@
     "semantic_hash": "9ab91c19b1ffcfc8e57302027dc2cf4e"
   },
   "docs/screenshots/settings-appearance-dark.png": {
-    "mtime": 1793059051.963966,
-    "seen": 1793059153.7706459,
+    "mtime": 1793066025.2341404,
+    "seen": 1793066124.5999455,
     "ast_hash": "558f87703a7282c8c19fcbf251803ab0",
     "semantic_hash": "558f87703a7282c8c19fcbf251803ab0"
   },
   "docs/screenshots/settings-popup-appearance.png": {
-    "mtime": 1793059083.1552155,
-    "seen": 1793059153.7706604,
+    "mtime": 1793066025.267727,
+    "seen": 1793066124.5999599,
     "ast_hash": "90e84d8b52579693ea039194866c0330",
     "semantic_hash": "90e84d8b52579693ea039194866c0330"
   },
@@ -642,8 +642,8 @@
     "semantic_hash": "7b3322e92debb5f97ffa13bc7d51067d"
   },
   "docs/screenshots/settings-popup-home.png": {
-    "mtime": 1793059061.1766503,
-    "seen": 1793059153.770663,
+    "mtime": 1793065881.5699806,
+    "seen": 1793066124.599962,
     "ast_hash": "17f32c135664a53e9f8425abfaae18b4",
     "semantic_hash": "17f32c135664a53e9f8425abfaae18b4"
   },
@@ -768,14 +768,14 @@
     "semantic_hash": "d7594f4aa2cf47e66e5c7f896c60eb49"
   },
   "docs/screenshots/settings-master-identity-popup.png": {
-    "mtime": 1793059122.1723664,
-    "seen": 1793059153.7706556,
+    "mtime": 1793066025.256551,
+    "seen": 1793066124.5999558,
     "ast_hash": "42afe62c71bff2140a5cc4c9cb0dca8d",
     "semantic_hash": ""
   },
   "docs/screenshots/settings-master-new-popup.png": {
-    "mtime": 1793059063.3206499,
-    "seen": 1793059153.770658,
+    "mtime": 1793066025.2621994,
+    "seen": 1793066124.5999577,
     "ast_hash": "05887775035aeae56148427f662b2387",
     "semantic_hash": ""
   },
@@ -930,10 +930,10 @@
     "semantic_hash": "0df652476d24a50b69be813f90cf0da7"
   },
   "tests/recoveryDesign-browser.mjs": {
-    "mtime": 1793059879.5983973,
-    "seen": 1793060096.6860104,
-    "ast_hash": "f7e72e35a27b7c13d66f34f131807037",
-    "semantic_hash": "f7e72e35a27b7c13d66f34f131807037"
+    "mtime": 1793065922.8228703,
+    "seen": 1793066199.3457305,
+    "ast_hash": "5c5c621f515a6899cb1c057a2fff70a2",
+    "semantic_hash": "5c5c621f515a6899cb1c057a2fff70a2"
   },
   "docs/issues/RECOVERY_SURFACES.md": {
     "mtime": 1793059920.7458575,
@@ -942,99 +942,111 @@
     "semantic_hash": "76e2cc02d844f94e943850d0a81da325"
   },
   "docs/screenshots/recovery-ui/recover-popup-dark.png": {
-    "mtime": 1793059948.95679,
-    "seen": 1793060096.75815,
-    "ast_hash": "6e4accc5884e7e1d1e003e714713982e",
-    "semantic_hash": "6e4accc5884e7e1d1e003e714713982e"
+    "mtime": 1793065994.5534344,
+    "seen": 1793066199.412004,
+    "ast_hash": "d4b0d36d79d227eb46829c5aa8ba14ca",
+    "semantic_hash": "d4b0d36d79d227eb46829c5aa8ba14ca"
   },
   "docs/screenshots/recovery-ui/recover-popup-light.png": {
-    "mtime": 1793059945.604231,
-    "seen": 1793060096.7581553,
-    "ast_hash": "dec4fda2df2822c8733c6dac5a86b7d2",
-    "semantic_hash": "dec4fda2df2822c8733c6dac5a86b7d2"
+    "mtime": 1793065991.1686406,
+    "seen": 1793066199.4120073,
+    "ast_hash": "89aea6534e763940029e50d2ee83102d",
+    "semantic_hash": "89aea6534e763940029e50d2ee83102d"
   },
   "docs/screenshots/recovery-ui/recover-tab-light.png": {
-    "mtime": 1793059953.3325787,
-    "seen": 1793060096.75816,
-    "ast_hash": "de5ad4acdd117b6ba298ab8146fb3afc",
-    "semantic_hash": "de5ad4acdd117b6ba298ab8146fb3afc"
+    "mtime": 1793065998.588001,
+    "seen": 1793066199.4120104,
+    "ast_hash": "dd8e55ca7a6d56ecabae2955e315cd6d",
+    "semantic_hash": "dd8e55ca7a6d56ecabae2955e315cd6d"
   },
   "docs/screenshots/recovery-ui/restore-popup-dark.png": {
-    "mtime": 1793059949.2447898,
-    "seen": 1793060096.758167,
-    "ast_hash": "479c134923f81024c9129fb32b82f2cf",
-    "semantic_hash": "479c134923f81024c9129fb32b82f2cf"
+    "mtime": 1793065994.8054483,
+    "seen": 1793066199.412013,
+    "ast_hash": "57f1c04f6ec53784f87fd04065085927",
+    "semantic_hash": "57f1c04f6ec53784f87fd04065085927"
   },
   "docs/screenshots/recovery-ui/restore-popup-light.png": {
-    "mtime": 1793059945.8602312,
-    "seen": 1793060096.7581737,
-    "ast_hash": "0965453d93c04f9012e93c8c7572f65b",
-    "semantic_hash": "0965453d93c04f9012e93c8c7572f65b"
+    "mtime": 1793065991.4046535,
+    "seen": 1793066199.4120166,
+    "ast_hash": "83530e8990f04cca078ed87475708c32",
+    "semantic_hash": "83530e8990f04cca078ed87475708c32"
   },
   "docs/screenshots/recovery-ui/restore-tab-light.png": {
-    "mtime": 1793059953.7285783,
-    "seen": 1793060096.7581778,
-    "ast_hash": "a0a6dd240f55bb41127f99e0af8a9bf9",
-    "semantic_hash": "a0a6dd240f55bb41127f99e0af8a9bf9"
+    "mtime": 1793065999.0040238,
+    "seen": 1793066199.4120195,
+    "ast_hash": "cf5f031783a6b89de5f5dee05ffd8a2f",
+    "semantic_hash": "cf5f031783a6b89de5f5dee05ffd8a2f"
   },
   "docs/screenshots/recovery-ui/review-popup-dark.png": {
-    "mtime": 1793059948.74079,
-    "seen": 1793060096.7581828,
-    "ast_hash": "f1184105475615a09112c0318a12dc2b",
-    "semantic_hash": "f1184105475615a09112c0318a12dc2b"
+    "mtime": 1793065994.3494234,
+    "seen": 1793066199.412023,
+    "ast_hash": "61f9ed1310d5655042275b8bb2dda281",
+    "semantic_hash": "61f9ed1310d5655042275b8bb2dda281"
   },
   "docs/screenshots/recovery-ui/review-popup-light.png": {
-    "mtime": 1793059945.3922312,
-    "seen": 1793060096.758185,
-    "ast_hash": "9dcc01a406ba2e48277d8bb5c1556026",
-    "semantic_hash": "9dcc01a406ba2e48277d8bb5c1556026"
+    "mtime": 1793065990.9806304,
+    "seen": 1793066199.4120257,
+    "ast_hash": "8bad63b00c0a07bef5f159c81efa7406",
+    "semantic_hash": "8bad63b00c0a07bef5f159c81efa7406"
   },
   "docs/screenshots/recovery-ui/review-tab-light.png": {
-    "mtime": 1793059953.0485787,
-    "seen": 1793060096.7581878,
-    "ast_hash": "6857ca26b9e513c6c2d4009b82a728b1",
-    "semantic_hash": "6857ca26b9e513c6c2d4009b82a728b1"
+    "mtime": 1793065998.291985,
+    "seen": 1793066199.4120288,
+    "ast_hash": "a5c15a24a2c9414295d939366cd46b5e",
+    "semantic_hash": "a5c15a24a2c9414295d939366cd46b5e"
   },
   "docs/screenshots/recovery-ui/unlock-biometric-dark.png": {
-    "mtime": 1793059954.976578,
-    "seen": 1793060096.7581906,
-    "ast_hash": "b525037d7c04ce84c302fcf7010f1a4c",
-    "semantic_hash": "b525037d7c04ce84c302fcf7010f1a4c"
+    "mtime": 1793066000.4961052,
+    "seen": 1793066199.4120317,
+    "ast_hash": "141179a9c0d233468b75f1e8b43234c0",
+    "semantic_hash": "141179a9c0d233468b75f1e8b43234c0"
   },
   "docs/screenshots/recovery-ui/unlock-error-popup-dark.png": {
-    "mtime": 1793059947.4727902,
-    "seen": 1793060096.7581933,
-    "ast_hash": "309fd9fdf45fe448fda8a6b60d6c0d54",
-    "semantic_hash": "309fd9fdf45fe448fda8a6b60d6c0d54"
+    "mtime": 1793065993.1213562,
+    "seen": 1793066199.4120343,
+    "ast_hash": "68bf5e8616b5c3303a1c7a9f58cb942e",
+    "semantic_hash": "68bf5e8616b5c3303a1c7a9f58cb942e"
   },
   "docs/screenshots/recovery-ui/unlock-error-popup-light.png": {
-    "mtime": 1793059943.6802316,
-    "seen": 1793060096.7581959,
-    "ast_hash": "ed9ecc970a7256efee23e59ca837def3",
-    "semantic_hash": "ed9ecc970a7256efee23e59ca837def3"
+    "mtime": 1793065989.3845432,
+    "seen": 1793066199.412038,
+    "ast_hash": "158abf5dc3ac4c0ef0efddd586546591",
+    "semantic_hash": "158abf5dc3ac4c0ef0efddd586546591"
   },
   "docs/screenshots/recovery-ui/unlock-error-tab-light.png": {
-    "mtime": 1793059951.596579,
-    "seen": 1793060096.7581985,
-    "ast_hash": "cae2fc27787aaca5aa15b555bdae6194",
-    "semantic_hash": "cae2fc27787aaca5aa15b555bdae6194"
+    "mtime": 1793065997.1359217,
+    "seen": 1793066199.412041,
+    "ast_hash": "28b3aef100664eeb7d995163419da9ce",
+    "semantic_hash": "28b3aef100664eeb7d995163419da9ce"
   },
   "docs/screenshots/recovery-ui/unlock-popup-dark.png": {
-    "mtime": 1793059946.9607904,
-    "seen": 1793060096.7582011,
-    "ast_hash": "344ab656e2251268a851e042864441f6",
-    "semantic_hash": "344ab656e2251268a851e042864441f6"
+    "mtime": 1793065992.6693316,
+    "seen": 1793066199.4120438,
+    "ast_hash": "f63eec54b61efd271b7d69314c922db0",
+    "semantic_hash": "f63eec54b61efd271b7d69314c922db0"
   },
   "docs/screenshots/recovery-ui/unlock-popup-light.png": {
-    "mtime": 1793059943.2002318,
-    "seen": 1793060096.758204,
-    "ast_hash": "d5f4250b2f31f7e886fa9783463a1fb4",
-    "semantic_hash": "d5f4250b2f31f7e886fa9783463a1fb4"
+    "mtime": 1793065988.9165177,
+    "seen": 1793066199.4120471,
+    "ast_hash": "3456e3ed4092fba59111e8570bc61083",
+    "semantic_hash": "3456e3ed4092fba59111e8570bc61083"
   },
   "docs/screenshots/recovery-ui/unlock-tab-light.png": {
-    "mtime": 1793059950.7967894,
-    "seen": 1793060096.7582064,
-    "ast_hash": "5f9acdb83193d3f60df75db7e1f616b2",
-    "semantic_hash": "5f9acdb83193d3f60df75db7e1f616b2"
+    "mtime": 1793065996.4215364,
+    "seen": 1793066199.4120498,
+    "ast_hash": "18082a625105033cdd5c1bafb69ec438",
+    "semantic_hash": "18082a625105033cdd5c1bafb69ec438"
+  },
+  "docs/screenshots/recovery-ui/master-identity-biometric-dark.png": {
+    "mtime": 1793066003.452199,
+    "seen": 1793066199.4120002,
+    "ast_hash": "6ce0cfb2aa263c0b9c486d97b48c9316",
+    "semantic_hash": "6ce0cfb2aa263c0b9c486d97b48c9316"
+  },
+  "docs/screenshots/recovery-ui/vault-unlock-biometric-dark.png": {
+    "mtime": 1793066002.980173,
+    "seen": 1793066199.4120522,
+    "ast_hash": "245f0fac603da0b75f01e4d3fd4f9acd",
+    "semantic_hash": "245f0fac603da0b75f01e4d3fd4f9acd"
   }
 }
