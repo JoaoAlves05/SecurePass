@@ -113,7 +113,7 @@ async function unlockOlder(selected) {
 
 export async function reviewCheckpoint(selected, options = {}) {
   const expected = ++generation;
-  if (!await ensureVaultAccessible('Unlock to review this checkpoint.')) return;
+  if (!await ensureVaultAccessible('Unlock with biometrics or your master password to review this checkpoint.')) return;
   if (expected !== generation) return;
   let latest = (await checked('RECOVERY_ARCHIVE_STATUS')).snapshots.find(item => item.id === selected.id && item.source === 'Local');
   if (!latest) throw new Error('This checkpoint is no longer available. Return to the saved checkpoints.');
@@ -167,7 +167,7 @@ async function recoverEntry(current, entry) {
       try {
         return await requestOperation({
           layout: 'checkpoint', title: entry.change === 'missing' ? 'Recover deleted entry' : 'Restore saved entry',
-          description: 'Only this entry changes. Other entries stay the same.',
+          description: 'Only this entry changes. Other entries stay the same. Review the account and fields above before continuing.',
           details: [{ label: 'Website', value: entry.site }, { label: 'Account', value: entry.username || 'No username' }, ...(entry.change === 'changed' ? [{ label: 'Restore', value: changedFields(entry) }] : [])],
           notice: { text: 'Current contents saved in a checkpoint. Your Sync setting stays the same.' },
           confirmLabel: entry.change === 'missing' ? 'Recover entry' : 'Restore saved details', busyLabel: 'Recovering…',
@@ -205,7 +205,7 @@ async function restoreWhole(current) {
       try {
         return await requestOperation({
           layout: 'checkpoint', title: 'Restore whole vault',
-          description: 'Replace all entries. Your master password and biometrics stay the same.',
+          description: 'Replace all entries in your current vault. The counts below show what will be restored and removed. Your master password and biometric setup stay the same.',
           details: [{ label: 'Restore', value: entryCount(preview.count) }, { label: 'To remove', value: entryCount(preview.newer), danger: preview.newer > 0 }],
           notice: { text: 'Current contents kept in a checkpoint. Sync turns off; remote copies stay unchanged.' },
           confirmLabel: 'Restore vault', busyLabel: 'Restoring…', danger: true,
