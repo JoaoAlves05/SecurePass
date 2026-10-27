@@ -868,6 +868,16 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   padding: 12px 20px 20px;
 }
 
+/* Keep the home footer out of detail pages; show feedback only while needed. */
+.settings-panel[data-settings-detail='true'] .settings-about,
+.settings-panel[data-settings-detail='true'] #settingsSaveStatus:not([data-state='saving']):not([data-state='error']) {
+  display: none;
+}
+
+.settings-panel[data-settings-detail='true'] .settings-footer:not(:has(#settingsSaveStatus[data-state='saving'], #settingsSaveStatus[data-state='error'], #managementActivity:not(:empty))) {
+  display: none;
+}
+
 .settings-about {
   display: flex;
   justify-content: space-between;

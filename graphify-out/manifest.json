@@ -96,10 +96,10 @@
     "semantic_hash": "6bbc33d460d7ace1a672061dd6a6d936"
   },
   "popup/modules/settings.js": {
-    "mtime": 1792937784.6921275,
-    "seen": 1792938869.8504512,
-    "ast_hash": "b1a7ee9aefa8d7b7be0bc176fdcc8497",
-    "semantic_hash": "b1a7ee9aefa8d7b7be0bc176fdcc8497"
+    "mtime": 1793061088.223773,
+    "seen": 1793061117.756823,
+    "ast_hash": "d39a0c444034d962ba10c99682087900",
+    "semantic_hash": ""
   },
   "popup/modules/sync.js": {
     "mtime": 1793051672.769238,
@@ -546,10 +546,10 @@
     "semantic_hash": "1013f426652b4ef57cb35e8335612d9d"
   },
   "tests/settings-browser.mjs": {
-    "mtime": 1793056596.523941,
-    "seen": 1793059153.770419,
-    "ast_hash": "30947e4c50e5318e7e32a612d23f2758",
-    "semantic_hash": "30947e4c50e5318e7e32a612d23f2758"
+    "mtime": 1793061088.2249985,
+    "seen": 1793061117.7570767,
+    "ast_hash": "8f6ff18bd9ecebf767050cf7c3d6545d",
+    "semantic_hash": ""
   },
   "tests/settingsData.test.js": {
     "mtime": 1793051672.773238,

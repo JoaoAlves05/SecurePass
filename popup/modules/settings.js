@@ -24,7 +24,7 @@ export function scheduleSettingsSave() {
   for (const key of Object.keys(DEFAULT_SETTINGS)) if (key !== 'useSync' && snapshot[key] !== lastQueued?.[key]) patch[key] = snapshot[key];
   lastQueued = snapshot; if (!Object.keys(patch).length) return saving;
   const ticket = ++sequence;
-  setSaveStatus('Saving preferences…');
+  setSaveStatus('Saving preferences…', 'saving');
   saving = saving.catch(() => {}).then(async () => {
     const current = await sendMessage('LOAD_SETTINGS');
     if (!current.ok) throw new Error(current.error);

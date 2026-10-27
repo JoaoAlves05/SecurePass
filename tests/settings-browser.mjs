@@ -47,10 +47,9 @@ async function layouts(page) {
         assert.equal(await page.locator('#settingsNavigation').isVisible(), sidebar);
         assert.equal(await page.locator('#settingsPanel [role="tab"], #settingsPanel [role="tablist"]').count(), 0);
         assert.equal(await page.getByRole('button', { name: 'Back to settings', exact: true }).isVisible(), !sidebar);
-        assert.equal(await page.locator('.app-version').isVisible(), true);
-        assert.equal(await page.getByRole('link', { name: 'GitHub', exact: true }).isVisible(), true);
-        const footer = await page.locator('.settings-footer').boundingBox();
-        assert.ok(footer.y >= 0 && footer.y + footer.height <= 651, `Settings footer remains in view at ${width}px, ${theme}, ${id}`);
+        assert.equal(await page.locator('.app-version').isVisible(), false);
+        assert.equal(await page.getByRole('link', { name: 'GitHub', exact: true }).isVisible(), false);
+        assert.equal(await page.locator('.settings-footer').isVisible(), false, `No persistent footer at ${width}px, ${theme}, ${id}`);
         const overflow = await page.evaluate(() => ({ width: innerWidth, body: document.body.scrollWidth, layout: document.querySelector('.settings-content-wrapper').scrollWidth, available: document.querySelector('.settings-content-wrapper').clientWidth }));
         assert.ok(overflow.body <= overflow.width && overflow.layout <= overflow.available, `Horizontal overflow at ${width}px, ${theme}, ${id}: ${JSON.stringify(overflow)}`);
         if (id === 'advancedSection') {
@@ -89,7 +88,15 @@ try {
   assert.ok((await page.locator('#autoLockRange').boundingBox()).height >= 24);
   await page.locator('#autoLockRange').focus(); await page.keyboard.press('ArrowRight');
   await page.waitForFunction(() => document.querySelector('#settingsSaveStatus').textContent === 'Preferences saved');
-  assert.equal(await page.locator('#settingsSaveStatus').isVisible(), true);
+  assert.equal(await page.locator('#settingsSaveStatus').isVisible(), false);
+  // Pending/error feedback remains available without restoring home branding.
+  for (const status of ['saving', 'error']) {
+    await page.locator('#settingsSaveStatus').evaluate((node, status) => { node.dataset.state = status; }, status);
+    assert.equal(await page.locator('#settingsSaveStatus').isVisible(), true);
+    assert.equal(await page.locator('.app-version').isVisible(), false);
+  }
+  await page.locator('#settingsSaveStatus').evaluate(node => { node.dataset.state = ''; });
+  assert.equal(await page.locator('.settings-footer').isVisible(), false);
   assert.equal((await send(page, 'LOAD_SETTINGS')).settings.vaultTimeout, 16);
   assert.equal(await page.locator('#autoLockRange').getAttribute('aria-valuetext'), '16 minutes');
   await section(page, 'generalSection');
