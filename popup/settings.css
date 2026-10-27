@@ -499,8 +499,7 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   background: transparent;
   box-shadow: none;
   color: var(--text-muted);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 
 #backupsSection[data-checkpoint-review='true'] > :not(.checkpoint-review):not(.section-header) {
@@ -763,9 +762,14 @@ body:has(.settings-panel[aria-hidden='false']) > .app-container {
   color: var(--text-muted);
   font: inherit;
   font-size: 12px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
   cursor: pointer;
+}
+
+.settings-text-action:hover,
+.snapshot-actions button[data-snapshot-action='export']:hover,
+.snapshot-actions button[data-snapshot-action='remove']:hover {
+  color: var(--text);
 }
 
 .checkpoint-review-changes {
