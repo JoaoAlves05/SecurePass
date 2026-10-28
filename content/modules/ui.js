@@ -59,6 +59,7 @@ export function setupShadowDom() {
       box-shadow: 0 2px 6px rgba(0,0,0,.12);
     }
     .securepass-floating:hover, .securepass-floating[aria-expanded=true] { background: var(--sp-hover); }
+    .securepass-floating[aria-busy=true] { opacity: .65; cursor: progress; }
     .securepass-panel {
       pointer-events: auto; position: fixed; margin: 0; padding: 16px;
       width: 320px; overflow: auto; overscroll-behavior: contain;
@@ -90,7 +91,20 @@ export function setupShadowDom() {
     .securepass-icon-btn:hover { background: var(--sp-hover); color: var(--sp-text); }
     .securepass-status { margin: 12px 0 0; color: var(--sp-muted); font-size: 12px; overflow-wrap: anywhere; }
     .securepass-status[data-state=error] { color: var(--sp-danger); }
+    .securepass-feedback {
+      pointer-events: none; position: fixed; right: 8px; bottom: 8px; margin: 0; padding: 10px 12px;
+      width: max-content; max-width: calc(100vw - 16px); border: 1px solid var(--sp-border); border-radius: 10px;
+      background: var(--sp-bg); color: var(--sp-text); box-shadow: var(--sp-shadow);
+      font: 12px/1.5 Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow-wrap: anywhere;
+    }
+    .securepass-feedback[data-state=error] { color: var(--sp-danger); }
     .securepass-tools { display: grid; gap: 2px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--sp-border); }
+    .securepass-options { margin-top: 10px; }
+    .securepass-options summary { cursor: pointer; padding: 7px 0; color: var(--sp-muted); font-size: 12px; }
+    .securepass-options .securepass-tools { margin-top: 0; padding-top: 4px; border: 0; }
+    .securepass-option-row { display: grid; gap: 6px; margin-top: 9px; color: var(--sp-text); font-size: 12px; }
+    .securepass-option-row input, .securepass-option-row select { width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--sp-border); border-radius: 8px; background: var(--sp-surface); color: var(--sp-text); font: inherit; }
+    .securepass-option-row input:focus-visible, .securepass-option-row select:focus-visible { outline: 2px solid var(--sp-accent); outline-offset: 2px; }
     @keyframes sp-enter { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
     @media (prefers-reduced-motion: reduce) { .securepass-panel { animation: none; } }
   `;

@@ -25,9 +25,17 @@
       <p class="auth-hint">Confirm only after this login or password change worked on the website.</p>
     </section>
     <section id="accounts" aria-label="Choose a saved login"></section>
+    <section id="emptyLogins" hidden><p class="auth-hint">Add a login here, or sign in on the website and review the save suggestion.</p><button id="addLogin" class="primary compact-btn" type="button">Add login</button></section>
+    <form id="manualLoginForm" hidden>
+      <button id="backToAccounts" class="auth-refresh" type="button">Back to logins</button>
+      <div class="auth-field"><label for="manualUsername">Username <span class="auth-optional">(optional)</span></label><div class="input-wrapper"><input id="manualUsername" type="text" maxlength="255" autocomplete="off"></div></div>
+      <div class="auth-field"><label for="manualPassword">Login password</label><div class="input-wrapper"><input id="manualPassword" type="password" maxlength="1024" autocomplete="off" required><button id="revealManualPassword" class="auth-reveal" type="button" aria-label="Show login password" aria-pressed="false"></button></div></div>
+      <p class="auth-hint">Save a new login for the website above. This does not fill or submit its form.</p>
+    </form>
+    <details id="otherOptions" class="auth-options" hidden><summary>Other options</summary><p class="auth-hint">These tools use the password field on the website.</p><button id="generateOnSite" class="auth-tool" type="button">Generate and fill a password</button><button id="copyOnSite" class="auth-tool" type="button">Copy entered password</button><button id="saveOnSite" class="auth-tool" type="button">Save entered login</button><button id="addAnotherLogin" class="auth-tool" type="button" hidden>Add a new login</button></details>
     <p id="error" class="auth-error" role="alert" hidden></p>
     <button id="refreshReview" class="auth-refresh" type="button" hidden>Review accounts again</button>
-    <footer class="auth-actions"><button id="cancel" class="secondary compact-btn" type="button">Cancel</button><button id="unlock" class="primary compact-btn" type="submit" form="unlockForm" hidden>Unlock</button><button id="save" class="primary compact-btn" type="button" hidden>Save login</button></footer>
+    <footer class="auth-actions"><button id="cancel" class="secondary compact-btn" type="button">Cancel</button><button id="unlock" class="primary compact-btn" type="submit" form="unlockForm" hidden>Unlock</button><button id="save" class="primary compact-btn" type="button" hidden>Save login</button><button id="saveManualLogin" class="primary compact-btn" type="submit" form="manualLoginForm" hidden>Save login</button></footer>
   </main>
   <script type="module" src="auth.js"></script>
 </body>

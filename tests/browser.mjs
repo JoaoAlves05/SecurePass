@@ -70,9 +70,8 @@ try {
   assert.equal((await send(popup, 'LIST_CREDENTIALS')).entries[0].password, original.password);
   const site = await context.newPage(); await site.goto(`${origin}/${'long-login-path-'.repeat(20)}?return=${'x'.repeat(300)}`); await site.waitForSelector('#securepass-extension-root');
   await site.waitForTimeout(400);
-  await shadowClick(site, '.securepass-floating');
   const secureWindow = context.waitForEvent('page');
-  await shadowClick(site, '.securepass-panel .securepass-btn');
+  await shadowClick(site, '.securepass-floating');
   const auth = await secureWindow; await auth.waitForURL('**/auth/auth.html?**');
   await auth.waitForSelector('#accounts button'); await auth.locator('#accounts button').click();
   await site.waitForFunction(() => document.querySelector('input[type=password]').value.length > 0);
@@ -85,9 +84,8 @@ try {
   // Entering the master password happens in an extension window, outside website listeners.
   await site.locator('input[type=password]').fill('');
   await site.evaluate(() => { window.capturedKeys = []; document.addEventListener('keydown', e => window.capturedKeys.push(e.key), true); });
-  await shadowClick(site, '.securepass-floating');
   const lockedWindow = context.waitForEvent('page');
-  await shadowClick(site, '.securepass-panel .securepass-btn');
+  await shadowClick(site, '.securepass-floating');
   const lockedAuth = await lockedWindow; await lockedAuth.waitForURL('**/auth/auth.html?**');
   await lockedAuth.waitForSelector('#unlockForm');
   await lockedAuth.locator('#passphrase').pressSequentially(passphrase);
@@ -96,9 +94,8 @@ try {
   await site.waitForFunction(() => document.querySelector('input[type=password]').value.length > 0);
   assert.deepEqual(await site.evaluate(() => window.capturedKeys), []);
   // Navigation revokes a previously approved document identity, even on the same origin.
-  await shadowClick(site, '.securepass-floating');
   const staleWindow = context.waitForEvent('page');
-  await shadowClick(site, '.securepass-panel .securepass-btn');
+  await shadowClick(site, '.securepass-floating');
   const staleAuth = await staleWindow; await staleAuth.waitForURL('**/auth/auth.html?**'); await staleAuth.waitForSelector('#accounts button');
   const staleRequest = new URL(staleAuth.url()).searchParams.get('requestId');
   await site.goto(`${origin}/new-document`);

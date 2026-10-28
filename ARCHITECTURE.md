@@ -74,16 +74,18 @@ Master-password changes use the inline `masterPassword.js` flow: fresh password 
 
 ## Message flows
 
-1. A content script asks for autofill with its browser-supplied origin/document identity.
-2. The background opens an extension-owned window and binds the request to that window's tab.
+1. A login-field key directly requests autofill with its browser-supplied origin/document identity and a random per-field target. Repeated clicks refocus that same pending selector.
+2. The background reserves an `about:blank` window, records its tab identity, then loads the extension-owned auth page bound to that tab.
 3. The window unlocks through the master password or verified PRF. Its unlock response contains no full vault.
-4. The user chooses a credential filtered by exact origin in the background.
-5. The background consumes the request, checks revocation and sends that single credential to the original document ID.
-6. The content script checks its pending request and field, applies native input/change events, and never submits the form.
+4. The user explicitly chooses a credential filtered by exact origin, even when only one matches. Account metadata stays in the native selector for this flow.
+5. The background consumes the request, checks revocation and sends that single credential to the original document ID, requiring source acknowledgement.
+6. The content script checks its pending target, visibility and login context, applies native input/change events, restores field focus and shows pointer-transparent status feedback. It never submits the form.
 
 Management messages are restricted to the exact bundled popup page. The confirmation window has a smaller capability set. Content scripts cannot call general vault mutations, list all entries, unlock the vault or complete biometric ceremonies. Local/session/Sync storage is restricted before the background accepts requests. Public resource exposure includes only content modules and the form analyzer.
 
 [Account suggestions and inline login tools](docs/ACCOUNT_PROMPTS.md) use the popup visual tokens in extension-owned confirmation and a closed-shadow tools menu. Submission captures values before page listeners clear/navigate, without claiming login success. Metadata-only suggestions remain available after review cancellation and are removed on save/dismiss/expiry/lock. Inline review/dismiss checks the originating tab/document. Explicit same-origin save targets preserve notes/identity, bind the reviewed destination revision and serialize consumption with commit. Public status/account/Sync reads serialize against mutations; fill remains one-shot, document-bound and never submits. No permissions changed; auth may read only existing public presentation settings.
+
+The [contextual-key refinement](docs/CONTEXTUAL_KEY.md) keeps generation/copy/save-entered in the source content module, reached through consumed, source-acknowledged native requests; public generation/current-field copy can run while locked. Manual Add login stays in `auth/`, is create-only, source-origin/document/revision-bound, and uses the encrypted checkpoint/outbox commit path without filling. Its draft password never enters the pending fill record. Registration/change tools offer bounded generation overrides and recheck context after generation to protect current-password fields. Automatic suggestions preserve manually opened tools and pending selections. Keyboard shortcuts remain deferred; the existing capability set is unchanged.
 
 ## Biometric model
 
