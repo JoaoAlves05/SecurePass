@@ -34,7 +34,9 @@ async function shadow(page, selector, mode = 'click') {
       if(mode==='box'){const r=this.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};}
       if(mode==='disabled')return this.disabled;
       if(mode==='opacity')return getComputedStyle(this).opacity;
+      if(mode==='pointerEvents')return getComputedStyle(this).pointerEvents;
       if(mode==='focus'){this.focus();return true;}
+      if(mode.startsWith('value:')){this.value=mode.slice(6);this.dispatchEvent(new Event('input',{bubbles:true}));this.dispatchEvent(new Event('change',{bubbles:true}));return this.value;}
       this.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,composed:true,pointerType:'mouse'}));
       if(!this.isConnected)throw new Error('Control disappeared during pointer interaction');this.click();return true;
     }`, arguments: [{ value: mode }], returnByValue: true });
@@ -44,7 +46,12 @@ async function shadow(page, selector, mode = 'click') {
 async function waitShadow(page, selector, exists = true) { for (let attempt = 0; attempt < 60; attempt++) { if (await shadow(page, selector, 'exists') === exists) return; await new Promise(resolve => setTimeout(resolve, 50)); } assert.fail(`Shadow selector ${selector} expected ${exists}`); }
 async function waitShadowText(page, selector, pattern) { for (let attempt = 0; attempt < 60; attempt++) { if (pattern.test(await shadow(page, selector, 'text'))) return; await new Promise(resolve => setTimeout(resolve, 50)); } assert.fail(`Shadow text ${selector} expected ${pattern}`); }
 async function openTools(page) { await waitShadow(page, '.securepass-floating:not([hidden])'); await shadow(page, '.securepass-floating:not([hidden])'); await waitShadow(page, '.securepass-panel'); }
-async function openFill(site) { const created = nextPage(); await shadow(site, '[data-action="fill"]'); const page = await created; page.on('pageerror', error => errors.push(error.message)); await page.waitForURL('**/auth/auth.html?**'); await page.locator('#origin').filter({ hasText: origin }).waitFor(); return page; }
+async function openFill(site) { const created = nextPage(); await waitShadow(site, '.securepass-floating:not([hidden])'); await shadow(site, '.securepass-floating:not([hidden])'); const page = await created; page.on('pageerror', error => errors.push(error.message)); await page.waitForURL('**/auth/auth.html?**'); await page.locator('#origin').filter({ hasText: origin }).waitFor(); return page; }
+async function openSaveEntered(site) {
+  const selector = await openFill(site); await selector.locator('#otherOptions').waitFor(); await selector.locator('#otherOptions summary').click();
+  const created = nextPage(); await selector.locator('#saveOnSite').click(); const page = await created;
+  page.on('pageerror', error => errors.push(error.message)); await page.waitForURL('**/auth/auth.html?**'); return page;
+}
 async function theme(popup, value) { const current = await send(popup, 'LOAD_SETTINGS'); await send(popup, 'SAVE_SETTINGS', { patch: { theme: value }, expectedRevision: current.revision }); }
 async function primaryContrast(page) {
   const ratio = await page.locator('.auth-actions .primary:visible').first().evaluate(node => {
@@ -73,23 +80,30 @@ try {
   await send(popup, 'STORE_CREDENTIAL', { entry: { site: 'https://other.example', username: 'not-for-this-origin', password: 'Other fictional login' } });
   await theme(popup, 'light');
   const site = await context.newPage(); site.on('pageerror', error => errors.push(error.message)); await site.setViewportSize({ width: 400, height: 700 }); await site.goto(`${origin}/login`);
-  await openTools(site); assert.equal(await shadow(site, '[data-action="copy"]', 'disabled'), true); assert.equal(await shadow(site, '[data-action="save"]', 'disabled'), true);
-  const light = await shadow(site, '.securepass-panel', 'box'); assert.ok(light.x >= 0 && light.right <= 400 && light.y >= 0 && light.bottom <= 700);
-  assert.equal(await shadow(site, '.securepass-floating svg', 'exists'), true); await capture(site, 'inline-light');
-  await shadow(site, '[data-action="fill"]', 'focus'); await site.keyboard.press('Escape'); await waitShadow(site, '.securepass-panel', false);
-  await openTools(site); await site.locator('h1').click(); await waitShadow(site, '.securepass-panel', false);
-  await openTools(site); let auth = await openFill(site); await auth.locator('#accounts button').waitFor();
+  let auth = await openFill(site); await auth.locator('#accounts button').waitFor();
+  assert.equal(await shadow(site, '.securepass-panel', 'exists'), false, 'The key opens the trusted selector directly.');
+  assert.equal(await shadow(site, '.securepass-floating svg', 'exists'), true);
   assert.equal(await auth.locator('#accounts button').count(), 1); assert.match(await auth.locator('#status').textContent(), /will not be submitted/);
+  await shadow(site, '.securepass-floating:not([hidden])');
+  assert.equal(context.pages().filter(page => page.url().includes('/auth/auth.html')).length, 1, 'A second key click refocuses the existing selection.');
+  await auth.locator('#otherOptions summary').click();
+  assert.equal(await auth.locator('#copyOnSite').isDisabled(), true); assert.equal(await auth.locator('#saveOnSite').isDisabled(), true);
+  await auth.setViewportSize({ width: 400, height: 640 }); await capture(auth, 'fill-options-light');
+  await auth.locator('#otherOptions summary').click(); await auth.setViewportSize({ width: 400, height: 560 }); await capture(auth, 'fill-light');
+  await site.setViewportSize({ width: 320, height: 520 });
   await auth.locator('#accounts button').click(); await site.waitForFunction(() => document.querySelector('#password').value.length > 0); assert.equal(await site.locator('#password').inputValue(), LOGIN); assert.equal(await site.evaluate(() => window.submitted), 0);
+  await waitShadowText(site, '.securepass-feedback', /Login filled/); assert.equal(await shadow(site, '.securepass-feedback', 'pointerEvents'), 'none');
+  assert.equal(await shadow(site, '.securepass-panel', 'exists'), false); await capture(site, 'filled-feedback-light');
   // An identical login is suppressed, including the on-page suggestion.
-  await site.locator('#submit').click(); await popup.waitForTimeout(350); assert.equal((await send(popup, 'LIST_SAVE_CANDIDATES')).candidates.length, 0); assert.equal(await shadow(site, '.securepass-panel', 'exists'), false);
+  await site.locator('#submit').click({ timeout: 1000 }); assert.equal(await site.evaluate(() => window.submitted), 1); await popup.waitForTimeout(350); assert.equal((await send(popup, 'LIST_SAVE_CANDIDATES')).candidates.length, 0); assert.equal(await shadow(site, '.securepass-panel', 'exists'), false); await site.setViewportSize({ width: 400, height: 700 });
   await send(popup, 'LOCK_VAULT'); await theme(popup, 'dark');
   await site.evaluate(() => { window.captured=[];document.addEventListener('keydown',event=>window.captured.push(event.key),true); });
-  await openTools(site); auth = await openFill(site); await auth.setViewportSize({ width: 320, height: 520 }); await auth.waitForFunction(() => document.body.dataset.theme === 'dark'); await auth.locator('#passphrase').waitFor();
+  auth = await openFill(site); await auth.setViewportSize({ width: 320, height: 520 }); await auth.waitForFunction(() => document.body.dataset.theme === 'dark'); await auth.locator('#passphrase').waitFor();
   assert.equal(await auth.locator('#error').isVisible(), false); await primaryContrast(auth); await capture(auth, 'unlock-dark');
   await auth.locator('#passphrase').fill('Wrong fictional password'); await auth.locator('#unlock').click(); await auth.locator('#error').waitFor({ state: 'visible' }); assert.equal(await auth.locator('#passphrase').inputValue(), '');
   await auth.locator('#passphrase').pressSequentially(PASS); await auth.locator('#unlock').click(); await auth.locator('#accounts button').waitFor(); assert.deepEqual(await site.evaluate(() => window.captured), []);
-  await auth.locator('#cancel').click(); await popup.waitForTimeout(100); assert.equal(await shadow(site, '[data-action="fill"]', 'disabled'), false); await shadow(site, '.securepass-icon-btn');
+  await site.setViewportSize({ width: 320, height: 520 }); await auth.locator('#cancel').click(); await waitShadowText(site, '.securepass-feedback', /Selection cancelled/);
+  assert.equal(await shadow(site, '.securepass-feedback', 'pointerEvents'), 'none'); await capture(site, 'cancel-feedback-dark'); await site.mouse.click(2, 2); await waitShadow(site, '.securepass-feedback', false); await site.setViewportSize({ width: 400, height: 700 });
   // A submission that clears fields still captures the original value for review.
   await site.goto(`${origin}/login?clear`); await site.locator('[name="username"]').fill('new-fictional-user'); await site.locator('#password').fill(' Exact fictional <> password '); await site.locator('#submit').click();
   await popup.locator('.save-candidate').waitFor(); assert.equal(await site.locator('#password').inputValue(), ''); assert.match(await popup.locator('.save-candidate').textContent(), /No changes saved yet/);
@@ -115,19 +129,51 @@ try {
   await site.goto(`${origin}/login?navigate`); await site.locator('[name="username"]').fill('navigation-fictional'); await site.locator('#password').fill('Navigation fictional password'); await site.locator('#submit').click(); await site.waitForURL('**/accepted');
   await popup.locator('.save-candidate').waitFor(); assert.match(await popup.locator('.save-candidate').textContent(), /navigation-fictional/); await popup.locator('.save-candidate [data-action="dismiss"]').click(); await popup.waitForFunction(() => !document.querySelector('.save-candidate'));
   // Registration generation fills confirmation; change forms preserve the old password.
-  await site.goto(`${origin}/register`); await openTools(site); assert.equal(await shadow(site, '[data-action="fill"]', 'exists'), false); await shadow(site, '[data-action="generate"]');
-  const generated = await site.locator('#password').inputValue(); assert.ok(generated.length >= 16 && generated.length <= 32); assert.equal(await site.locator('[name="confirm"]').inputValue(), generated); await shadow(site, '[data-action="copy"]'); await waitShadowText(site, '.securepass-status', /Password copied/);
+  await theme(popup, 'light'); await site.goto(`${origin}/register`); await openTools(site); await capture(site, 'inline-light'); assert.equal(await shadow(site, '[data-action="fill"]', 'exists'), false); await shadow(site, '[data-action="generate"]');
+  await site.waitForFunction(() => document.querySelector('#password').value.length >= 16);
+  const generated = await site.locator('#password').inputValue(); assert.ok(generated.length >= 16 && generated.length <= 32); assert.equal(await site.locator('[name="confirm"]').inputValue(), generated); await shadow(site, '.securepass-options:last-child summary'); await shadow(site, '[data-action="copy"]'); await waitShadowText(site, '.securepass-status', /Password copied/);
+  await shadow(site, '.securepass-options:first-of-type summary'); await shadow(site, '.securepass-option-row input', 'value:24'); await shadow(site, '.securepass-option-row select', 'value:no');
+  await capture(site, 'generator-options-light');
+  await shadow(site, '[data-action="generate"]'); await site.waitForFunction(() => document.querySelector('#password').value.length === 24);
+  assert.match(await site.locator('#password').inputValue(), /^[A-Za-z0-9]+$/); assert.equal(await site.locator('[name="confirm"]').inputValue(), await site.locator('#password').inputValue());
+  await site.locator('[name="username"]').fill('generator-fictional'); await site.evaluate(() => document.querySelector('form').requestSubmit()); await popup.locator('.save-candidate').waitFor();
+  assert.equal(await shadow(site, '.securepass-panel h3', 'text'), 'Create a password', 'Save suggestions do not replace manually opened tools.');
+  await popup.locator('.save-candidate [data-action="dismiss"]').click(); await popup.waitForFunction(() => !document.querySelector('.save-candidate'));
+  await site.mouse.click(2, 2); await waitShadow(site, '.securepass-panel', false);
+  await openTools(site); await shadow(site, '[data-action="generate"]', 'focus'); await site.keyboard.press('Escape'); await waitShadow(site, '.securepass-panel', false);
   await site.goto(`${origin}/change`); await site.locator('[name="old"]').fill('Original fictional current'); await waitShadow(site, '.securepass-floating');
   await shadow(site, '.securepass-floating'); assert.equal(await shadow(site, '[data-action="generate"]', 'exists'), false); assert.equal(await shadow(site, '[data-action="save"]', 'exists'), false); await shadow(site, '.securepass-icon-btn');
   await shadow(site, '.securepass-floating:nth-of-type(2)'); await shadow(site, '[data-action="generate"]');
   await site.waitForFunction(() => document.querySelector('#password').value.length >= 16);
   assert.equal(await site.locator('[name="old"]').inputValue(), 'Original fictional current');
   assert.equal(await site.locator('[name="confirm"]').inputValue(), await site.locator('#password').inputValue());
-  // A narrow dark login menu follows the field on scrolling and stays in the viewport.
-  await site.goto(`${origin}/login`); await site.setViewportSize({ width: 320, height: 520 }); await openTools(site); await capture(site, 'inline-dark');
+  await capture(site, 'change-light');
+  // A narrow dark generator follows the field on scrolling and stays in the viewport.
+  await theme(popup, 'dark'); await site.goto(`${origin}/register`); await site.setViewportSize({ width: 320, height: 520 }); await openTools(site); await capture(site, 'inline-dark');
   const box = await shadow(site, '.securepass-panel', 'box'); assert.ok(box.x >= 0 && box.right <= 320 && box.y >= 0 && box.bottom <= 520);
   await site.evaluate(() => window.scrollBy(0, 40)); const moved = await shadow(site, '.securepass-panel', 'box'); assert.ok(moved.bottom <= 520);
   await site.evaluate(() => document.querySelector('form').remove()); await waitShadow(site, '.securepass-panel', false);
+  // Secondary native actions return to the original field; generation never submits or saves.
+  await site.goto(`${origin}/login`); await site.locator('#password').fill('Fictional copied field value'); auth = await openFill(site);
+  await auth.locator('#otherOptions summary').click(); await auth.locator('#copyOnSite').click(); await waitShadowText(site, '.securepass-status', /Password copied/);
+  auth = await openFill(site); await auth.locator('#otherOptions summary').click(); await auth.locator('#generateOnSite').click();
+  await site.waitForFunction(() => document.querySelector('#password').value.length >= 16 && document.querySelector('#password').value !== 'Fictional copied field value');
+  assert.equal(await site.evaluate(() => window.submitted), 0);
+  // Changing/removing the target while the native selector is open cannot fill another field.
+  auth = await openFill(site); await auth.locator('#accounts button').first().waitFor(); await site.evaluate(() => document.querySelector('#password').remove());
+  await auth.locator('#accounts button').first().click(); await auth.waitForFunction(() => document.querySelector('#heading').textContent === 'Request expired'); await auth.locator('#cancel').click();
+  // The empty selector offers explicit manual creation in the extension, without filling the website.
+  for (const entry of (await send(popup, 'LIST_CREDENTIALS')).entries.filter(entry => entry.site === origin)) await send(popup, 'DELETE_CREDENTIAL', { id: entry.id });
+  await theme(popup, 'light'); await site.goto(`${origin}/login`); auth = await openFill(site); await auth.locator('#emptyLogins').waitFor(); await auth.setViewportSize({ width: 320, height: 560 }); await capture(auth, 'empty-light');
+  await auth.locator('#addLogin').click(); await auth.locator('#manualUsername').fill('manual-fictional'); await auth.locator('#manualPassword').fill('Cancelled fictional draft');
+  await auth.locator('#backToAccounts').click(); await auth.locator('#emptyLogins').waitFor(); assert.equal(await auth.locator('#manualPassword').inputValue(), '');
+  await auth.locator('#addLogin').click(); await auth.locator('#manualUsername').fill('manual-fictional'); await auth.locator('#manualPassword').fill(LOGIN);
+  await theme(popup, 'dark'); await auth.waitForFunction(() => document.body.dataset.theme === 'dark'); await primaryContrast(auth); await capture(auth, 'add-login-dark');
+  await auth.locator('#saveManualLogin').click(); await popup.waitForFunction(async () => (await chrome.runtime.sendMessage({ type: 'LIST_CREDENTIALS' })).entries.some(entry => entry.username === 'manual-fictional'));
+  assert.equal(await site.locator('#password').inputValue(), ''); assert.equal(await site.evaluate(() => window.submitted), 0);
+  await waitShadowText(site, '.securepass-feedback', /Login saved/);
+  auth = await openFill(site); await auth.locator('#accounts button').waitFor(); await auth.setViewportSize({ width: 320, height: 560 }); await capture(auth, 'fill-dark');
+  await auth.locator('#accounts button').click(); await site.waitForFunction(() => document.querySelector('#password').value.length > 0); assert.equal(await site.locator('#password').inputValue(), LOGIN);
   // Native WebAuthn cancellation in the dedicated confirmation keeps the vault locked.
   const webauthn = await context.newCDPSession(popup);
   await webauthn.send('WebAuthn.enable', { enableUI: false });
@@ -136,7 +182,7 @@ try {
   const enrollment = await popup.evaluate(async pass => { try { const { enrollBiometric } = await import('../src/biometric/client.js'); await enrollBiometric(pass); return { ok: true }; } catch (error) { return { ok: false, error: error.message }; } }, PASS);
   assert.equal(enrollment.ok, true, enrollment.error);
   await webauthn.send('WebAuthn.setAutomaticPresenceSimulation', { authenticatorId, enabled: false });
-  await send(popup, 'LOCK_VAULT'); await site.goto(`${origin}/login`); await openTools(site); auth = await openFill(site);
+  await send(popup, 'LOCK_VAULT'); await site.goto(`${origin}/login`); auth = await openFill(site);
   await auth.setViewportSize({ width: 320, height: 520 }); await auth.locator('#biometric').waitFor();
   const passwordBox = await auth.locator('#passphrase').boundingBox(); const biometricBox = await auth.locator('#biometric').boundingBox();
   assert.equal(passwordBox.height, biometricBox.height); await capture(auth, 'unlock-biometric-dark');
@@ -145,20 +191,20 @@ try {
   await webauthn.detach();
   // Fresh-vault setup still requires a separate final save; expiry never saves.
   await send(popup, 'WIPE_DEVICE', { force: true, confirmation: 'ERASE THIS DEVICE' });
-  await site.goto(`${origin}/login`); await site.locator('[name="username"]').fill('fresh-fictional-user'); await site.locator('#password').fill('Fresh fictional password'); await openTools(site);
-  created = nextPage(); await shadow(site, '[data-action="save"]'); auth = await created; await auth.locator('#unlockForm').waitFor();
+  await site.goto(`${origin}/login`); await site.locator('[name="username"]').fill('fresh-fictional-user'); await site.locator('#password').fill('Fresh fictional password');
+  auth = await openSaveEntered(site); await auth.locator('#unlockForm').waitFor();
   assert.equal(await auth.locator('#heading').textContent(), 'Create your vault');
   await auth.locator('#passphrase').fill(PASS); await auth.locator('#confirm').fill('A different fictional password'); await auth.locator('#unlock').click(); await auth.locator('#error').waitFor({ state: 'visible' });
   assert.equal((await send(popup, 'VAULT_STATUS')).status.initialized, false);
   await auth.locator('#passphrase').fill(PASS); await auth.locator('#confirm').fill(PASS); await auth.locator('#unlock').click(); await auth.locator('#saveReview').waitFor();
   assert.equal((await send(popup, 'LIST_CREDENTIALS')).entries.length, 0); await auth.locator('#cancel').click();
-  created = nextPage(); await shadow(site, '[data-action="save"]'); auth = await created; await auth.locator('#saveReview').waitFor();
+  auth = await openSaveEntered(site); await auth.locator('#saveReview').waitFor();
   await worker.evaluate(async requestId => { const key = `autofill:${requestId}`; const data = await chrome.storage.session.get(key); data[key].expires = Date.now() - 1; await chrome.storage.session.set(data); }, new URL(auth.url()).searchParams.get('requestId'));
   await auth.locator('#save').click(); await auth.waitForFunction(() => document.querySelector('#heading').textContent === 'Request expired'); assert.equal(await auth.locator('#save').isVisible(), false);
   assert.equal((await send(popup, 'LIST_CREDENTIALS')).entries.length, 0); await auth.locator('#cancel').click();
-  created = nextPage(); await shadow(site, '[data-action="save"]'); auth = await created; await auth.locator('#saveReview').waitFor(); await auth.locator('#save').click();
+  auth = await openSaveEntered(site); await auth.locator('#saveReview').waitFor(); await auth.locator('#save').click();
   await popup.waitForFunction(async () => (await chrome.runtime.sendMessage({ type: 'LIST_CREDENTIALS' })).entries.length === 1);
-  created = nextPage(); await shadow(site, '[data-action="save"]'); auth = await created; await auth.waitForFunction(() => document.querySelector('#heading').textContent === 'Login already saved'); assert.equal(await auth.locator('#save').isVisible(), false); await auth.locator('#cancel').click();
+  auth = await openSaveEntered(site); await auth.waitForFunction(() => document.querySelector('#heading').textContent === 'Login already saved'); assert.equal(await auth.locator('#save').isVisible(), false); await auth.locator('#cancel').click();
   assert.deepEqual(errors, []);
   console.log('Account prompts passed: exact-origin/no-submit fill, locked retry and isolated master input, live clean suggestions, field clearing/navigation, cancel/dismiss, explicit save/update preserving notes, stale-review rejection, registration generation/confirmation/copy, current-password protection, narrow light/dark layout, Escape/outside/scroll/removal.');
-} catch (error) { console.error('Account prompt scenario failed:', error.message); throw error; } finally { if (context) await context.close(); await new Promise(resolve => server.close(resolve)); await rm(profile, { recursive: true, force: true }); }
+} catch (error) { console.error('Account prompt scenario failed:', error.message); if (context) { for (const page of context.pages()) { if (page.url().includes('/popup/popup.html')) console.error('Popup status:', await page.locator('#toast, #managementActivity, .save-candidate').allTextContents()); } console.error('Auth request metadata:', await context.serviceWorkers()[0].evaluate(async () => Object.entries(await chrome.storage.session.get(null)).filter(([key]) => key.startsWith('autofill:')).map(([id, value]) => ({ id, kind: value.kind, tab: value.authTabId, expires: value.expires })))); } throw error; } finally { if (context) await context.close(); await new Promise(resolve => server.close(resolve)); await rm(profile, { recursive: true, force: true }); }

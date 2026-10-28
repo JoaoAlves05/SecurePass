@@ -185,3 +185,69 @@ test('local erasure can finish while management views concurrently request vault
   const [_, current, remote] = await Promise.all([erasing, vaultHandlers.get('VAULT_STATUS')({}), utilHandlers.get('SYNC_STATUS')({})]);
   assert.equal(current.status.initialized, false); assert.equal(remote.status.initialized, false); assert.equal(remote.status.enabled, false);
 });
+
+test('direct key reserves the native window identity before loading auth and refocuses only its original target', async () => {
+  const targetId = crypto.randomUUID(); let bound = false;
+  chrome.tabs.update = async (tabId, options) => {
+    if (options.url) bound = Object.values(areas.session).some(value => value?.authTabId === tabId && value.targetId === targetId);
+  };
+  const request = await requests.createRequest({ targetId, hasPassword: true }, sender);
+  assert.equal(windows[0].options.url, 'about:blank'); assert.equal(bound, true);
+  assert.equal((await requests.requestDetails(request, auth(10))).hasPassword, true);
+  await requests.createRequest({ existingRequestId: request.requestId, targetId }, sender);
+  assert.equal(windows.length, 1);
+  for (const other of [{ ...sender, documentId: 'another-doc' }, { ...sender, tab: { id: 2 } }, { ...sender, url: 'https://other.example', origin: 'https://other.example' }]) {
+    await assert.rejects(requests.createRequest({ existingRequestId: request.requestId, targetId }, other), /expired/);
+  }
+  await assert.rejects(requests.createRequest({ existingRequestId: request.requestId, targetId: crypto.randomUUID() }, sender), /expired/);
+});
+test('secondary tools are one-shot, window/document-bound and do not require an unlocked vault', async () => {
+  const targetId = crypto.randomUUID();
+  const request = await requests.createRequest({ targetId, hasPassword: true }, sender); const owner = auth(10);
+  await assert.rejects(requests.completeRequest({ ...request, action: 'generate' }, auth(99)), /does not belong/);
+  await assert.rejects(requests.completeRequest({ ...request, action: 'unknown' }, owner), /Unknown password tool/);
+  const results = await Promise.allSettled([requests.completeRequest({ ...request, action: 'generate' }, owner), requests.completeRequest({ ...request, action: 'generate' }, owner)]);
+  assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
+  const delivered = sent.filter(item => item.message.type === 'AUTOFILL_TOOL'); assert.equal(delivered.length, 1);
+  assert.equal(delivered[0].message.targetId, targetId); assert.equal(delivered[0].options.documentId, sender.documentId);
+  assert.equal((await vault.vaultStatus()).initialized, false);
+});
+test('empty, stale and unacknowledged source fields cannot silently complete password tools or fill', async () => {
+  const request = await requests.createRequest({}, sender); const owner = auth(10);
+  for (const action of ['copy', 'save-entered']) await assert.rejects(requests.completeRequest({ ...request, action }, owner), /Enter a password/);
+  const originalSend = chrome.tabs.sendMessage;
+  chrome.tabs.sendMessage = async () => ({ ok: false, origin });
+  await assert.rejects(requests.completeRequest({ ...request, action: 'generate' }, owner), /no longer active/);
+  chrome.tabs.sendMessage = async (tab, message, options) => message.type === 'AUTOFILL_CHECK_DOCUMENT' ? { ok: true, origin } : { ok: false };
+  await assert.rejects(requests.completeRequest({ ...request, action: 'generate' }, owner), /original field/);
+  await assert.rejects(requests.completeRequest({ ...request, action: 'generate' }, owner), /expired/);
+  chrome.tabs.sendMessage = originalSend;
+  await vault.initializeVault(PASS); const account = await vault.storeCredential(entry());
+  const fill = await requests.createRequest({}, sender); const fillOwner = auth(11);
+  chrome.tabs.sendMessage = async (_tab, message) => message.type === 'AUTOFILL_CHECK_DOCUMENT' ? { ok: true, origin } : undefined;
+  await assert.rejects(requests.completeRequest({ ...fill, credentialId: account.id }, fillOwner), /original field/);
+});
+test('adding a login from the empty selector is explicit, revision-checked and restricted to its website', async () => {
+  await vault.initializeVault(PASS);
+  const request = await requests.createRequest({}, sender); const owner = auth(10);
+  const revision = (await requests.requestDetails(request, owner)).revision;
+  const message = { ...request, action: 'add', saveAction: 'create', expectedRevision: revision, username: ' Manual <> user ', password: ' Manual <> secret ', site: 'https://forged.example', notes: 'ignored' };
+  await assert.rejects(requests.completeRequest({ ...message, saveAction: 'update' }, owner), /new login/);
+  await assert.rejects(requests.completeRequest({ ...message, expectedRevision: 'stale' }, owner), /vault changed/);
+  assert.equal((await vault.listCredentials()).length, 0);
+  await requests.completeRequest(message, owner);
+  const [saved] = await vault.listCredentials(); assert.equal(saved.site, origin); assert.equal(saved.username, message.username); assert.equal(saved.password, message.password); assert.equal(saved.notes, '');
+  assert.equal(sent.filter(item => item.message.type === 'AUTOFILL_RESULT').length, 0);
+  assert.equal(sent.at(-1).message.reason, 'saved');
+  await assert.rejects(requests.completeRequest(message, owner), /expired/);
+});
+test('failed manual save does not persist its draft password or replace the active vault', async () => {
+  await vault.initializeVault(PASS); const request = await requests.createRequest({}, sender); const owner = auth(10);
+  const revision = (await requests.requestDetails(request, owner)).revision;
+  const message = { ...request, action: 'add', saveAction: 'create', expectedRevision: revision, username: 'manual', password: 'Fictional manual draft secret' };
+  const original = IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put = function (...args) { const result = original.apply(this, args); if (args[1] === 'securepassVault') result.addEventListener('success', () => this.transaction.abort()); return result; };
+  try { await assert.rejects(requests.completeRequest(message, owner), /aborted/); } finally { IDBObjectStore.prototype.put = original; }
+  assert.equal(JSON.stringify(areas.session).includes(message.password), false); assert.equal((await vault.listCredentials()).length, 0);
+  await requests.completeRequest(message, owner); assert.equal((await vault.listCredentials()).length, 1);
+});
