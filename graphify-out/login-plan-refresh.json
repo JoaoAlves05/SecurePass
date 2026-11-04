@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-04",
+  "scope": [
+    "docs/SYNC_DATA_PLAN.md"
+  ],
+  "sha256": "9b455527ddea8e8645d0c18e1a5d9a2a4a508fe300fc33851a305241713940a9",
+  "method": "Host semantic incremental extraction of section 23; preserved unchanged sections and updated version/status nodes",
+  "runtime_changed": false,
+  "new_nodes": 8,
+  "token_usage": "Host semantic extraction token usage unavailable"
+}

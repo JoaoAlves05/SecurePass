@@ -90,3 +90,9 @@ The [contextual-key refinement](docs/CONTEXTUAL_KEY.md) keeps generation/copy/sa
 ## Biometric model
 
 Registration requires the master password. A create ceremony is followed by a real assertion that must return PRF output. The background verifies the public key signature, challenge, credential ID, origin, RP ID hash, UP/UV flags and authenticator counter. Ceremonies expire, are bound to the exact bundled extension page and its per-document random client ID, and are consumed once; this supports Chrome popup messages that do not include `sender.documentId`. The PRF key wraps the data key with vault/credential/epoch authenticated context. Master rotation, adopting a different vault/key or explicit revocation invalidates the wrapper. Content recovery into an existing vault preserves its active key and biometric wrapper. No verify-only session seed or persistent Trusted Device bypass is supported.
+
+## In-progress plan completion — 2026-11-04
+
+The fill selector uses a compact extension-owned window, starts configured biometric authentication once while locked, and offers cancellation/password fallback. Account selection carries the displayed vault revision and fills without a second authentication while the session remains valid. Names stay hidden while locked. No embedded credential-list surface or new page capability was introduced.
+
+`src/sync/driveTransport.js` is an isolated read-only transport primitive, with token/binding injection, complete bounded pagination, bounded streaming download and typed errors. It is not registered in the worker or exposed in the UI; OAuth, publication, signed-device protocol, recovery kit and Drive migration remain unimplemented. See [transport status](docs/DRIVE_TRANSPORT.md) and [execution checklist](docs/IMPLEMENTATION_CHECKLIST.md).

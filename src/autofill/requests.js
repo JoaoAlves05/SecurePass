@@ -1,6 +1,6 @@
 import { getStorage, setStorage, removeStorage, readLocalVaultRecordRaw } from '../utils/storage.js';
 import { senderOrigin, matchesOrigin, extensionPage } from '../security/origins.js';
-import { listCredentials, requireVault, vaultGeneration, assertVaultGeneration, vaultStatus } from '../cryptoVault.js';
+import { requireVault, vaultGeneration, assertVaultGeneration, vaultStatus } from '../cryptoVault.js';
 import { validateEntry, validateString } from '../validation.js';
 import { withVaultOperation, withVaultLock } from '../vault/queue.js';
 import { assertCurrent, commitRecord } from '../vault/repository.js';
@@ -52,7 +52,7 @@ export async function createRequest(message, sender, kind = 'fill', { candidateI
   });
   let window;
   try {
-    window = await chrome.windows.create({ url: 'about:blank', type: 'popup', width: 420, height: 560, focused: true });
+    window = await chrome.windows.create({ url: 'about:blank', type: 'popup', width: 360, height: kind === 'fill' ? 400 : 560, focused: true });
     request.authTabId = window.tabs?.[0]?.id; request.authWindowId = window.id;
     if (!Number.isInteger(request.authTabId)) throw new Error('Unable to open secure confirmation.');
     assertVaultGeneration(epoch);
@@ -153,8 +153,9 @@ export async function completeRequest(message, sender) {
       if (!reply?.ok) throw new Error('The original field is no longer available. Open SecurePass again.');
       return { tool: message.action };
     }
-    await requireVault();
-    const entry = (await listCredentials()).find(entry => entry.id === message.credentialId && matchesOrigin(entry.site, current.origin));
+    const state = await requireVault();
+    if (!message.expectedRevision || message.expectedRevision !== state.record.revision) throw new Error('The vault changed. Review accounts again.');
+    const entry = state.entries.find(entry => entry.id === message.credentialId && matchesOrigin(entry.site, current.origin));
     if (!entry) throw new Error('Credential not available for this origin.');
     await trustedRequest(message.requestId, sender);
     assertVaultGeneration(epoch);

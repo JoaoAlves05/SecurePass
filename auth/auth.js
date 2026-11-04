@@ -3,6 +3,7 @@ import { icon } from '../content/modules/icons.js';
 import { applyTheme, watchSystemTheme } from '../popup/modules/theme.js';
 const requestId = new URLSearchParams(location.search).get('requestId');
 const $ = id => document.getElementById(id);
+let biometricAttempted = false; let passwordRequested = false;
 let invalidated = false; let initialized; let controller; let details; let busy = false; let disposed = false; let completed = false; let expiry; let theme = 'system';
 async function send(type, data = {}) {
   const response = await chrome.runtime.sendMessage({ type, ...data });
@@ -22,25 +23,22 @@ function showError(error) {
 }
 function expired() {
   invalidated = true; $('cancel').disabled = false;
-  controller?.abort(); clearSecrets(); $('accounts').replaceChildren(); $('saveReview').hidden = $('save').hidden = $('unlockForm').hidden = $('unlock').hidden = $('biometric').hidden = true;
+  controller?.abort(); $('usePassword').hidden = true; clearSecrets(); $('accounts').replaceChildren(); $('saveReview').hidden = $('save').hidden = $('unlockForm').hidden = $('unlock').hidden = $('biometric').hidden = true;
   $('status').textContent = 'This request has expired. Return to the website and open SecurePass again.'; $('heading').textContent = 'Request expired';
-  $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = $('otherOptions').hidden = true;
+  $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = true;
   $('manualUsername').value = '';
   $('refreshReview').hidden = true;
 }
 async function run(task) {
-  if (busy || disposed) return;
+  if (busy || disposed || invalidated) return;
   busy = true; document.body.setAttribute('aria-busy', 'true'); $('error').hidden = true; $('refreshReview').hidden = true;
-  const controls = [...document.querySelectorAll('button:not(#cancel), input, select')]; controls.forEach(control => { control.disabled = true; });
+  const controls = [...document.querySelectorAll('button:not(#cancel):not(#usePassword), input, select')]; controls.forEach(control => { control.disabled = true; });
   try { await task(); } catch (error) { showError(error); }
-  finally { clearSecrets(); busy = false; document.body.removeAttribute('aria-busy'); if (!disposed) controls.forEach(control => { control.disabled = false; }); if (details?.kind === 'save' && !$('save').hidden) saveTargetChanged(); updateToolAvailability(); }
-}
-function updateToolAvailability() {
-  $('copyOnSite').disabled = $('saveOnSite').disabled = !details?.hasPassword || busy;
+  finally { clearSecrets(); busy = false; document.body.removeAttribute('aria-busy'); if (!disposed) controls.forEach(control => { control.disabled = false; }); if (details?.kind === 'save' && !$('save').hidden) saveTargetChanged(); }
 }
 function addLogin() {
   if (invalidated || busy || !details?.revision || details.kind !== 'fill') return;
-  $('accounts').hidden = $('emptyLogins').hidden = $('otherOptions').hidden = true;
+  $('accounts').hidden = $('emptyLogins').hidden = true;
   $('manualLoginForm').hidden = $('saveManualLogin').hidden = false;
   $('heading').textContent = 'Add a login'; $('status').textContent = 'Check the website before saving. Your login password stays in SecurePass until you choose to fill it.';
   $('manualUsername').focus();
@@ -63,15 +61,19 @@ async function refresh() {
   $('passphrase').autocomplete = initialized ? 'current-password' : 'new-password';
   const bio = await send('BIOMETRIC_STATUS'); if (disposed || invalidated) return;
   $('biometric').hidden = state.unlocked || !bio.enabled;
+  $('usePassword').hidden = true;
   $('accounts').replaceChildren(); $('saveReview').hidden = $('save').hidden = true;
   $('accounts').hidden = false; $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = true;
-  $('manualUsername').value = ''; $('otherOptions').hidden = details.kind !== 'fill';
-  $('otherOptions').open = false; $('addAnotherLogin').hidden = details.kind !== 'fill' || !state.unlocked;
-  updateToolAvailability();
+  $('manualUsername').value = '';
+
   $('cancel').textContent = 'Cancel';
   if (!state.unlocked) {
     $('heading').textContent = initialized ? details.kind === 'save' ? 'Unlock to review login' : 'Unlock to fill login' : 'Create your vault';
     $('status').textContent = initialized ? 'Enter your master password in this SecurePass window to continue.' : details.kind === 'save' ? 'Choose a master password of at least 16 characters. Your login is saved only after a separate confirmation.' : 'Choose a master password of at least 16 characters to create a local vault. You can then add your logins in SecurePass.';
+    if (initialized && bio.enabled && details.kind === 'fill' && !biometricAttempted && !passwordRequested) {
+      biometricAttempted = true;
+      queueMicrotask(() => run(unlockBiometric));
+    }
     return;
   }
   if (details.kind === 'save') {
@@ -97,9 +99,8 @@ async function refresh() {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'auth-account';
       const text = document.createElement('span'); text.textContent = entry.username || 'No username';
       if (details.entries.filter(other => other.username === entry.username).length > 1) text.textContent += ` · ${entry.id.slice(0, 8)}`;
-      const fill = document.createElement('span'); fill.textContent = 'Fill'; fill.className = 'auth-fill-label';
-      button.setAttribute('aria-label', `Fill login for ${text.textContent}`); button.append(icon('user'), text, fill, icon('arrow'));
-      button.addEventListener('click', () => run(() => complete({ credentialId: entry.id })));
+      button.setAttribute('aria-label', `Fill login for ${text.textContent}`); button.append(icon('user'), text, icon('arrow'));
+      button.addEventListener('click', () => run(() => complete({ credentialId: entry.id, expectedRevision: next.revision })));
       $('accounts').append(button);
     }
   }
@@ -117,14 +118,13 @@ $('revealManualPassword').append(icon('eye'));
 $('revealManualPassword').addEventListener('click', () => {
   const reveal = $('manualPassword').type === 'password'; $('manualPassword').type = reveal ? 'text' : 'password'; $('revealManualPassword').setAttribute('aria-label', `${reveal ? 'Hide' : 'Show'} login password`); $('revealManualPassword').setAttribute('aria-pressed', String(reveal));
 });
-$('addLogin').addEventListener('click', addLogin); $('addAnotherLogin').addEventListener('click', addLogin);
+$('addLogin').addEventListener('click', addLogin);
 $('backToAccounts').addEventListener('click', () => run(refresh));
 $('manualLoginForm').addEventListener('submit', event => {
   event.preventDefault();
   const username = $('manualUsername').value; const password = $('manualPassword').value;
   run(() => complete({ action: 'add', saveAction: 'create', expectedRevision: details.revision, username, password }));
 });
-for (const [id, action] of [['generateOnSite', 'generate'], ['copyOnSite', 'copy'], ['saveOnSite', 'save-entered']]) $(id).addEventListener('click', () => run(() => complete({ action })));
 $('revealPassword').addEventListener('click', () => {
   const reveal = $('passphrase').type === 'password'; $('passphrase').type = reveal ? 'text' : 'password'; $('revealPassword').setAttribute('aria-label', `${reveal ? 'Hide' : 'Show'} master password`); $('revealPassword').setAttribute('aria-pressed', String(reveal));
 });
@@ -139,18 +139,50 @@ $('unlockForm').addEventListener('submit', event => {
     await refresh();
   });
 });
-$('biometric').addEventListener('click', () => run(async () => { controller = new AbortController(); await authenticateBiometric(controller.signal); await refresh(); }));
+async function unlockBiometric() {
+  biometricAttempted = true; passwordRequested = false;
+  controller = new AbortController();
+  const attempt = controller;
+  let authenticated = false;
+  $('usePassword').disabled = false;
+  $('unlockForm').hidden = $('unlock').hidden = true;
+  $('usePassword').hidden = false;
+  $('heading').textContent = 'Unlock SecurePass';
+  $('status').textContent = 'Confirm with your device to continue.';
+  try {
+    await authenticateBiometric(attempt.signal);
+    authenticated = true;
+    if (!disposed && !invalidated && !passwordRequested) await refresh();
+  } catch (error) {
+    if (!passwordRequested) throw error;
+  } finally {
+    if (controller === attempt) controller = null;
+    if (!disposed && !invalidated) {
+      $('usePassword').hidden = true;
+      if (passwordRequested || !authenticated) {
+        $('unlockForm').hidden = $('unlock').hidden = false;
+        $('status').textContent = 'Enter your master password to continue.';
+        $('passphrase').focus();
+      }
+    }
+  }
+}
+$('usePassword').addEventListener('click', () => {
+  passwordRequested = true; controller?.abort();
+  $('usePassword').disabled = true;
+});
+$('biometric').addEventListener('click', () => run(unlockBiometric));
 $('saveTarget').addEventListener('change', saveTargetChanged);
 $('save').addEventListener('click', () => run(async () => {
   if (!$('saveTarget').value) throw new Error('Choose the login to update, or save a new login.');
   await complete({ username: $('saveUsername').value, saveAction: $('saveTarget').value === 'new' ? 'create' : 'update', credentialId: $('saveTarget').value === 'new' ? undefined : $('saveTarget').value, expectedRevision: details.revision });
 }));
 $('refreshReview').addEventListener('click', () => run(refresh));
-$('cancel').addEventListener('click', async () => { disposed = true; controller?.abort(); clearSecrets(); await send('AUTH_REQUEST_CANCEL', { requestId }).catch(() => {}); window.close(); });
+$('cancel').addEventListener('click', async () => { disposed = true; controller?.abort(); $('usePassword').hidden = true; clearSecrets(); await send('AUTH_REQUEST_CANCEL', { requestId }).catch(() => {}); window.close(); });
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('cancel').disabled) { event.preventDefault(); $('cancel').click(); } });
-window.addEventListener('pagehide', () => { disposed = true; clearTimeout(expiry); controller?.abort(); clearSecrets(); if (!completed) chrome.runtime.sendMessage({ type: 'AUTH_REQUEST_CANCEL', requestId }).catch(() => {}); });
+window.addEventListener('pagehide', () => { disposed = true; clearTimeout(expiry); controller?.abort(); $('usePassword').hidden = true; clearSecrets(); if (!completed) chrome.runtime.sendMessage({ type: 'AUTH_REQUEST_CANCEL', requestId }).catch(() => {}); });
 chrome.runtime.onMessage.addListener(message => {
-  if (message.type === 'VAULT_LOCKED') { invalidated = true; controller?.abort(); clearSecrets(); $('accounts').replaceChildren(); $('saveUsername').value = $('manualUsername').value = ''; $('saveReview').hidden = $('save').hidden = $('unlock').hidden = $('unlockForm').hidden = $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = $('otherOptions').hidden = true; $('status').textContent = 'Vault locked. Start a new request from the website.'; }
+  if (message.type === 'VAULT_LOCKED') { invalidated = true; controller?.abort(); $('usePassword').hidden = true; clearSecrets(); $('accounts').replaceChildren(); $('saveUsername').value = $('manualUsername').value = ''; $('saveReview').hidden = $('save').hidden = $('unlock').hidden = $('unlockForm').hidden = $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = true; $('status').textContent = 'Vault locked. Start a new request from the website.'; }
   if (message.type === 'SETTINGS_CHANGED') updateTheme().catch(() => {});
 });
 async function updateTheme() { const response = await send('PUBLIC_SETTINGS'); theme = response.settings.theme; applyTheme(theme); }

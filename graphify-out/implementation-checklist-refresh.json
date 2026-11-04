@@ -1,0 +1,9 @@
+{
+  "scope": [
+    "docs/IMPLEMENTATION_CHECKLIST.md"
+  ],
+  "sha256": "0247ef18f92f058a86cfd9f8c01b3dd72e874ceba0e7b5a341bdcc9a6b38a56a",
+  "method": "host semantic incremental update",
+  "token_usage": "unavailable",
+  "browser_evidence": "General browser suite passed including virtual PRF; no physical hardware acceptance"
+}

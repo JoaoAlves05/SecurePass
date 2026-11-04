@@ -1,8 +1,12 @@
 # Plano completo — Settings, Sync, dispositivos e Data Management
 
-Data: 25/10/2026. Versão do plano: 2. Estado: **especificação recomendada para implementação; não implementada**. Baseline: SecurePass 0.2.0, commit `e97f4c6558be23e50016a9b473441ce4c431490a`. O utilizador concordou com a direção de cofre local cifrado, sincronização opcional e proteção ponta a ponta e pediu cobertura dos diferentes cenários. Este plano concretiza essa direção sem apresentar decisões técnicas por validar como garantias já existentes.
+Data original: 25/10/2026. Atualização: 04/11/2026. Versão do plano: 3. Estado: **plano completo ainda não implementado nem aceite; existem incrementos locais/legacy documentados separadamente**. Baseline da revisão: SecurePass 0.2.0, commit `e97f4c6558be23e50016a9b473441ce4c431490a`. O utilizador concordou com a direção de cofre local cifrado, sincronização opcional e proteção ponta a ponta e pediu cobertura dos diferentes cenários. Este plano concretiza essa direção sem apresentar decisões técnicas por validar como garantias já existentes.
+
+A execução é acompanhada em [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md), com entregáveis, cenários e dependências de aceitação.
 
 Origem: [23 problemas SD e sete melhorias UX](REVIEW_SETTINGS_SYNC_DATA.md). [VALIDATION.md](VALIDATION.md) continua a ser o registo de evidência executada. Nenhum SD é fechado por escrever este plano.
+
+A [secção 23](#23-retoma-e-fluxo-compacto-de-login--04112026) regista as decisões de login acordadas em 04/11/2026 e a ordem de retoma, incluindo implementação e aceitação pendentes. O contrato de [chave contextual](CONTEXTUAL_KEY.md) continua a descrever o comportamento implementado em 28/10; o novo fluxo abaixo é trabalho planeado.
 
 ## 1. Resultado e decisões recomendadas
 
@@ -424,3 +428,84 @@ As políticas de produto e a organização de módulos acima são recomendaçõe
 - [Chrome Storage](https://developer.chrome.com/docs/extensions/reference/api/storage): quotas e áreas de armazenamento; não usar o limite local de credenciais como promessa de capacidade Chrome Sync.
 
 Antes de codificar o formato novo, fechar numa revisão técnica: serialização canónica, cadeia administrativa/inscrição, limites multi-dispositivo de nonces, critérios de checkpoint/GC, orçamento real de arquivos legacy, OAuth no pacote estável e prova de retoma em cada fronteira. Se uma garantia depender de uma dessas peças, a release espera pela respetiva validação ou retira explicitamente a garantia/funcionalidade.
+
+## 23. Retoma e fluxo compacto de login — 04/11/2026
+
+### 23.1 Estado de partida e ordem de trabalho
+
+Última integração funcional consultada: `3c2be42`, de 28/10/2026, na versão 0.2.0. Inclui chave contextual, sugestões de guardar/atualizar, ferramentas de geração, comparação/recuperação de checkpoints e configuração guiada de Chrome Sync. Estes incrementos não significam implementação integral das fases P0–P6 nem fecho dos SD01–SD23. As evidências e os seus limites permanecem em [VALIDATION.md](VALIDATION.md), [SETTINGS_UX_IMPLEMENTATION.md](SETTINGS_UX_IMPLEMENTATION.md) e [REVIEW_BACKUP_ADVANCED.md](REVIEW_BACKUP_ADVANCED.md).
+
+Ordem de retoma:
+
+1. **Consolidar a baseline atual:** mapear cada SD/UX e cenário SC à implementação e regressão correspondente; distinguir mitigado, por implementar e por aceitar. Reproduzir as lacunas relevantes e registar evidência atual, sem transportar automaticamente os 38 testes da baseline original para uma alegação de validação atual.
+2. **Implementar e validar o login compacto desta secção:** tarefa focada, com issue e branch próprias, sem depender de Drive. Preservar as fronteiras de autenticação, origem, sessão e preenchimento. A revisão de isolamento determina a superfície final antes de expor dados numa interface embutida.
+3. **Fechar as lacunas comuns de integridade e recuperação:** concluir os itens locais/legacy e a aceitação de P1/P2/P5 que continuam em aberto antes de reutilizar esses mecanismos no novo transporte.
+4. **Implementar o protocolo e transporte novos:** P3/P4/P5, após revisão técnica, configuração OAuth e regressões comuns; executar migração e aceitação P6. Manter Drive indisponível até haver implementação e evidência adequadas.
+
+Pendências a manter explícitas no backlog, além do login:
+
+| Área | Trabalho ainda necessário para o plano completo |
+|---|---|
+| Settings, Sync e dados atuais | Consolidar aceitação por SD/UX; capacidade/quota e recuperação de histórico cheio; recolha segura de uploads abandonados; retoma completa de transições entre armazenamentos e falhas em cada fronteira. Reavaliar as mitigações posteriores à revisão original antes de declarar um defeito ainda reproduzível. |
+| Drive e identidade | OAuth, descoberta/seleção e troca de conta/cofre, vínculo da outbox à conta, adaptador de produção, erros/quota/retry e operações remotas retomáveis. |
+| Chaves e dispositivos | Formato/protocolo revistos, autorização assinada, inscrição e revogação, épocas e conflitos de chaves, kit de recuperação e limites de frescura no bootstrap. |
+| Convergência e retenção | Fast-forward remoto automático, merge de três vias, tombstones, rebase de dispositivos antigos, checkpoints autenticados, compactação e testes de convergência por permutação de eventos. |
+| Backups e migração | Leitura incremental limitada de arquivos legacy grandes, limites de tamanho/memória, exportação em lote, migração retomável, escritas tardias de clientes antigos e tratamento de downgrade. |
+| Eliminação e concorrência | Eliminação remota explícita e retomável, corridas de wipe/respostas antigas, operações em múltiplos contextos e testes alargados das capacidades dos futuros handlers. |
+| Aceitação e distribuição | Autenticadores físicos/PRF, Chrome Sync autenticado e futuro Drive real em contas descartáveis, popup na toolbar, sites reais/login/SSO, teclado/leitor de ecrã/SO, clipboard sleep/wake, suspensão/restart, atualização/migração, revisão de segurança independente e pacote final. |
+
+Os testes emulados e o autenticador virtual não substituem estas verificações. A última evidência contextual registada é de 138 testes Node, 93 módulos e cenários Chromium; a suite completa precedeu o último ajuste de feedback e não foi repetida por esta atualização documental.
+
+### 23.2 Experiência acordada
+
+Objetivo: aproximar a rapidez e a simplicidade do seletor do gestor de passwords do Google, preservando a identidade do SecurePass e as suas garantias verificáveis. A janela atual de 420 × 560 não é um requisito de segurança nem deve definir o desenho futuro.
+
+**Fluxo principal:** chave junto ao campo → desbloquear apenas se necessário → lista compacta de contas do site → clicar numa conta e preencher imediatamente.
+
+- **Cofre desbloqueado:** abrir diretamente a lista. Selecionar a conta é a confirmação de preenchimento; não acrescentar botão “Fill”, diálogo ou nova autenticação.
+- **Cofre bloqueado com biometria configurada:** a ação explícita na chave inicia uma única tentativa de autenticação WebAuthn/PRF no contexto protegido da extensão, sem exigir clique prévio num botão de impressão digital. Mostrar apenas contexto mínimo de desbloqueio e “Usar password mestra”, discreto mas legível, focável e acessível.
+- **Falha ou indisponibilidade da biometria/PRF:** oferecer o formulário de password mestra com erro compreensível, sem repetição automática da cerimónia. A API pode devolver cancelamento, timeout e outros erros de forma indistinguível; não assumir que identifica uma impressão digital incorreta. Cancelamento explícito do fluxo fecha o pedido sem preencher; cancelamento/erro ambíguo da cerimónia deixa a password disponível, sem insistir nem preencher.
+- **Escolher password durante uma cerimónia:** abortar a tentativa biométrica e ignorar respostas tardias antes de aceitar a password; não manter autenticações concorrentes.
+- **Sem biometria configurada:** apresentar diretamente a password mestra. Cofre inexistente tem percurso próprio de criação explícita, sem criação implícita numa tentativa de desbloqueio.
+- **Depois de desbloquear:** apresentar as contas e aguardar escolha explícita, mesmo quando só existe uma. Clicar preenche username/password da conta escolhida e fecha o seletor, sem submeter o formulário.
+- **Sessão expirada ou bloqueada entretanto:** invalidar a seleção e exigir novo desbloqueio. Uma sessão ainda válida não pede autenticação adicional por conta. Este fluxo não altera a exigência de autenticação recente para ações administrativas/restauro completo.
+
+O painel do autenticador é controlado pelo navegador/SO. Não prometer aspeto idêntico ao Google, impressão digital exclusiva nem supressão de gestos que o browser exija. Se a invocação automática for recusada por falta de ativação, oferecer uma ação compacta para tentar de novo ou usar password; validar em hardware real antes de afirmar o fluxo suportado.
+
+### 23.3 Conteúdo e apresentação
+
+- Lista curta, junto ao campo quando tecnicamente seguro e viável, com origem do site e uma linha por conta. Altura adapta-se ao conteúdo, com scroll para muitas contas; evitar cartões grandes, texto explicativo repetido e ações concorrentes.
+- Remover **Password options** e **Other options** do percurso de login/seleção de contas. Sem copiar passwords ou guardar o valor do campo como ações secundárias nesse seletor.
+- No estado sem contas, oferecer **Adicionar login** e fecho/voltar. Preservar criação explícita, origem imutável e revisão de destino; guardar não preenche automaticamente.
+- Geração e opções de comprimento/símbolos pertencem aos campos de registo/nova password e ao gerador principal. Preservar preenchimento da confirmação e proteção do campo da password atual. A gestão de contas continua acessível pelo popup principal.
+- Manter tema claro/escuro/sistema, navegação por teclado, foco visível, nomes acessíveis, Escape, scroll/resize/zoom e feedback breve sem interceptar cliques no site. A opção de password não pode depender de letras demasiado pequenas ou baixo contraste.
+
+### 23.4 Fronteiras de segurança e decisão técnica pendente
+
+1. **Nomes protegidos enquanto bloqueado:** não expor usernames, sites guardados, contagens de contas ou um índice persistente em claro para antecipar sugestões. Não conservar uma cache de contas utilizável após lock. A origem da página atual pode identificar o pedido, sem revelar se há contas guardadas.
+2. **Autenticação protegida:** master password, WebAuthn/PRF e chaves permanecem no contexto da extensão autorizado para autenticar; nunca recolher a master password numa superfície da página. Não tornar a página de gestão ou o fluxo atual de autenticação embutível só para aproximar o aspeto visual.
+3. **Lista compacta não equivale a isolamento nativo:** content scripts partilham o DOM com o site; Shadow DOM fechado não é uma fronteira de segurança. Antes de escolher DOM injetado, frame de origem da extensão ou janela compacta, avaliar exposição de metadados, sobreposição/clickjacking, foco/teclado, CSP e recursos acessíveis. Uma superfície embutida exige capacidade mínima, sem acesso geral ao cofre, e testes com página hostil. Se não houver proteção demonstrada, usar janela compacta da extensão; a preferência visual não autoriza enfraquecer a fronteira atual.
+4. **Entrega mínima e vinculada:** apenas a conta escolhida e a origem exata, ligados ao tab/documento/campo e pedido expiráveis. Revalidar sessão, revisão e campo antes da entrega, consumir a autorização uma única vez e exigir confirmação do destino. Fecho, navegação, remoção do campo, lock e timeout impedem respostas antigas de preencher.
+5. **Sem autenticação redundante nem automática em ciclo:** no máximo uma tentativa inicial por ação explícita na chave; abrir/refocar repetidamente não multiplica cerimónias ou pedidos. Sucesso autentica a sessão segundo o contrato atual; não introduzir silenciosamente autorização limitada por conta ou autenticação por preenchimento.
+6. **Limites comunicados:** o site pode ler os valores depois de preenchidos. O seletor não comprova sucesso de login nem torna um site malicioso seguro. Iframes/campos em Shadow DOM do site continuam fora do suporte atual; não anunciar suporte novo sem implementação e testes.
+
+### 23.5 Regressões e aceitação do novo fluxo
+
+Os cenários AF abaixo são **requisitos a implementar e executar**, não evidência existente. Complementam SC44–SC46, SC51 e SC56.
+
+| ID | Cenário | Resultado exigido |
+|---|---|---|
+| AF01 | Cofre bloqueado, com/sem biometria | Nenhum nome/contagem guardada antes de autenticar; biometria inicia uma vez quando configurada; password direta quando ausente. |
+| AF02 | Sucesso biométrico ou password correta | Lista apenas da origem atual; escolha explícita mesmo para uma conta; um clique preenche sem nova autenticação ou submit. |
+| AF03 | Cofre já desbloqueado | Lista direta e preenchimento imediato; nenhum prompt biométrico redundante. |
+| AF04 | Biometria falha, PRF ausente, timeout, cancelamento ou falta de ativação | Sem bypass nem loop; password/repetição explícita conforme estado; cancelar o fluxo não preenche. |
+| AF05 | Trocar para password com biometria pendente | Cerimónia abortada e resposta tardia rejeitada; não duplicar sessão/pedido nem preencher após fecho. |
+| AF06 | Expiração/lock, navegação, campo removido, revisão alterada ou replay | Rejeição antes de entregar; lista e segredos descartados; nova seleção/autenticação quando necessária. |
+| AF07 | Cliques rápidos, refoco, várias contas/pedidos | Uma cerimónia por ação válida; sem duplicações nem mistura de origem, documento, campo ou conta. |
+| AF08 | Zero/uma/muitas contas, nomes repetidos/longos | Estado vazio com adicionar, seleção inequívoca e scroll limitado; guardar não preenche por si só. |
+| AF09 | Login versus registo/alteração de password | Login sem os dois menus removidos; geração continua disponível no contexto correto e não altera password atual. |
+| AF10 | Página hostil e capacidades | Sem acesso da página a master/chaves/lista completa; pedidos forjados, sobreposição e redirecionamento testados conforme superfície escolhida. |
+| AF11 | Teclado/leitor de ecrã, claro/escuro, 320px, zoom, scroll/resize | Foco, fallback e cancelamento utilizáveis; lista ancorada ou janela compacta adequada; feedback não bloqueia o site. |
+| AF12 | Hardware e browser reais | Testar sucesso, falha/cancelamento e fallback nos SO/autenticadores alvo; registar limitações de ativação e toolbar sem equiparar PRF virtual a aceitação física. |
+
+Antes de entregar implementação: issue/branch focadas, regressões Node e Chromium significativas, capturas claro/escuro do novo fluxo, inspeção visual, `npm run check`, suites afetadas e `git diff --check`. Atualizar os contratos de chave contextual/arquitetura e [VALIDATION.md](VALIDATION.md) apenas com comportamento implementado e resultados efetivamente executados. A aceitação de Drive e do protocolo completo mantém os gates das secções 19–21.

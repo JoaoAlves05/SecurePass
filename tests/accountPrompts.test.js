@@ -113,7 +113,7 @@ test('save completion removes the linked suggestion and keeps manually corrected
 test('fill is document-bound, origin-bound and delivered only once under concurrent confirmation', async () => {
   await vault.initializeVault(PASS); const account = await vault.storeCredential(entry());
   const request = await requests.createRequest({}, sender); const owner = auth(areas.session[`autofill:${request.requestId}`].authTabId);
-  const results = await Promise.allSettled([requests.completeRequest({ ...request, credentialId: account.id }, owner), requests.completeRequest({ ...request, credentialId: account.id }, owner)]);
+  const results = await Promise.allSettled([requests.completeRequest({ ...request, credentialId: account.id, expectedRevision: (await vault.requireVault()).record.revision }, owner), requests.completeRequest({ ...request, credentialId: account.id, expectedRevision: (await vault.requireVault()).record.revision }, owner)]);
   assert.equal(results.filter(result => result.status === 'fulfilled').length, 1); assert.equal(sent.filter(item => item.message.type === 'AUTOFILL_RESULT').length, 1);
   assert.equal(sent.find(item => item.message.type === 'AUTOFILL_RESULT').options.documentId, sender.documentId);
   const stale = await requests.createRequest({}, sender); const staleOwner = auth(areas.session[`autofill:${stale.requestId}`].authTabId);
@@ -225,7 +225,7 @@ test('empty, stale and unacknowledged source fields cannot silently complete pas
   await vault.initializeVault(PASS); const account = await vault.storeCredential(entry());
   const fill = await requests.createRequest({}, sender); const fillOwner = auth(11);
   chrome.tabs.sendMessage = async (_tab, message) => message.type === 'AUTOFILL_CHECK_DOCUMENT' ? { ok: true, origin } : undefined;
-  await assert.rejects(requests.completeRequest({ ...fill, credentialId: account.id }, fillOwner), /original field/);
+  await assert.rejects(requests.completeRequest({ ...fill, credentialId: account.id, expectedRevision: (await vault.requireVault()).record.revision }, fillOwner), /original field/);
 });
 test('adding a login from the empty selector is explicit, revision-checked and restricted to its website', async () => {
   await vault.initializeVault(PASS);
@@ -250,4 +250,21 @@ test('failed manual save does not persist its draft password or replace the acti
   try { await assert.rejects(requests.completeRequest(message, owner), /aborted/); } finally { IDBObjectStore.prototype.put = original; }
   assert.equal(JSON.stringify(areas.session).includes(message.password), false); assert.equal((await vault.listCredentials()).length, 0);
   await requests.completeRequest(message, owner); assert.equal((await vault.listCredentials()).length, 1);
+});
+
+test('fill rejects missing or stale vault revision without delivering and permits explicit fresh review', async () => {
+  await vault.initializeVault(PASS);
+  const account = await vault.storeCredential(entry());
+  const request = await requests.createRequest({}, sender);
+  const owner = auth(areas.session[`autofill:${request.requestId}`].authTabId);
+  const review = await requests.requestDetails(request, owner);
+  await vault.storeCredential(entry('another'));
+  for (const expectedRevision of [undefined, review.revision]) {
+    await assert.rejects(requests.completeRequest({ ...request, credentialId: account.id, expectedRevision }, owner), /vault changed/);
+  }
+  assert.equal(sent.filter(item => item.message.type === 'AUTOFILL_RESULT').length, 0);
+  assert.ok(areas.session[`autofill:${request.requestId}`]);
+  const fresh = await requests.requestDetails(request, owner);
+  await requests.completeRequest({ ...request, credentialId: account.id, expectedRevision: fresh.revision }, owner);
+  assert.equal(sent.filter(item => item.message.type === 'AUTOFILL_RESULT').length, 1);
 });
