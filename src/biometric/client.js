@@ -35,10 +35,31 @@ export async function enrollBiometric(passphrase, signal) {
     return await request('BIOMETRIC_REGISTER_COMPLETE', { sessionId: session.sessionId, ...await assert(session, signal) });
   } finally { await request('BIOMETRIC_CANCELLED', { sessionId: session.sessionId }).catch(() => {}); }
 }
+function abortable(promise, signal) {
+  if (!signal) return promise;
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(signal.reason || new DOMException('Authentication cancelled.', 'AbortError'));
+    signal.addEventListener('abort', abort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', abort));
+    if (signal.aborted) abort();
+  });
+}
 export async function authenticateBiometric(signal, purpose) {
-  const session = await request('BIOMETRIC_AUTH_START', { purpose });
-  try { return await request('BIOMETRIC_AUTH_COMPLETE', { sessionId: session.sessionId, ...await assert(session, signal) }); }
-  finally { await request('BIOMETRIC_CANCELLED', { sessionId: session.sessionId }).catch(() => {}); }
+  signal?.throwIfAborted();
+  const starting = request('BIOMETRIC_AUTH_START', { purpose });
+  let session;
+  try {
+    session = await abortable(starting, signal);
+    signal?.throwIfAborted();
+    const proof = await abortable(assert(session, signal), signal);
+    signal?.throwIfAborted();
+    return await request('BIOMETRIC_AUTH_COMPLETE', { sessionId: session.sessionId, ...proof });
+  } finally {
+    // Start can finish after cancellation. Revoke that ceremony as soon as its ID arrives.
+    const cancel = value => request('BIOMETRIC_CANCELLED', { sessionId: value.sessionId }).catch(() => {});
+    if (session) await cancel(session);
+    else starting.then(cancel).catch(() => {});
+  }
 }
 
 export const authorizeMasterPassword = passphrase => request('AUTHORIZE_MASTER_PASSWORD', { passphrase });

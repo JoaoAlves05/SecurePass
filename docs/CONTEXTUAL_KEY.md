@@ -1,6 +1,6 @@
 # Contextual on-page key
 
-Implemented for SecurePass 0.2.0 on 2026-10-28. Work item: [#4](https://github.com/JoaoAlves05/SecurePass/issues/4). This is a refinement of the existing extension theme, typography and tokens. Keyboard shortcuts are deferred. [Account proposals and save/update](ACCOUNT_PROMPTS.md) retain their separate confirmation contract.
+Original implementation: SecurePass 0.2.0 on 2026-10-28. Compact-login refinement in the working tree: 2026-11-04. Work item: [#4](https://github.com/JoaoAlves05/SecurePass/issues/4). This is a refinement of the existing extension theme, typography and tokens. Keyboard shortcuts are deferred. [Account proposals and save/update](ACCOUNT_PROMPTS.md) retain their separate confirmation contract.
 
 ## Login and authentication
 
@@ -8,9 +8,11 @@ Clicking a login-field key opens the extension-owned selector directly. Clicking
 
 Master-password unlock, reveal and retry remain inside the extension window. Configured biometric unlock is a separate fingerprint button beside the password field, using the existing verified PRF flow. Vault creation also stays here and requires matching master passwords of at least 16 characters. Authentication does not itself choose an account, save a login or submit the website.
 
-**Other options** offers **Generate and fill a password**, **Copy entered password** and **Save entered login**. These return to the original website field. Copy/save are disabled when it was empty; the source checks its current value again. Generation and current-field copy use existing public tools and can run while the vault is locked. Save-entered opens a separate trusted save review.
+The fill selector now uses a 360 × 400 extension-owned window with compact account rows and bounded list scrolling. Clicking an account immediately fills it without another authentication or confirmation when the session remains valid. Login selection has no Password options or Other options menu. Generation controls remain on registration/change-password fields.
 
-The empty state offers **Add login**. Its form has an optional username, masked login password with reveal control, **Back to logins**, and explicit **Save login**. The displayed website is immutable. Saving creates a new encrypted entry for that origin; it neither updates another entry nor fills the page. The user can reopen the selector and choose the saved login afterward. **Add a new login** is also available under Other options while unlocked.
+When a locked vault has biometrics configured, opening the fill request starts one biometric attempt. A Use master password action aborts it; errors offer password fallback without automatic retry. Authentication and metadata remain in the extension window, not embedded in the website. Native OS/WebAuthn dialogs may capture pointer input: dismissing that dialog may be necessary before interacting with the fallback. Physical hardware acceptance remains outstanding. Cancellation discards late authenticator results and revokes a ceremony whose start completes late.
+
+The empty state offers **Add login**. Its form has an optional username, masked login password with reveal control, **Back to logins**, and explicit **Save login**. The displayed website is immutable. Saving creates a new encrypted entry for that origin; it neither updates another entry nor fills the page. The user can reopen the selector and choose the saved login afterward.
 
 Back, cancel, failure, expiry, page closure and vault lock clear the draft password and reset reveal state. A stale vault revision requires review again. The draft password is submitted only with explicit save and is never added to the pending fill-request record.
 
@@ -32,7 +34,7 @@ Automatic submission-triggered save suggestions neither steal focus nor replace 
 
 `content/modules/autofill.js` owns a random per-field target and a two-minute pending selection. `src/autofill/requests.js` binds the request to the source origin, tab, browser document and native confirmation tab. It first reserves an `about:blank` window and records its tab identity, then loads `auth/auth.html`. Repeated key clicks must match the original source and target before refocusing that window.
 
-Fill and secondary-tool requests validate the original live document/field, consume their request under the operation lock and require acknowledgement from the source. Only the selected username/password is delivered for fill. Navigation, removal, cancellation, expiry, confirmation closure and vault lock release or revoke the pending selection. The source checks visibility and login context before applying a result; no form submission is issued.
+Fill and legacy secondary-tool requests validate the original live document/field, consume their request under the operation lock and require acknowledgement from the source. Fill also requires the exact vault revision shown by the selector; a changed vault requires explicit review again. Only the selected username/password is delivered for fill. Navigation, removal, cancellation, expiry, confirmation closure and vault lock release or revoke the pending selection. The source checks visibility and login context before applying a result; no form submission is issued.
 
 Manual addition validates the source document, active session, immutable origin and displayed vault revision. It accepts create only and uses the ordinary encrypted commit/checkpoint/outbox path. Failed local transactions preserve the previous vault; a failure after commit cannot revive a consumed save grant. No manifest permissions, host permissions or message-capability set changed. Website scripts can read filled fields; these checks do not make an untrusted website safe.
 

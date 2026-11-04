@@ -1,0 +1,14 @@
+{
+  "scope": {
+    "ARCHITECTURE.md": "5a6e5810d407395639242e77fb151c855b047ef58eb90d8e95d567fd1abc0c9b",
+    "auth/auth.html": "ff81582a20f37b47d59839f7ad0ca6a1ee18f9a431d505c35f7fdee7b56789dd",
+    "docs/CONTEXTUAL_KEY.md": "21333cd789cb8e22c6e94416d76c5321b6fd08d8dc753fa36529b3a4741472c1",
+    "docs/VALIDATION.md": "ae026ec5ef68af363f1656480a28c287c97ade517b50ed1f4af065387720e05d",
+    "docs/IMPLEMENTATION_CHECKLIST.md": "f0c9f3e2de8d75b1d38b16d94aab4ec59e081c4c8e3486d410145f62491fff4c",
+    "docs/DRIVE_TRANSPORT.md": "bbbd9249210d9d402b0598db62c3964087471d625511bf690640d1a83dd5bf86",
+    "docs/issues/SYNC_DATA_COMPLETION.md": "ded411179e7e78bdacc48f2f7aec9a75ad6774747be05ac1d6551bce0b28464d"
+  },
+  "method": "Host semantic incremental update preserving unchanged facts; updated removed secondary menu contract",
+  "limitations": "Changed auth screenshots are not semantically re-extracted in this update; existing image nodes may describe previous layouts. Analysis sidecar remains stale.",
+  "token_usage": "unavailable"
+}

@@ -2,6 +2,16 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Plan completion increment — 2026-11-04
+
+The working tree now includes compact 360 × 400 fill windows, account-row selection without secondary menus, one initial biometric attempt for configured locked fill requests, password fallback and rejection of late authenticator results. Autofill requires the exact vault revision displayed by the selector. Authentication and account metadata remain in an extension-owned window.
+
+The dedicated account-prompt Chromium suite passed after adapting its login-tool expectations to the new flow; saving from registration tools retains separate confirmation. The fallback test dispatches a button click programmatically while WebAuthn is pending, because the native dialog can own pointer input. This proves the cancellation handler, not physical interaction with an OS dialog. Actual hardware/OS behavior remains unaccepted. Narrow light/dark auth captures were refreshed and representative selector/unlock captures inspected. The design detector reported inherited font/palette/focus-glow warnings.
+
+The settings Chromium and two-profile emulated Sync suites passed. Three biometric-client regressions cover cancellation during start, late assertion and stalled-start completion. Five simulated Drive-reader tests cover pagination, binding changes, response limits and error classification. `npm run check` passed for 96 modules. **147 Node tests passed** in the final full run; the general Chromium suite also passed, including virtual PRF enrollment/unlock/revocation.
+
+Drive reading is currently an isolated module with injected token/binding providers, not a connected product feature. No OAuth, signed protocol, Drive publication, recovery kit or Drive migration is claimed. See [implementation checklist](IMPLEMENTATION_CHECKLIST.md) and [transport limitations](DRIVE_TRANSPORT.md). Release remains unaccepted.
+
 ## Contextual on-page key — 2026-10-28
 
 The [implemented interaction and security contract](CONTEXTUAL_KEY.md) gives login fields a direct extension-owned selector, repeated-click refocus and explicit account choice even for one login. Other options delegates generation/copy/save-entered to the original field. The empty selector supports explicit, revision-checked, create-only **Add login**, without filling the website or retaining its draft password in the pending request. Registration/change tools lead with generation and optional bounded length/symbol controls; asynchronous context rechecks protect current-password fields. Automatic save suggestions preserve manually opened tools and pending selections. Fill/cancel feedback now uses a compact, pointer-transparent bottom status region and leaves the website submit target usable. Keyboard shortcuts are deferred; no manifest, host permission or message-capability set changed.

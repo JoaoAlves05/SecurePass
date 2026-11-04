@@ -1,24 +1,23 @@
-# Graph Report - SecurePass  (2026-10-28)
+# Graph Report - SecurePass  (2026-11-04)
 
 ## Corpus Check
-- 122 files · ~103,953 words
+- 128 files · ~111,157 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: .css 5, (none) 3)
 
 ## Summary
-- 1617 nodes · 3763 edges · 135 communities (90 shown, 45 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 46 edges (avg confidence: 0.86)
-- Token cost: deterministic code extraction; host semantic-update token counts unavailable.
+- 1656 nodes · 3816 edges · 125 communities (82 shown, 43 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 47 edges (avg confidence: 0.86)
+- Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1909aa3a`
+- Built from commit: `3c2be42b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- syncService.js
+- DriveError
 - getStorage
-- biometric/service.js
 - Popup HTML semantic surfaces
 - Recovery checkpoints behavior, protection and verification
 - biometric/service.js
@@ -27,7 +26,7 @@
 - Revisão funcional histórica
 - Inline master-password flow and independent management proportions
 - checkpointReview.js
-- sendMessage
+- popup.js
 - session.js
 - Criptografia e armazenamento
 - Autofill na página
@@ -35,12 +34,10 @@
 - biometric.test.js
 - biometric.test.js
 - Documentação de Sync e dados
-- crypto.js
 - Modelo de segurança
 - Checkpoint review design document
-- Navegação e validação Settings
-- Implementação e migração
-- Quatro áreas das definições
+- cryptoVault.js
+- SETTINGS_UX_IMPLEMENTATION.md
 - backupDialogs-browser.mjs
 - vaultUnlock.js
 - Navegação e composição popup
@@ -54,20 +51,18 @@
 - Ferramentas de desenvolvimento
 - Ferramentas de desenvolvimento
 - Account suggestions, inline tools and trusted-window confirmation contract
-- popup.js
+- modules/settings.js
 - checkpoints-browser.mjs
 - Recovery checkpoints behavior, protection and verification
 - Ferramentas de desenvolvimento
 - Checkpoint review interaction
 - Guided Chrome Sync setup and device verification
-- Shared password and biometric method row
 - REVIEW_BACKUP_ADVANCED.md
 - Evidência visual das definições
 - Quatro áreas das definições
 - Análise de formulários
 - Timestamped local version backup cards
-- session.js
-- cryptoVault.js
+- client.js
 - Ícone 16 pixels
 - Ícone 32 pixels
 - Ícone 48 pixels
@@ -85,8 +80,6 @@
 - restore error dark extension dialog screenshot
 - restore light 320 extension dialog screenshot
 - restore light 400 extension dialog screenshot
-- Light management checkpoint cards with one Review action
-- Security settings light screenshot
 - .put
 - Operação de teste
 - Contextual on-page key contract
@@ -123,13 +116,8 @@
 - Historical six-category frontend review
 - Original SD review with later local increment notice
 - SETTINGS_NAVIGATION.md
-- 2026-10-25T22-07-51Z__popup-popup-html.md
-- Guided Chrome Sync setup, manual discovery and device test
 - Separate whole-vault restore confirmation from inline review
-- Popup inline identity confirmation
-- Popup inline new-master-password step
-- Compact in-section checkpoint comparison
-- Dark management checkpoint cards with one Review action
+- checkpointReview.js
 - Short account-specific deleted-entry confirmation
 - Narrow dark registration generator inside the viewport
 - Light contextual registration generator with primary Generate and fill
@@ -137,11 +125,13 @@
 - Compact popup save suggestion with origin, username and two actions
 - Dark biometric alternative beside the master-password input
 - Dark review of a password update
-- Checkpoint recovery with inline comparison and fresh scoped confirmation
+- Guided Chrome Sync setup and receipt evidence contract
+- playwright
+- Implementation checklist: partial implementation, release not accepted
 
 ## God Nodes (most connected - your core abstractions)
-1. `getStorage()` - 72 edges
-2. `Comprehensive recommended v2 settings Sync devices and data plan` - 66 edges
+1. `Version 3 settings Sync data and compact login plan` - 75 edges
+2. `getStorage()` - 72 edges
 3. `removeStorage()` - 54 edges
 4. `Current architecture with implemented local and legacy increment` - 53 edges
 5. `Validation and release checklist` - 52 edges
@@ -170,95 +160,87 @@
 - **Trusted autofill disclosure boundary** — architecture_capability_policy, architecture_autofill_confirmation, architecture_storage_restriction [EXTRACTED 1.00]
 - **Whole-checkpoint restore authorization sequence** — docs_checkpoint_review_recent_authentication, docs_checkpoint_review_confirm_identity, docs_checkpoint_review_fresh_scoped_token, docs_checkpoint_review_secondary_restore [EXTRACTED 1.00]
 
-## Communities (135 total, 45 thin omitted)
+## Communities (125 total, 43 thin omitted)
 
-### Community 0 - "syncService.js"
+### Community 0 - "DriveError"
+Cohesion: 0.28
+Nodes (8): bounded(), classify(), createDriveReader(), guard(), request(), DriveError, parse(), setup()
+
+### Community 2 - "getStorage"
 Cohesion: 0.05
-Nodes (103): Guided Chrome Sync setup, bounded capacity and non-authorizing device diagnostic, Guided setup Node/security and Chromium evidence with emulated transport boundaries, Guided setup supersedes parts of historical capacity and selected-restore findings, copyInBackground(), ensureOffscreen(), ALARM_NAME, BIOMETRIC_SESSION_PASSPHRASE_KEY, CHUNK_SIZE (+95 more)
-
-### Community 1 - "getStorage"
-Cohesion: 0.13
-Nodes (44): handlers, ready, clearCandidates(), dismissCandidate(), inlineCandidate(), listCandidates, proposeCandidate(), reviewCandidate() (+36 more)
-
-### Community 2 - "biometric/service.js"
-Cohesion: 0.20
-Nodes (25): begin(), cancelAuthentication(), consume(), context(), expireCeremonies(), finishAuthentication(), finishRegistration(), origin() (+17 more)
+Nodes (113): Independent management-tab layout with shared trusted pathname, Purpose-bound inline master-password authorization, handlers, ready, clearCandidates(), dismissCandidate(), inlineCandidate(), listCandidates (+105 more)
 
 ### Community 3 - "Popup HTML semantic surfaces"
-Cohesion: 0.13
-Nodes (23): Version and repository footer, System light and dark theme controls, Auto-lock inactivity preference, Backups, checkpoint cards and inline review settings area, Consistent fingerprint symbol for biometric entry points, Ownership-aware clipboard timeout explanation, Encrypted backup import and export controls, Popup HTML semantic surfaces (+15 more)
+Cohesion: 0.05
+Nodes (52): Cancel, Unlock and icon-only fingerprint share one action row, Dark master-password identity with inline biometric method, Dark main vault unlock with inline biometric method, Readable cache row layout correction, Reproduced cache status layout defect, Historical navigation and dialog recommendations, Recovery discovery and terminology concerns, Visual critique and accessibility limits (+44 more)
 
 ### Community 4 - "Recovery checkpoints behavior, protection and verification"
 Cohesion: 0.04
-Nodes (48): Archived Sync copies stay separate and exports are source-specific, Unlocked checkpoint counts, differences and affected-account examples, Remove one checkpoint or verify current password to clear local history, Recovery checkpoints behavior, protection and verification, Per-entry recovery through inline review and explicit confirmation, Existing-vault external and selected-remote restores preserve active authentication, Secondary full-restore review preserves current authentication, Unreadable legacy protection requires explicit unlock or removal (+40 more)
+Nodes (48): Checkpoint recovery with inline comparison and fresh scoped confirmation, Inline checkpoint review module and displayed-comparison identity, Archived Sync copies stay separate and exports are source-specific, Unlocked checkpoint counts, differences and affected-account examples, Remove one checkpoint or verify current password to clear local history, Recovery checkpoints behavior, protection and verification, Per-entry recovery through inline review and explicit confirmation, Existing-vault external and selected-remote restores preserve active authentication (+40 more)
 
 ### Community 5 - "biometric/service.js"
 Cohesion: 0.07
-Nodes (40): attachGeneratorListeners(), avoidSimilar, copyGeneratedBtn, generateButton, generatedResult, generatorStatus, handleGenerate(), includeLower (+32 more)
+Nodes (36): avoidSimilar, copyGeneratedBtn, generateButton, generatedResult, generatorStatus, handleGenerate(), includeLower, includeNumbers (+28 more)
 
 ### Community 6 - "Interface e revisão visual"
-Cohesion: 0.05
-Nodes (8): Comprehensive recommended v2 settings Sync devices and data plan, Chrome Identity, Chrome Storage, Drive appDataFolder, Drive errors, OWASP Cryptographic Storage, Web Crypto AES-GCM parameters, MV3 service worker lifecycle
+Cohesion: 0.04
+Nodes (16): Version 3 settings Sync data and compact login plan, PROPOSED AF01–AF12 regression matrix; virtual PRF does not establish physical hardware acceptance, PLANNED single biometric attempt on key click with master-password fallback and late-result cancellation, PLANNED key unlock account click fill without extra authentication or form submission, REQUIRED one-shot origin tab document field revision and session bound selected-account delivery, PLANNED compact account list without Password options or Other options; add only when empty and generator on registration, REQUIRED no saved usernames sites counts or plaintext persistent index while locked, Planned baseline reconciliation, compact login, common integrity gaps, then Drive and migration (+8 more)
 
 ### Community 9 - "Inline master-password flow and independent management proportions"
-Cohesion: 0.14
-Nodes (14): Approved inline identity/password/success and management proportions, Pre-save biometric revocation notice and optional setup again, Clear secrets and revoke the exact grant on leaving the inline flow, Inline master-password flow and independent management proportions, Two-minute single-use revision-bound password-change grant, Physical authenticator and actual toolbar sizing remain manual acceptance, Fresh identity confirmation replaces preliminary unlock and modal, Tab stylesheet separates desktop layout from compact popup presentation (+6 more)
+Cohesion: 0.06
+Nodes (34): Approved inline identity/password/success and management proportions, Pre-save biometric revocation notice and optional setup again, Clear secrets and revoke the exact grant on leaving the inline flow, Inline master-password flow and independent management proportions, Two-minute single-use revision-bound password-change grant, Physical authenticator and actual toolbar sizing remain manual acceptance, Fresh identity confirmation replaces preliminary unlock and modal, Tab stylesheet separates desktop layout from compact popup presentation (+26 more)
 
 ### Community 10 - "checkpointReview.js"
-Cohesion: 0.12
-Nodes (53): account(), attachCheckpointReviewListeners(), changedFields(), checkFreshness(), clientId, closeReview(), date(), entryCount() (+45 more)
+Cohesion: 0.16
+Nodes (35): attachCheckpointListeners(), date(), deleteHistory(), handleCheckpointAction(), plural(), renderCheckpoints(), accessibleDestination(), attachDataListeners() (+27 more)
 
-### Community 11 - "sendMessage"
-Cohesion: 0.30
-Nodes (16): attachBiometricListeners(), syncBiometricView(), attachMasterPasswordListeners(), sendMessage(), refreshState(), assert(), authenticateBiometric(), authorizeMasterPassword() (+8 more)
+### Community 11 - "popup.js"
+Cohesion: 0.19
+Nodes (34): attachBiometricListeners(), syncBiometricView(), attachCandidateListeners(), refreshCandidates(), attachGeneratorListeners(), saveGeneratedToVault(), syncGeneratorControls(), attachMasterPasswordListeners() (+26 more)
 
 ### Community 12 - "session.js"
 Cohesion: 0.09
-Nodes (28): Older checkpoint protection migration, Journey scope and unconfigured OAuth, Accessibility and website compatibility acceptance, Automated regression coverage, Backups and Advanced functional review, Backup dialog refinement evidence, Development validation commands, Recovery checkpoints implementation evidence (+20 more)
+Nodes (27): Older checkpoint protection migration, Journey scope and unconfigured OAuth, Accessibility and website compatibility acceptance, Automated regression coverage, Backup dialog refinement evidence, Development validation commands, Recovery checkpoints implementation evidence, Clipboard platform acceptance (+19 more)
 
 ### Community 13 - "Criptografia e armazenamento"
 Cohesion: 0.08
-Nodes (20): Local backup safety and repeatable recovery cleanup, Preenchimento confirmado por origem e documento, Backups cifrados com pré-visualização de importação, Desbloqueio WebAuthn com PRF, Limites de capacidade e importação, Desenvolvimento e verificações, Chrome122 e âmbito de compatibilidade, Contribuições e licença MIT (+12 more)
+Nodes (21): Local backup safety and repeatable recovery cleanup, Backups and Advanced functional review, Preenchimento confirmado por origem e documento, Backups cifrados com pré-visualização de importação, Desbloqueio WebAuthn com PRF, Limites de capacidade e importação, Desenvolvimento e verificações, Chrome122 e âmbito de compatibilidade (+13 more)
 
 ### Community 14 - "Autofill na página"
 Cohesion: 0.08
 Nodes (23): action, default_popup, default_title, background, service_worker, type, content_scripts, content_security_policy (+15 more)
 
 ### Community 15 - "backupCrypto.js"
-Cohesion: 0.11
-Nodes (36): showToast(), biometricUnlockContainer, clearRevealTimer(), confirmMasterInput, createMasterSection, createVaultIconButton(), deleteCredential(), entryForm (+28 more)
+Cohesion: 0.08
+Nodes (23): biometricUnlockContainer, clearRevealTimer(), confirmMasterInput, createMasterSection, createVaultIconButton(), entryForm, entryModalTitle, entryNotesInput (+15 more)
 
 ### Community 16 - "biometric.test.js"
-Cohesion: 0.22
-Nodes (11): LOG_ENABLED, buffer, format(), isArrayBufferLike(), isPrimitive(), isSensitiveString(), logger, redactValue() (+3 more)
+Cohesion: 0.11
+Nodes (21): ALARM_NAME, BIOMETRIC_SESSION_PASSPHRASE_KEY, CHUNK_SIZE, CLIPBOARD_ALARM_NAME, DB_STORE_NAME, DB_VERSION, LOG_ENABLED, META_KEY (+13 more)
 
 ### Community 17 - "biometric.test.js"
-Cohesion: 0.10
-Nodes (23): fake-indexeddb, auth(), saveRequest(), sender, assertion(), b64(), client(), der() (+15 more)
+Cohesion: 0.09
+Nodes (26): fake-indexeddb, AUTH, CONTENT, auth(), entry(), saveRequest(), sender, assertion() (+18 more)
 
 ### Community 18 - "Documentação de Sync e dados"
 Cohesion: 0.11
 Nodes (36): clearSecrets(), complete(), expired(), refresh(), requestId, run(), saveTargetChanged(), send() (+28 more)
 
-### Community 19 - "crypto.js"
-Cohesion: 0.13
-Nodes (32): DECODER, decryptBackupPayload(), deriveBackupKey(), ENCODER, encryptBackupPayload(), isEncryptedBackupEnvelope(), rotateMasterPassword(), base64ToBuffer() (+24 more)
-
 ### Community 20 - "Modelo de segurança"
-Cohesion: 0.27
-Nodes (17): Inline unlock errors and retry without dismissing the form, resolveUnlockSetup(), setUnlockResolver(), attachUIListeners(), backFromSettings(), closeModal(), closeSettingsPanel(), manageFocus() (+9 more)
+Cohesion: 0.29
+Nodes (16): Inline unlock errors and retry without dismissing the form, resolveUnlockSetup(), setUnlockResolver(), attachUIListeners(), backFromSettings(), closeModal(), closeSettingsPanel(), manageFocus() (+8 more)
 
 ### Community 21 - "Checkpoint review design document"
-Cohesion: 0.12
-Nodes (16): Single checkpoint review entry, Inline checkpoint comparison, Confirm identity flow, Individual entry recovery, Checkpoint review design document, Authentication expiry during confirmation, Successful recovery refreshes review or returns to checkpoint list, Recovery review cleanup and navigation (+8 more)
+Cohesion: 0.08
+Nodes (25): Single checkpoint review entry, Inline checkpoint comparison, Confirm identity flow, Individual entry recovery, Checkpoint review design document, Authentication expiry during confirmation, Successful recovery refreshes review or returns to checkpoint list, Recovery review cleanup and navigation (+17 more)
 
-### Community 23 - "Navegação e validação Settings"
-Cohesion: 0.18
-Nodes (31): recoveryStatus(), restoreRecovery(), vaultHandlers, normalizeSite(), readRecoveryRecords(), snapshotId(), BACKUP_VERSION, createVaultBackup() (+23 more)
+### Community 23 - "cryptoVault.js"
+Cohesion: 0.07
+Nodes (114): decryptBackupPayload(), isEncryptedBackupEnvelope(), changeMasterPassword(), changeMasterPasswordAuthorized(), clearVaultEntries(), deleteCredential(), importVaultData(), initializeVault() (+106 more)
 
-### Community 24 - "Implementação e migração"
-Cohesion: 0.15
-Nodes (6): Delivered behavior, Executed checks, Remaining release gates, Review artifacts, Scenario coverage boundary, Settings UX implementation and evidence
+### Community 24 - "SETTINGS_UX_IMPLEMENTATION.md"
+Cohesion: 0.05
+Nodes (16): Drive transport implementation status, Cenários de aceitação, Checklist de implementação e aceitação, Dependências externas e condições de release, Entregáveis por secção, Próximos blocos de implementação, Revisão original e fecho de problemas, Trabalho desta execução (+8 more)
 
 ### Community 26 - "backupDialogs-browser.mjs"
 Cohesion: 0.17
@@ -304,17 +286,17 @@ Nodes (4): errors, layouts(), root, section()
 Cohesion: 0.13
 Nodes (15): Review cancellation retains a proposal; dismissal/save/expiry/lock remove it, Restricted five-minute proposals, eight-item bound, metadata-only listing and deduplication, Compact dark master-password confirmation, Master password stays on the extension-owned page with retry and cancellation, Same-origin explicit save/update binds destination revision and preserves notes and identity, Fill and save consume authorization once under the operation lock, Inline review and dismissal validate origin, tab and document, Closed-shadow tools follow theme and reposition with field and viewport; removal releases listeners (+7 more)
 
-### Community 39 - "popup.js"
-Cohesion: 0.18
-Nodes (19): attachCandidateListeners(), refreshCandidates(), attachManagementListeners(), refreshManagement(), attachSettingsListeners(), initialiseSettings(), saving, scheduleSettingsSave() (+11 more)
+### Community 39 - "modules/settings.js"
+Cohesion: 0.32
+Nodes (11): attachSettingsListeners(), initialiseSettings(), saving, scheduleSettingsSave(), setSaveStatus(), syncSettingsView(), updateRangeLabel(), applyTheme() (+3 more)
 
 ### Community 40 - "checkpoints-browser.mjs"
 Cohesion: 0.20
 Nodes (5): errors, root, server, shadowClick(), find()
 
 ### Community 41 - "Recovery checkpoints behavior, protection and verification"
-Cohesion: 0.18
-Nodes (4): captures, errors, root, seedReviewFixture()
+Cohesion: 0.20
+Nodes (3): captures, errors, root
 
 ### Community 42 - "Ferramentas de desenvolvimento"
 Cohesion: 0.20
@@ -328,13 +310,9 @@ Nodes (14): Approved interaction, Captures, Checkpoint review interaction, State
 Cohesion: 0.29
 Nodes (6): Device test, Evidence shown to the user, Guided Chrome Sync setup and device verification, Recovery and capacity corrections, User journey, Validation and manual acceptance
 
-### Community 45 - "Shared password and biometric method row"
-Cohesion: 0.22
-Nodes (10): Cancel, Unlock and icon-only fingerprint share one action row, Dark master-password identity with inline biometric method, Dark main vault unlock with inline biometric method, Shared password and biometric method row, Accessible fingerprint-only shortcut beside password, Inline identity form with biometric shortcut beside current password, New-password confirmation with biometric revocation warning, Inline master-password identity, new-password and success forms (+2 more)
-
 ### Community 46 - "REVIEW_BACKUP_ADVANCED.md"
-Cohesion: 0.11
-Nodes (19): devDependencies, fake-indexeddb@^6.2.4, playwright@1.56.1, name, private, scripts, check, package (+11 more)
+Cohesion: 0.18
+Nodes (11): scripts, check, package, test, test:account-prompts-browser, test:backup-dialogs-browser, test:browser, test:checkpoints-browser (+3 more)
 
 ### Community 47 - "Evidência visual das definições"
 Cohesion: 0.22
@@ -352,13 +330,9 @@ Nodes (8): 85 modules and four browser suites; Node evidence remains historical,
 Cohesion: 0.29
 Nodes (7): Changed account labels Different fields: password and offers Restore details, Back to checkpoints remains part of the in-section view, Show matching entries checkbox includes matching count, Account rows offer a specific Recover entry action, Management inline checkpoint review in dark theme, Website or username search within the review, Review title/date and saved/deleted/different/newer counts
 
-### Community 51 - "session.js"
-Cohesion: 0.25
-Nodes (11): tail, activate(), assertGeneration(), current(), generation(), onLock(), reconfigureTimeout(), revokeSession() (+3 more)
-
-### Community 52 - "cryptoVault.js"
-Cohesion: 0.21
-Nodes (23): Independent management-tab layout with shared trusted pathname, Purpose-bound inline master-password authorization, changeMasterPassword(), changeMasterPasswordAuthorized(), clearVaultEntries(), deleteCredential(), importVaultData(), initializeVault() (+15 more)
+### Community 52 - "client.js"
+Cohesion: 0.18
+Nodes (20): DECODER, deriveBackupKey(), ENCODER, encryptBackupPayload(), abortable(), assert(), clientId, enrollBiometric() (+12 more)
 
 ### Community 53 - "Ícone 16 pixels"
 Cohesion: 0.33
@@ -424,14 +398,6 @@ Nodes (5): Single Cancel and Unlock row with compact spacing, Actual extension v
 Cohesion: 0.40
 Nodes (5): Single Cancel and Unlock row with compact spacing, Actual extension visible under a shared dimmed blurred backdrop, Inline Invalid master password or corrupted vault error with empty password field, Compact Unlock vault heading, current-password field and reveal control, Light tab bounded vault unlock with inline error
 
-### Community 70 - "Light management checkpoint cards with one Review action"
-Cohesion: 0.50
-Nodes (4): One primary Review checkpoint button with secondary Export and Remove, Dated cards show sequence and aggregate entry differences without account examples, Backups & recovery sidebar selection and Recovery checkpoints heading remain visible, Light management checkpoint cards with one Review action
-
-### Community 71 - "Security settings light screenshot"
-Cohesion: 0.20
-Nodes (10): Visible auto-lock vault slider shows 15 minutes, Visible biometric unlock setup card with collapsed explanation, Visible copied-password clearing slider shows After 30 seconds; best effort matching the last SecurePass copy, Visible GitHub footer link, Visible Change master password row asks to authenticate and choose a new vault password, Visible footer product version SecurePass v0.2.0, Visible Preferences saved status below product version, Security settings light screenshot (+2 more)
-
 ### Community 72 - ".put"
 Cohesion: 0.50
 Nodes (4): Review checkpoint primary action with secondary Export and Remove, Dated checkpoint with sequence, recoverable-entry and later-entry counts, Backups header and Open in tab remain visible above checkpoint cards, Dark popup checkpoint card with one Review action
@@ -485,7 +451,7 @@ Cohesion: 0.67
 Nodes (3): Timestamped encrypted local-version backup cards with Restore and Export buttons, Legacy Sync mode update notice requesting active vault unlock, Backups and recovery settings screenshot
 
 ### Community 112 - "accountPrompts-browser.mjs"
-Cohesion: 0.17
+Cohesion: 0.18
 Nodes (17): 133 Node tests, 93 modules and disposable account-prompt Chromium evidence, Dedicated disposable account-prompt Chromium command, capture(), errors, nextPage(), openFill(), openSaveEntered(), openTools() (+9 more)
 
 ### Community 113 - "Contextual on-page key"
@@ -500,57 +466,52 @@ Nodes (7): Historical accessible themes ranges and saving feedback, Historical s
 Cohesion: 0.29
 Nodes (9): Compatible Settings fragments, Executed verification, Hierarchical Settings navigation, Navigation history, focus and scroll preservation, Implemented behavior, Manual review and limits, Preserved Settings behavior and security contracts, Shared Settings footer across navigation layouts (+1 more)
 
-### Community 118 - "2026-10-25T22-07-51Z__popup-popup-html.md"
-Cohesion: 0.29
-Nodes (6): Readable cache row layout correction, Reproduced cache status layout defect, Historical navigation and dialog recommendations, Recovery discovery and terminology concerns, Visual critique and accessibility limits, Breach-check cache management
-
-### Community 119 - "Guided Chrome Sync setup, manual discovery and device test"
-Cohesion: 0.29
-Nodes (7): Advanced Chrome Sync setup and local maintenance, Scoped entry clearing and local device erasure, Explicit legacy remote version review, Guided Chrome Sync setup, manual discovery and device test, Remote source unlock then entry-count comparison and confirmation, Configure Chrome Sync then separately enable automatic sending, Explicit matching-code device test and historical receipt status
-
 ### Community 121 - "Separate whole-vault restore confirmation from inline review"
 Cohesion: 0.50
 Nodes (4): Cancel and Restore vault in the confirmation footer, Copy preserves current authentication and keeps current contents as a checkpoint while turning automatic Sync off, Separate whole-vault restore confirmation from inline review, Compact confirmation shows saved-entry count and highlighted removal count
 
-### Community 123 - "Popup inline identity confirmation"
-Cohesion: 0.40
-Nodes (5): Continue and Cancel actions on the same row, Use biometric unlock instead action, Security header, Open in tab action and fixed footer remain visible, Empty current-master-password field with reveal control, Popup inline identity confirmation
-
-### Community 124 - "Popup inline new-master-password step"
-Cohesion: 0.40
-Nodes (5): Save new password and Cancel actions on one row, Empty new-password and confirmation fields with reveal controls, Visible guidance to use at least 16 characters, Popup inline new-master-password step, Pre-save warning that biometric unlock on this device will be turned off
-
-### Community 125 - "Compact in-section checkpoint comparison"
-Cohesion: 0.40
-Nodes (5): Compact in-section checkpoint comparison, Checkpoint cards and inline review with separate archived copies, Accessible compact comparison search and matching controls, Secondary whole-checkpoint review with preserved authentication copy, Stale review warning and refresh action
-
-### Community 126 - "Dark management checkpoint cards with one Review action"
-Cohesion: 0.50
-Nodes (4): One primary Review checkpoint button with secondary Export and Remove, Dated cards show sequence and aggregate entry differences without account examples, Backups & recovery sidebar selection and Recovery checkpoints heading remain visible, Dark management checkpoint cards with one Review action
+### Community 124 - "checkpointReview.js"
+Cohesion: 0.31
+Nodes (20): account(), attachCheckpointReviewListeners(), changedFields(), checkFreshness(), clientId, closeReview(), date(), entryCount() (+12 more)
 
 ### Community 127 - "Short account-specific deleted-entry confirmation"
 Cohesion: 0.50
 Nodes (4): Website and username identify the deleted entry to recover, Cancel and Recover entry without an account dropdown, Copy preserves other entries, current master password/biometrics and existing Sync mode, Short account-specific deleted-entry confirmation
 
+### Community 135 - "Guided Chrome Sync setup and receipt evidence contract"
+Cohesion: 0.12
+Nodes (17): Guided Chrome Sync setup, bounded capacity and non-authorizing device diagnostic, Guided setup Node/security and Chromium evidence with emulated transport boundaries, Guided setup supersedes parts of historical capacity and selected-restore findings, Conservative two-complete-version capacity and local-only failure handling, Dark guided setup refusing insufficient two-version capacity, Enable is unavailable when the local vault cannot coexist with a subsequent complete copy, Narrow dark device-test receipt with preserved local cache controls, Receipt confirms the tested encrypted version while local maintenance remains available (+9 more)
+
+### Community 138 - "playwright"
+Cohesion: 0.25
+Nodes (8): devDependencies, fake-indexeddb@^6.2.4, playwright@1.56.1, name, private, type, version, playwright
+
+### Community 145 - "Implementation checklist: partial implementation, release not accepted"
+Cohesion: 0.50
+Nodes (4): Pending SC01–SC58 and AF01–AF12 acceptance scenarios, Implementation checklist: partial implementation, release not accepted, Pending OAuth stable extension identity, real Google, hardware and independent review, Implemented autofill revision guard: missing or changed revision rejects delivery; targeted 22 tests pass
+
 ## Knowledge Gaps
-- **352 isolated node(s):** `Independent management-tab layout with shared trusted pathname`, `Recover an entry, Restore whole vault, Export and Remove actions`, `Dated checkpoint cards with saved entry counts, sequence and account differences`, `Recovery checkpoints heading, Clear history and three-state policy`, `Four-section sidebar with Backups & recovery selected` (+347 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 787 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **45 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **363 isolated node(s):** `Historical frontend regression evidence and manual limits`, `Historical independent Impeccable review evidence`, `Historical hTML category ownership and dedicated settings styles`, `Historical accessible themes ranges and saving feedback`, `Historical settings disclosures unlock and focus corrections` (+358 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 808 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **43 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Current architecture with implemented local and legacy increment` connect `Revisão funcional histórica` to `Ferramentas de desenvolvimento`, `Confirmação de autofill`, `restore light 400 extension dialog screenshot`, `Ferramentas de desenvolvimento`, `Checkpoint recovery with inline comparison and fresh scoped confirmation`, `Interface e revisão visual`, `popup.js`, `Ferramentas de desenvolvimento`, `Criptografia e armazenamento`, `Quatro áreas das definições`, `cryptoVault.js`, `Original SD review with later local increment notice`, `Implementação e migração`, `backupDialogs-browser.mjs`?**
-  _High betweenness centrality (0.295) - this node is a cross-community bridge._
-- **What connects `Independent management-tab layout with shared trusted pathname`, `Recover an entry, Restore whole vault, Export and Remove actions`, `Dated checkpoint cards with saved entry counts, sequence and account differences` to the rest of the system?**
-  _352 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `syncService.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.053268765133171914 - nodes in this community are weakly interconnected._
-- **Why does `Checkpoint recovery with inline comparison and fresh scoped confirmation` connect `Checkpoint recovery with inline comparison and fresh scoped confirmation` to `Revisão funcional histórica`, `Recovery checkpoints behavior, protection and verification`, `Navegação e validação Settings`?**
-  _High betweenness centrality (0.164) - this node is a cross-community bridge._
+- **Why does `Current architecture with implemented local and legacy increment` connect `Revisão funcional histórica` to `Ferramentas de desenvolvimento`, `getStorage`, `Confirmação de autofill`, `Recovery checkpoints behavior, protection and verification`, `restore light 400 extension dialog screenshot`, `Ferramentas de desenvolvimento`, `Interface e revisão visual`, `popup.js`, `Ferramentas de desenvolvimento`, `Criptografia e armazenamento`, `Quatro áreas das definições`, `Original SD review with later local increment notice`, `SETTINGS_UX_IMPLEMENTATION.md`, `backupDialogs-browser.mjs`?**
+  _High betweenness centrality (0.334) - this node is a cross-community bridge._
+- **What connects `Historical frontend regression evidence and manual limits`, `Historical independent Impeccable review evidence`, `Historical hTML category ownership and dedicated settings styles` to the rest of the system?**
+  _363 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `getStorage` be split into smaller, more focused modules?**
-  _Cohesion score 0.13019607843137254 - nodes in this community are weakly interconnected._
-- **Why does `Recovery-surface presentation and unlock-controller refinement` connect `Quatro áreas das definições` to `export management dark extension dialog screenshot`, `restore dark 320 extension dialog screenshot`, `restore dark 400 extension dialog screenshot`, `restore error dark extension dialog screenshot`, `restore light 320 extension dialog screenshot`, `Local Settings Sync and Data Management work item`, `Análise de formulários`, `export light 400 extension dialog screenshot`, `recoveryDesign-browser.mjs`, `Modelo de segurança`, `Ícone 32 pixels`, `Ícone 48 pixels`, `Entrada do content script`, `export dark 400 extension dialog screenshot`, `export error dark extension dialog screenshot`, `export light 320 extension dialog screenshot`, `Navegação e validação Settings`?**
-  _High betweenness centrality (0.119) - this node is a cross-community bridge._
+  _Cohesion score 0.05445431761221235 - nodes in this community are weakly interconnected._
+- **Why does `Checkpoint recovery with inline comparison and fresh scoped confirmation` connect `Recovery checkpoints behavior, protection and verification` to `Revisão funcional histórica`, `cryptoVault.js`?**
+  _High betweenness centrality (0.173) - this node is a cross-community bridge._
 - **Should `Popup HTML semantic surfaces` be split into smaller, more focused modules?**
-  _Cohesion score 0.13438735177865613 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05297532656023222 - nodes in this community are weakly interconnected._
+- **Why does `Vault unlock controller with bounded inline retry and WebAuthn cancellation` connect `Quatro áreas das definições` to `Revisão funcional histórica`, `Modelo de segurança`?**
+  _High betweenness centrality (0.115) - this node is a cross-community bridge._
+- **Should `Recovery checkpoints behavior, protection and verification` be split into smaller, more focused modules?**
+  _Cohesion score 0.04343971631205674 - nodes in this community are weakly interconnected._
+## Plan completion semantic increment — 2026-11-04
+
+Seven current implementation/status facts added; previous menu contract corrected. See `plan-completion-refresh.json` for source hashes. Runtime remains partial; Drive activation and release acceptance pending. Auth screenshot semantic extraction and analysis-sidecar refresh remain pending.

@@ -1,8 +1,8 @@
-body { margin: 0; min-width: 0; min-height: 100dvh; width: auto; height: auto; padding: 20px 24px; background: var(--bg); color: var(--text); }
+body { margin: 0; min-width: 0; min-height: 100dvh; width: auto; height: auto; padding: 16px; background: var(--bg); color: var(--text); }
 .auth-shell { max-width: 380px; margin: 0 auto; }
-.auth-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; font-size: 13px; font-weight: 650; }
+.auth-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 650; }
 .auth-brand svg { display: block; }
-h1 { margin: 0 0 8px; font-size: 23px; line-height: 1.25; letter-spacing: -.3px; }
+h1 { margin: 0 0 8px; font-size: 20px; line-height: 1.25; letter-spacing: -.3px; }
 .auth-lead { color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
 .auth-site { display: grid; gap: 5px; padding: 12px 0; margin-bottom: 14px; border-block: 1px solid var(--border); }
 .auth-site span { font-size: 12px; color: var(--text-muted); }
@@ -22,8 +22,8 @@ h1 { margin: 0 0 8px; font-size: 23px; line-height: 1.25; letter-spacing: -.3px;
 .auth-actions { display: flex; gap: 8px; justify-content: flex-end; position: sticky; bottom: 0; margin-top: 12px; padding-top: 12px; background: var(--bg); }
 .auth-actions .compact-btn { width: auto; min-height: 38px; padding: 9px 16px; }
 body[data-theme] .auth-actions button.primary { background: var(--text); color: var(--bg); border-color: transparent; box-shadow: none; transition: opacity .15s ease, transform .15s ease; }
-#accounts { display: grid; gap: 8px; }
-.auth-account { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; padding: 14px; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface); font: inherit; }
+#accounts { display: grid; gap: 0; max-height: 220px; overflow-y: auto; }
+.auth-account { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 8px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; color: var(--text); background: var(--surface); font: inherit; }
 .auth-account:hover { background: var(--surface-raised); }
 .auth-account span { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 14px; font-weight: 600; }
 .auth-account svg { flex: none; }
