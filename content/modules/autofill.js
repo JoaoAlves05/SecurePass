@@ -12,7 +12,7 @@ function action(label, name, primary = false) {
   button.dataset.action = name;
   button.append(icon(name), element('span', label)); return button;
 }
-function createPanel(field, title, { focus = false, kind = 'tools' } = {}) {
+function createPanel(field, title, { focus = false, kind = 'tools', onClose } = {}) {
   active?.close();
   const entry = tracked.get(field); if (!entry || !visibleField(field)) return null;
   const panel = element('section', null, 'securepass-panel sp-light'); panel.id = `securepass-panel-${crypto.randomUUID()}`;
@@ -33,6 +33,7 @@ function createPanel(field, title, { focus = false, kind = 'tools' } = {}) {
     window.visualViewport?.removeEventListener('resize', reposition); window.visualViewport?.removeEventListener('scroll', reposition);
     if (entry.close === close) { entry.close = null; entry.button.setAttribute('aria-expanded', 'false'); entry.button.removeAttribute('aria-controls'); }
     if (active?.panel === panel) active = null;
+    onClose?.();
     if (restoreFocus && !entry.button.hidden && entry.button.isConnected) entry.button.focus();
   };
   const report = (text, error = false) => { if (closed) return; status.textContent = text; status.hidden = !text; status.dataset.state = error ? 'error' : ''; reposition(); };
@@ -62,6 +63,7 @@ function showSaveSuggestion(field, candidateId, username) {
   view.actions.append(review, dismiss); view.expire(30000); positionPanel(view.panel, field);
 }
 function releaseTarget(target) {
+  if (target.requestId) request('REQUEST_AUTOFILL', { existingRequestId: target.requestId, targetId: target.id, cancelSelection: true }).catch(() => {});
   clearTimeout(target.timer); pending.delete(target.id);
   if (target.entry.target === target) target.entry.target = null;
   target.entry.button.removeAttribute('aria-busy');
@@ -87,11 +89,44 @@ function feedback(field, message, error = false) {
   document.addEventListener('pointerdown', close, true);
   resolveThemeClass().then(theme => { if (!closed) { status.classList.remove('sp-light', 'sp-dark'); status.classList.add(theme); } }).catch(() => {});
 }
+function selectorVisible(target, interaction) {
+  const frame = active?.kind === 'selector' && active.field === target?.field ? active.panel.querySelector('iframe') : null;
+  if (!frame || shadowRoot.activeElement !== frame || document.visibilityState !== 'visible') return false;
+  for (let node = frame; node; node = node.parentElement || (node.getRootNode() === shadowRoot ? shadowHost : null)) {
+    const style = getComputedStyle(node);
+    if (style.display === 'none' || style.visibility !== 'visible' || Number(style.opacity) < .99 || style.transform !== 'none' || style.filter !== 'none' || style.clipPath !== 'none' || style.mixBlendMode !== 'normal' || style.clip !== 'auto' || style.maskImage && style.maskImage !== 'none') return false;
+  }
+  const rect = frame.getBoundingClientRect();
+  const x = rect.left + interaction.x; const y = rect.top + interaction.y;
+  if (x < rect.left || y < rect.top || x > rect.right || y > rect.bottom || x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return false;
+  return document.elementFromPoint(x, y) === shadowHost && shadowRoot.elementFromPoint(x, y) === frame;
+}
+function openSelector(target) {
+  if (!pending.has(target.id) || !visibleField(target.field)) return false;
+  if (active?.kind === 'selector' && active.field === target.field) { active.panel.querySelector('iframe')?.focus(); return true; }
+  let transferring = false;
+  const view = createPanel(target.field, 'Saved logins', { kind: 'selector', onClose: () => { if (!transferring && pending.has(target.id)) releaseTarget(target); } }); if (!view) return false;
+  view.panel.querySelector('h3')?.remove(); view.panel.querySelector('.securepass-origin')?.remove();
+  view.panel.style.padding = '12px'; view.panel.style.animation = 'none';
+  const frame = document.createElement('iframe'); frame.title = 'SecurePass saved logins';
+  frame.referrerPolicy = 'no-referrer';
+  frame.src = chrome.runtime.getURL(`selector/selector.html?requestId=${target.requestId}`);
+  frame.style.cssText = 'display:block;width:100%;height:100px;border:0;border-radius:4px;background:var(--sp-bg);pointer-events:auto;';
+  const fallback = action('Open SecurePass window', 'native');
+  fallback.addEventListener('click', () => view.run(async () => {
+    transferring = true;
+    try {
+      const response = await request('REQUEST_AUTOFILL', { existingRequestId: target.requestId, targetId: target.id, forceNative: true });
+      target.requestId = response.requestId; view.close();
+    } catch (error) { transferring = false; throw error; }
+  }));
+  fallback.dataset.action = 'native'; view.actions.append(frame, fallback); positionPanel(view.panel, target.field); return true;
+}
 async function beginFill(field) {
   const entry = tracked.get(field); if (!entry || !visibleField(field)) return;
   if (entry.target) {
     if (!entry.target.requestId) return;
-    try { await request('REQUEST_AUTOFILL', { existingRequestId: entry.target.requestId, targetId: entry.target.id }); }
+    try { const response = await request('REQUEST_AUTOFILL', { existingRequestId: entry.target.requestId, targetId: entry.target.id }); if (response.presentation === 'selector') openSelector(entry.target); }
     catch (error) { if (entry.target) releaseTarget(entry.target); feedback(field, error.message, true); }
     return;
   }
@@ -102,9 +137,9 @@ async function beginFill(field) {
   entry.button.setAttribute('aria-label', 'Opening SecurePass…');
   target.timer = setTimeout(() => { releaseTarget(target); feedback(field, 'Selection expired. Open SecurePass again.'); }, 120000);
   try {
-    const response = await request('REQUEST_AUTOFILL', { targetId: target.id, hasPassword: Boolean(field.value) });
+    const response = await request('REQUEST_AUTOFILL', { targetId: target.id, hasPassword: Boolean(field.value), anchored: true });
     if (!pending.has(target.id)) return;
-    target.requestId = response.requestId; entry.button.removeAttribute('aria-busy');
+    target.requestId = response.requestId; if (response.presentation === 'selector') openSelector(target); entry.button.removeAttribute('aria-busy');
     entry.button.setAttribute('aria-label', 'Return to the SecurePass selection');
   } catch (error) { if (pending.has(target.id)) { releaseTarget(target); feedback(field, error.message, true); } }
 }
@@ -119,13 +154,25 @@ export async function initAutofill(deps) {
     if (sender.id !== chrome.runtime.id) return;
     const target = pending.get(message.targetId);
     const usable = target && target.expires > Date.now() && visibleField(target.field) && analyzer.analyzeFormContext(target.field).context === 'login';
-    if (message.type === 'AUTOFILL_CHECK_DOCUMENT') { respond({ ok: Boolean(usable), origin: location.origin }); return; }
+    if (message.type === 'AUTOFILL_SELECTOR_LAYOUT') {
+      const frame = active?.kind === 'selector' && active.field === target?.field ? active.panel.querySelector('iframe') : null;
+      if (!usable || target.requestId !== message.requestId || message.origin !== location.origin || !frame || !Number.isInteger(message.height) || message.height < 80 || message.height > 240) { respond({ ok: false }); return; }
+      frame.style.height = `${message.height}px`; positionPanel(active.panel, target.field);
+      // Allow the parent to paint the new geometry before
+      // the selector enables controls for the next pointer interaction.
+      requestAnimationFrame(() => requestAnimationFrame(() => respond({ ok: frame.isConnected }))); return true;
+    }
+    if (message.type === 'AUTOFILL_SELECTOR_OPEN') {
+      if (!usable || target.requestId !== message.requestId || message.origin !== location.origin) { respond({ ok: false }); return; }
+      respond({ ok: openSelector(target) }); return;
+    }
+    if (message.type === 'AUTOFILL_CHECK_DOCUMENT') { respond({ ok: Boolean(usable), origin: location.origin, selectorVisible: message.interaction && usable ? selectorVisible(target, message.interaction) : false }); return; }
     if (message.type === 'VAULT_LOCKED') { for (const value of pending.values()) releaseTarget(value); active?.close(); return; }
     if (!['AUTOFILL_RESULT', 'AUTOFILL_CANCELLED', 'AUTOFILL_TOOL'].includes(message.type)) return;
     if (!target || target.requestId && target.requestId !== message.requestId) { respond({ ok: false }); return; }
     releaseTarget(target);
     if (message.type === 'AUTOFILL_CANCELLED') { feedback(target.field, message.reason === 'saved' ? 'Login saved. Open SecurePass to fill it.' : message.reason === 'expired' ? 'Selection expired. Open SecurePass again.' : 'Selection cancelled. Choose a login when you are ready.'); target.field.focus({ preventScroll: true }); respond({ ok: true }); return; }
-    if (!usable || message.origin !== location.origin) { respond({ ok: false }); return; }
+    if (!usable || message.origin !== location.origin || message.interaction && !selectorVisible(target, message.interaction)) { respond({ ok: false }); return; }
     const context = analyzer.analyzeFormContext(target.field);
     if (context.isCurrent) { respond({ ok: false }); return; }
     if (message.type === 'AUTOFILL_TOOL') { openTools(target.field, message.tool); respond({ ok: true }); return; }

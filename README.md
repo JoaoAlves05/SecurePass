@@ -59,7 +59,7 @@ Gestão do cofre e das definições no popup ou num separador dedicado, com tema
 | **Cofre local cifrado** | Criar, pesquisar, adicionar, editar e remover credenciais, alterar a palavra-passe mestra e bloquear o acesso. |
 | **Gerador configurável** | Definir comprimento, conjuntos de caracteres e exclusões, com suporte para um subconjunto de regras dos formulários. Regras impossíveis ou não suportadas geram um erro explícito. |
 | **Análise de palavras-passe** | Obter uma avaliação heurística local e consultar, por pedido explícito, ocorrências no Have I Been Pwned. |
-| **Preenchimento assistido** | Selecionar uma conta numa janela da extensão e autorizar o preenchimento no site correspondente, sem submeter automaticamente o formulário. |
+| **Preenchimento assistido** | Selecionar uma de até duas sugestões junto ao campo, após desbloqueio protegido quando necessário; todas as contas ficam disponíveis na alternativa em janela e o formulário não é submetido automaticamente. |
 | **Sugestões de gravação** | Rever e confirmar a gravação ou atualização de credenciais detetadas na submissão de um formulário. |
 | **Backups e recuperação** | Exportar ficheiros cifrados, pré-visualizar importações, resolver duplicados e restaurar versões anteriores. |
 | **Bloqueio automático** | Bloquear o cofre por inatividade, ao bloquear o sistema operativo ou ao fechar a última janela do browser. |
@@ -91,7 +91,7 @@ Após alterações ao código, recarrega a extensão em `chrome://extensions` e 
 1. **Cria um cofre** com uma palavra-passe mestra de, pelo menos, 16 caracteres. Também podes importar um backup cifrado para um perfil vazio.
 2. **Adiciona credenciais** e utiliza o gerador para criar palavras-passe com as regras pretendidas.
 3. **Configura o bloqueio automático** e, se tiveres um autenticador com suporte PRF, o desbloqueio com WebAuthn.
-4. **Preenche uma conta num site** através da seleção e confirmação apresentadas pela extensão. Confirma que o site aceitou os dados antes de aprovar uma sugestão de gravação.
+4. **Preenche uma conta num site** clicando na chave e escolhendo a conta na lista junto ao campo; se necessário, desbloqueia primeiro na janela da extensão. Confirma que o site aceitou os dados antes de aprovar uma sugestão de gravação.
 5. **Exporta um backup cifrado** e verifica o restauro com dados descartáveis antes de depender desse processo.
 
 A palavra-passe mestra é preservada exatamente, incluindo espaços, símbolos e Unicode. Palavras-passe de cofres antigos continuam a ser aceites no desbloqueio e na migração.

@@ -1,4 +1,4 @@
-// Bounded, read-only Drive inspection. Activation/publication requires the signed protocol.
+// Bounded Drive transport. Production activation requires the reviewed signed protocol.
 const API = 'https://www.googleapis.com/drive/v3/files';
 const MAX_RESPONSE = 16 * 1024 * 1024;
 const MAX_LIST = 1024 * 1024;
@@ -39,22 +39,25 @@ function classify(response, body) {
   const retryAfter = Number.isFinite(seconds) ? Math.max(0, seconds * 1000) : Math.max(0, Date.parse(header) - Date.now()) || 0;
   return new DriveError(code, { retryable, retryAfter: Math.min(retryAfter, 24 * 60 * 60 * 1000) });
 }
-export function createDriveReader({ getToken, assertBinding, fetchImpl = fetch, maxPages = 100, maxFiles = 10000, timeoutMs = 30000 }) {
+function createDriveClient({ getToken, assertBinding, assertWritable, validatePublication, fetchImpl = fetch, maxPages = 100, maxFiles = 10000, timeoutMs = 30000 }, writable = false) {
   if (typeof getToken !== 'function' || typeof assertBinding !== 'function') throw new Error('A token provider and binding guard are required.');
   if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 100 || !Number.isInteger(maxFiles) || maxFiles < 1 || maxFiles > 10000 || !Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60000) throw new Error('Invalid Drive limits.');
   async function guard(binding) {
     try { await assertBinding(binding); } catch { throw new DriveError('binding-changed'); }
   }
-  async function request(url, binding, limit, signal) {
+  async function request(url, binding, limit, signal, init = {}) {
+    const writing = init.method === 'POST';
+    const writeGuard = async () => { if (writing) await assertWritable(binding); };
+    await writeGuard();
     signal?.throwIfAborted(); await guard(binding);
-    const token = await getToken(binding); signal?.throwIfAborted(); await guard(binding);
+    const token = await getToken(binding); signal?.throwIfAborted(); await guard(binding); await writeGuard();
     if (typeof token !== 'string' || !token || /[\r\n]/.test(token)) throw new DriveError('authentication-required');
     const controller = new AbortController();
     const cancel = () => controller.abort(); signal?.addEventListener('abort', cancel, { once: true });
     if (signal?.aborted) cancel();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetchImpl(url, { method: 'GET', headers: { Authorization: `Bearer ${token}` }, signal: controller.signal, redirect: 'error', credentials: 'omit', cache: 'no-store' });
+      const response = await fetchImpl(url, { ...init, method: init.method || 'GET', headers: { ...init.headers, Authorization: `Bearer ${token}` }, signal: controller.signal, redirect: 'error', credentials: 'omit', cache: 'no-store' });
       const text = await bounded(response, response.ok ? limit : Math.min(limit, 65536));
       signal?.throwIfAborted(); await guard(binding);
       if (!response.ok) { let error; try { error = JSON.parse(text); } catch {} throw classify(response, error); }
@@ -66,7 +69,7 @@ export function createDriveReader({ getToken, assertBinding, fetchImpl = fetch, 
       throw new DriveError('connection-interrupted', { retryable: true });
     } finally { clearTimeout(timer); signal?.removeEventListener('abort', cancel); }
   }
-  return {
+  const reader = {
     async list(binding, { signal } = {}) {
       const files = []; const ids = new Set(); const tokens = new Set(); let pageToken;
       for (let page = 0; page < maxPages; page++) {
@@ -91,4 +94,48 @@ export function createDriveReader({ getToken, assertBinding, fetchImpl = fetch, 
       return request(`${API}/${fileId}?alt=media`, binding, MAX_RESPONSE, signal);
     }
   };
+  if (!writable) return reader;
+  if (typeof assertWritable !== 'function' || typeof validatePublication !== 'function') throw new Error('Publication needs a write guard and a protocol validator.');
+  let pending = Promise.resolve();
+  async function publish(binding, publication, { signal } = {}) {
+    const { vaultId, revisionId, body } = publication || {};
+    if (![vaultId, revisionId].every(id => typeof id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(id)) || typeof body !== 'string') throw new DriveError('invalid-publication');
+    // The transport only handles an immutable serialized ciphertext packet. The caller
+    // verifies the signed format; it must never pass plaintext entries here.
+    if (body.length > 5 * 1024 * 1024 - 4096 || new TextEncoder().encode(body).length > 5 * 1024 * 1024 - 4096) throw new DriveError('publication-too-large');
+    const pinned = Object.freeze({ vaultId, revisionId });
+    await validatePublication(body, pinned);
+    signal?.throwIfAborted(); await guard(binding); await assertWritable(binding);
+    const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body)))].map(value => value.toString(16).padStart(2, '0')).join('');
+    const verify = async files => {
+      const matches = files.filter(file => file.appProperties?.vaultId === vaultId && file.appProperties?.revisionId === revisionId);
+      for (const file of matches) {
+        if (await reader.download(binding, file.id, { signal }) !== body) throw new DriveError('revision-content-conflict');
+      }
+      return matches.map(file => file.id).sort();
+    };
+    const existing = await verify(await reader.list(binding, { signal }));
+    if (existing.length) {
+      await guard(binding); await assertWritable(binding);
+      return { revisionId, digest, fileIds: existing, verified: true, reused: true };
+    }
+    const boundary = `securepass_${crypto.randomUUID()}`;
+    const metadata = JSON.stringify({ name: revisionId, parents: ['appDataFolder'], mimeType: 'application/json', appProperties: { vaultId, revisionId, digest } });
+    const multipart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
+    const created = parse(await request('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', binding, 65536, signal, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body: multipart }));
+    if (!idPattern.test(created?.id || '')) throw new DriveError('publication-unconfirmed', { retryable: true });
+    if (await reader.download(binding, created.id, { signal }) !== body) throw new DriveError('revision-content-conflict');
+    // Re-enumerate before acknowledgement so conflicting duplicates cannot be hidden
+    // by the response to files.create. Delayed discovery leaves publication pending.
+    const confirmed = await verify(await reader.list(binding, { signal }));
+    if (!confirmed.includes(created.id)) throw new DriveError('publication-unconfirmed', { retryable: true });
+    await guard(binding); await assertWritable(binding);
+    return { revisionId, digest, fileIds: confirmed, verified: true, reused: false };
+  }
+  return { ...reader, publish(binding, publication, options) {
+    const task = pending.then(() => publish(binding, publication, options));
+    pending = task.catch(() => {}); return task;
+  } };
 }
+export const createDriveReader = options => createDriveClient(options);
+export const createDriveTransport = options => createDriveClient(options, true);

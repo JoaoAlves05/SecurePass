@@ -33,6 +33,19 @@ export async function createRequest(message, sender, kind = 'fill', { candidateI
   if (kind === 'fill' && message.existingRequestId) {
     const existing = (await getStorage('session', `${PREFIX}${message.existingRequestId}`))[`${PREFIX}${message.existingRequestId}`];
     if (!existing || existing.kind !== 'fill' || existing.expires <= Date.now() || existing.tabId !== sender.tab.id || existing.documentId !== sender.documentId || existing.origin !== origin || existing.targetId !== message.targetId) throw new Error('Selection expired. Open SecurePass again.');
+    if (message.cancelSelection === true) {
+      await removeStorage('session', `${PREFIX}${message.existingRequestId}`);
+      return { cancelled: true };
+    }
+    if (message.forceNative === true) {
+      if (existing.presentation === 'selector') {
+        await removeStorage('session', `${PREFIX}${message.existingRequestId}`);
+        return createRequest({ targetId: existing.targetId, hasPassword: existing.hasPassword }, sender);
+      }
+      existing.anchored = false;
+      await setStorage('session', { [`${PREFIX}${message.existingRequestId}`]: existing });
+    }
+    if (existing.presentation === 'selector') return { requestId: message.existingRequestId, presentation: 'selector' };
     await chrome.windows.update(existing.authWindowId, { focused: true });
     return { requestId: message.existingRequestId };
   }
@@ -44,12 +57,15 @@ export async function createRequest(message, sender, kind = 'fill', { candidateI
     if (message.targetId !== undefined && (typeof message.targetId !== 'string' || !/^[\w-]{36}$/.test(message.targetId))) throw new Error('Invalid field target.');
     request.targetId = message.targetId || null;
     request.hasPassword = message.hasPassword === true;
+    request.anchored = message.anchored === true && Boolean(request.targetId);
   }
   let epoch;
   await withVaultLock(async () => {
-    await vaultStatus(); await prune(); epoch = vaultGeneration();
+    const status = await vaultStatus(); await prune(); epoch = vaultGeneration();
+    if (kind === 'fill' && request.anchored && status.unlocked) request.presentation = 'selector';
     await setStorage('session', { [`${PREFIX}${requestId}`]: request });
   });
+  if (request.presentation === 'selector') { await expireRequests(); return { requestId, presentation: 'selector' }; }
   let window;
   try {
     window = await chrome.windows.create({ url: 'about:blank', type: 'popup', width: 360, height: kind === 'fill' ? 400 : 560, focused: true });
@@ -70,12 +86,20 @@ async function trustedRequest(id, sender) {
   if (typeof id !== 'string' || !/^[\w-]{36}$/.test(id)) throw new Error('Invalid request.');
   const request = (await getStorage('session', `${PREFIX}${id}`))[`${PREFIX}${id}`];
   if (!request || request.expires <= Date.now()) throw new Error('Request expired. Return to the website and try again.');
-  if (!extensionPage(sender, ['/auth/auth.html']) || request.authTabId !== sender.tab?.id) throw new Error('Request does not belong to this window.');
+  if (extensionPage(sender, ['/selector/selector.html'])) {
+    if (request.presentation !== 'selector' || request.kind !== 'fill' || sender.tab?.id !== request.tabId || !Number.isInteger(sender.frameId) || sender.frameId < 1 || !sender.documentId) throw new Error('Request does not belong to this selector.');
+    if (request.selectorDocumentId && request.selectorDocumentId !== sender.documentId) throw new Error('Request does not belong to this selector.');
+    if (!request.selectorDocumentId) {
+      request.selectorDocumentId = sender.documentId;
+      await setStorage('session', { [`${PREFIX}${id}`]: request });
+    }
+  } else if (!extensionPage(sender, ['/auth/auth.html']) || request.presentation === 'selector' || request.authTabId !== sender.tab?.id) throw new Error('Request does not belong to this window.');
   return request;
 }
-async function assertDocument(request) {
-  const reply = await chrome.tabs.sendMessage(request.tabId, { type: 'AUTOFILL_CHECK_DOCUMENT', targetId: request.targetId }, { documentId: request.documentId });
+async function assertDocument(request, interaction) {
+  const reply = await chrome.tabs.sendMessage(request.tabId, { type: 'AUTOFILL_CHECK_DOCUMENT', targetId: request.targetId, ...(interaction ? { interaction } : {}) }, { documentId: request.documentId });
   if (!reply?.ok || reply.origin !== request.origin) throw new Error('The original document is no longer active.');
+  if (interaction && reply.selectorVisible !== true) throw new Error('Selection is hidden or obscured. Open the SecurePass window instead.');
 }
 export function requestDetails(message, sender) {
   return withVaultOperation(async () => {
@@ -88,7 +112,7 @@ export function requestDetails(message, sender) {
     const matches = request.entry ? entries.filter(entry => entry.username === request.entry.username) : [];
     const saveMode = matches.some(entry => entry.password === request.entry?.password) ? 'unchanged' : matches.length ? 'update' : 'create';
     if (request.kind === 'save' && active && saveMode === 'unchanged' && request.candidateId) await removeCandidate(request.candidateId).catch(() => {});
-    return { kind: request.kind, origin: request.origin, expires: request.expires, revision: active?.record.revision || null, hasPassword: request.hasPassword === true,
+    return { kind: request.kind, anchored: request.anchored === true, origin: request.origin, expires: request.expires, revision: active?.record.revision || null, hasPassword: request.hasPassword === true,
       entries: entries.map(entry => ({ id: entry.id, username: entry.username, site: entry.site, updatedAt: entry.updatedAt })),
       saveMode, matchingIds: matches.map(entry => entry.id), candidate: request.entry ? { username: request.entry.username, site: request.origin } : null };
   });
@@ -139,11 +163,14 @@ function completeSave(message, sender, manual = false) {
 }
 export async function completeRequest(message, sender) {
   const request = await trustedRequest(message.requestId, sender);
+  if (extensionPage(sender, ['/selector/selector.html']) && message.action) throw new Error('Selectors may only fill the selected login.');
   if (request.kind === 'save') return completeSave(message, sender);
   if (message.action === 'add') return completeSave(message, sender, true);
   return withVaultOperation(async epoch => {
     const current = await trustedRequest(message.requestId, sender);
-    await assertDocument(current);
+    const interaction = current.presentation === 'selector' ? message.interaction : undefined;
+    if (current.presentation === 'selector' && (!interaction || !['pointer', 'keyboard'].includes(interaction.mode) || !Number.isFinite(interaction.x) || !Number.isFinite(interaction.y) || interaction.x < 0 || interaction.y < 0 || interaction.x > 320 || interaction.y > 240)) throw new Error('Choose an account in the visible selector.');
+    await assertDocument(current, interaction);
     if (message.action && message.action !== 'fill') {
       if (!['generate', 'copy', 'save-entered'].includes(message.action)) throw new Error('Unknown password tool.');
       if (['copy', 'save-entered'].includes(message.action) && !current.hasPassword) throw new Error('Enter a password on the website first.');
@@ -158,10 +185,11 @@ export async function completeRequest(message, sender) {
     const entry = state.entries.find(entry => entry.id === message.credentialId && matchesOrigin(entry.site, current.origin));
     if (!entry) throw new Error('Credential not available for this origin.');
     await trustedRequest(message.requestId, sender);
+    if (interaction) await assertDocument(current, interaction);
     assertVaultGeneration(epoch);
     await removeStorage('session', `${PREFIX}${message.requestId}`);
     assertVaultGeneration(epoch);
-    const reply = await chrome.tabs.sendMessage(current.tabId, { type: 'AUTOFILL_RESULT', requestId: message.requestId, targetId: current.targetId, origin: current.origin, entry: { username: entry.username, password: entry.password } }, { documentId: current.documentId });
+    const reply = await chrome.tabs.sendMessage(current.tabId, { type: 'AUTOFILL_RESULT', requestId: message.requestId, targetId: current.targetId, origin: current.origin, ...(interaction ? { interaction } : {}), entry: { username: entry.username, password: entry.password } }, { documentId: current.documentId });
     if (!reply?.ok) throw new Error('The original field is no longer available. Open SecurePass again.');
   });
 }
@@ -189,5 +217,44 @@ export function listForOrigin(_message, sender) {
       if (error.message.includes('locked') || error.message.includes('not initialized')) return { entries: [], unlocked: false };
       throw error;
     }
+  });
+}
+
+export function useNativeSelection(message, sender) {
+  return withVaultOperation(async () => {
+    const request = await trustedRequest(message.requestId, sender);
+    if (!extensionPage(sender, ['/auth/auth.html'])) throw new Error('A trusted window is required.');
+    request.anchored = false;
+    await setStorage('session', { [`${PREFIX}${message.requestId}`]: request });
+    return {};
+  });
+}
+export function handoffSelection(message, sender) {
+  return withVaultOperation(async epoch => {
+    const request = await trustedRequest(message.requestId, sender);
+    if (!extensionPage(sender, ['/auth/auth.html']) || request.kind !== 'fill' || !request.anchored) throw new Error('Anchored selection is unavailable.');
+    await requireVault(); await assertDocument(request);
+    const original = { ...request };
+    request.presentation = 'selector'; delete request.authTabId; delete request.authWindowId;
+    await setStorage('session', { [`${PREFIX}${message.requestId}`]: request });
+    try {
+      assertVaultGeneration(epoch);
+      const result = await chrome.tabs.sendMessage(request.tabId, { type: 'AUTOFILL_SELECTOR_OPEN', requestId: message.requestId, targetId: request.targetId, origin: request.origin }, { documentId: request.documentId });
+      if (!result?.ok) throw new Error('The original field is no longer available.');
+      return { handedOff: true };
+    } catch (error) {
+      if (vaultGeneration() === epoch) await setStorage('session', { [`${PREFIX}${message.requestId}`]: original });
+      throw error;
+    }
+  });
+}
+
+export function selectorLayout(message, sender) {
+  return withVaultOperation(async () => {
+    const request = await trustedRequest(message.requestId, sender);
+    if (!extensionPage(sender, ['/selector/selector.html']) || !Number.isInteger(message.height) || message.height < 80 || message.height > 240) throw new Error('Invalid selector layout.');
+    await assertDocument(request);
+    const result = await chrome.tabs.sendMessage(request.tabId, { type: 'AUTOFILL_SELECTOR_LAYOUT', requestId: message.requestId, targetId: request.targetId, origin: request.origin, height: message.height }, { documentId: request.documentId });
+    return { applied: result?.ok === true };
   });
 }

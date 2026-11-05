@@ -55,6 +55,12 @@ export const utilHandlers = new Map([
   ['AUTH_REQUEST_DETAILS', requests.requestDetails],
   ['AUTH_REQUEST_COMPLETE', requests.completeRequest],
   ['AUTH_REQUEST_CANCEL', requests.cancelRequest],
+  ['AUTH_REQUEST_HANDOFF', requests.handoffSelection],
+  ['AUTH_REQUEST_USE_WINDOW', requests.useNativeSelection],
+  ['SELECTOR_DETAILS', requests.requestDetails],
+  ['SELECTOR_COMPLETE', requests.completeRequest],
+  ['SELECTOR_CANCEL', requests.cancelRequest],
+  ['SELECTOR_LAYOUT', requests.selectorLayout],
   ['COPY_PASSWORD', async m => { await copyInBackground(validateString(m.value, 1024, 'password', true)); return {}; }],
   ['COPY_INLINE_PASSWORD', async m => { await copyInBackground(validateString(m.value, 1024, 'password', true)); return {}; }]
 ]);

@@ -29,7 +29,7 @@ beforeEach(async () => {
   await vault.lockVault(); resetStorage(); windows = []; sent = []; badge = ''; nextTab = 10;
   chrome.action = { setBadgeText: async value => { badge = value.text; } };
   chrome.windows = { create: async options => { const value = { id: nextTab, tabs: [{ id: nextTab++ }] }; windows.push({ ...value, options }); return value; }, update: async () => {} };
-  chrome.tabs = { update: async () => {}, remove: async () => {}, sendMessage: async (tabId, message, options) => { sent.push({ tabId, message, options }); return { ok: true, origin }; } };
+  chrome.tabs = { update: async () => {}, remove: async () => {}, sendMessage: async (tabId, message, options) => { sent.push({ tabId, message, options }); return { ok: true, origin, selectorVisible: true }; } };
 });
 test('submission suggestions are temporary, exact-origin, deduplicated and metadata-only', async () => {
   await vault.initializeVault(PASS);
@@ -267,4 +267,59 @@ test('fill rejects missing or stale vault revision without delivering and permit
   const fresh = await requests.requestDetails(request, owner);
   await requests.completeRequest({ ...request, credentialId: account.id, expectedRevision: fresh.revision }, owner);
   assert.equal(sent.filter(item => item.message.type === 'AUTOFILL_RESULT').length, 1);
+});
+
+test('anchored selector binds an extension frame to the source tab/document and discloses metadata only', async () => {
+  await vault.initializeVault(PASS); const account = await vault.storeCredential(entry());
+  const targetId = crypto.randomUUID();
+  const request = await requests.createRequest({ anchored: true, targetId }, sender);
+  assert.equal(request.presentation, 'selector'); assert.equal(windows.length, 0);
+  const owner = { id: chrome.runtime.id, tab: { id: 1 }, documentId: 'selector-doc', frameId: 2, url: chrome.runtime.getURL('selector/selector.html') };
+  assert.equal(authorizeMessage({ type: 'SELECTOR_DETAILS' }, owner), 'selector');
+  assert.throws(() => authorizeMessage({ type: 'UNLOCK_VAULT' }, owner), /Forbidden/);
+  assert.throws(() => authorizeMessage({ type: 'LIST_CREDENTIALS' }, owner), /Forbidden/);
+  await assert.rejects(requests.requestDetails(request, { ...owner, tab: { id: 2 } }), /does not belong/);
+  const details = await requests.requestDetails(request, owner);
+  assert.equal(details.entries[0].username, account.username); assert.equal('password' in details.entries[0], false);
+  await requests.selectorLayout({ ...request, height: 100 }, owner);
+  await assert.rejects(requests.selectorLayout({ ...request, height: 0 }, owner), /layout/);
+  await assert.rejects(requests.requestDetails(request, { ...owner, documentId: 'other-frame-doc' }), /does not belong/);
+  await assert.rejects(requests.completeRequest({ ...request, action: 'add' }, owner), /only fill/);
+  await requests.completeRequest({ ...request, credentialId: account.id, expectedRevision: details.revision, interaction: { mode: 'keyboard', x: 20, y: 20 } }, owner);
+  assert.equal(sent.filter(item => item.message.type === 'AUTOFILL_RESULT').length, 1);
+});
+test('unlock handoff removes native ownership and permits explicit native fallback from the original source', async () => {
+  await vault.initializeVault(PASS); await vault.storeCredential(entry()); await vault.lockVault();
+  const targetId = crypto.randomUUID();
+  const request = await requests.createRequest({ anchored: true, targetId }, sender);
+  const owner = auth(areas.session[`autofill:${request.requestId}`].authTabId);
+  await vault.unlockVault(PASS);
+  await requests.handoffSelection(request, owner);
+  assert.equal(sent.at(-1).message.type, 'AUTOFILL_SELECTOR_OPEN');
+  await requests.closeRequestsForTab(owner.tab.id);
+  assert.ok(areas.session[`autofill:${request.requestId}`]);
+  await assert.rejects(requests.requestDetails(request, owner), /does not belong/);
+  const fallback = await requests.createRequest({ existingRequestId: request.requestId, targetId, forceNative: true }, sender);
+  assert.notEqual(fallback.requestId, request.requestId); assert.equal(windows.length, 2);
+  assert.equal(areas.session[`autofill:${fallback.requestId}`].anchored, false);
+});
+
+test('source cancellation is field/document bound and releases anchored requests without frame unload', async () => {
+  await vault.initializeVault(PASS); const targetId = crypto.randomUUID();
+  const request = await requests.createRequest({ anchored: true, targetId }, sender);
+  await assert.rejects(requests.createRequest({ existingRequestId: request.requestId, targetId: crypto.randomUUID(), cancelSelection: true }, sender), /expired/);
+  assert.ok(areas.session[`autofill:${request.requestId}`]);
+  assert.deepEqual(await requests.createRequest({ existingRequestId: request.requestId, targetId, cancelSelection: true }, sender), { cancelled: true });
+  assert.equal(areas.session[`autofill:${request.requestId}`], undefined);
+});
+
+test('anchored fill requires visible-selector attestation before releasing a credential', async () => {
+  await vault.initializeVault(PASS); const account = await vault.storeCredential(entry());
+  const request = await requests.createRequest({ anchored: true, targetId: crypto.randomUUID() }, sender);
+  const owner = { id: chrome.runtime.id, tab: { id: 1 }, documentId: 'visible-selector', frameId: 2, url: chrome.runtime.getURL('selector/selector.html') };
+  const details = await requests.requestDetails(request, owner);
+  chrome.tabs.sendMessage = async () => ({ ok: true, origin, selectorVisible: false });
+  await assert.rejects(requests.completeRequest({ ...request, credentialId: account.id, expectedRevision: details.revision, interaction: { mode: 'pointer', x: 10, y: 10 } }, owner), /hidden or obscured/);
+  assert.ok(areas.session[`autofill:${request.requestId}`]);
+  assert.equal(sent.filter(item => item.message.type === 'AUTOFILL_RESULT').length, 0);
 });

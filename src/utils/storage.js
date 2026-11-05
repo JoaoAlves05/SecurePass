@@ -1,3 +1,4 @@
+import { PUBLICATION_STATE_KEY, preparePublication, enqueuePublication } from '../sync/publicationModel.js';
 import { VAULT_KEY, CHUNK_SIZE, SECUREPASS_DB_NAME, DB_VERSION, DB_STORE_NAME } from '../constants.js';
 
 function handleRuntimeError(reject) {
@@ -109,7 +110,11 @@ export async function readLocalVaultRecordRaw() {
 
 export const CHECKPOINT_LIMIT = 3;
 
-export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendingSync = false, recoveryRecords, expectedRecoveryRecords, historyOnly = false, saveCheckpoint = true } = {}) {
+export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendingSync = false, recoveryRecords, expectedRecoveryRecords, historyOnly = false, saveCheckpoint = true, drivePublication } = {}) {
+  const expectedDriveAuthorization = drivePublication?.authorization;
+  if (expectedDriveAuthorization !== undefined && (typeof expectedDriveAuthorization !== 'string' || !/^[a-f0-9]{64}$/.test(expectedDriveAuthorization))) throw new Error('Invalid Drive authorization checkpoint.');
+  const preparedDrive = drivePublication ? preparePublication(drivePublication.binding, drivePublication.publication, expectedDriveAuthorization) : null;
+  if (preparedDrive && (pendingSync || historyOnly || preparedDrive.publication.revisionId !== record?.revision || preparedDrive.publication.vaultId !== record?.vaultId)) throw new Error('Drive publication must match the committed vault and cannot use legacy publication.');
   const db = await getDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DB_STORE_NAME, 'readwrite');
@@ -137,6 +142,25 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendi
           store.put(record, VAULT_KEY);
           if (pendingSync) store.put({ revision: record.revision, vaultId: record.vaultId }, 'syncOutbox');
           else store.delete('syncOutbox');
+          if (preparedDrive) {
+            const driveRequest = store.get(PUBLICATION_STATE_KEY);
+            driveRequest.onsuccess = () => {
+              try {
+                const state = driveRequest.result || { enabled: false, binding: null, operations: [] };
+                const enqueue = () => {
+                  try { enqueuePublication(state, preparedDrive); store.put(state, PUBLICATION_STATE_KEY); }
+                  catch (error) { failure = error; tx.abort(); }
+                };
+                if (expectedDriveAuthorization !== undefined) {
+                  const authorization = store.get(`driveAuthorization:${record.vaultId}`);
+                  authorization.onsuccess = () => {
+                    if (authorization.result?.head !== expectedDriveAuthorization) { failure = new Error('Drive authorization changed. Review again.'); tx.abort(); }
+                    else enqueue();
+                  };
+                } else enqueue();
+              } catch (error) { failure = error; tx.abort(); }
+            };
+          }
         }
       };
     };

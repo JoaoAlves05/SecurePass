@@ -1,0 +1,31 @@
+{
+  "description": "Public verification vector. Fictional empty encrypted vault. No private keys or real credentials.",
+  "genesis": {
+    "payload": {
+      "kind": "securepass-authorization",
+      "version": 1,
+      "vaultId": "8c844069-afbc-425e-a793-d7ed557536e2",
+      "keyEpoch": "4e91140e-715c-4caa-9919-c812b2e5b43c",
+      "revision": "fixed-vector-genesis",
+      "previous": null,
+      "adminKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEJnljmXBnDkwq9b9OOZibpWlrdP4fvW6lYQRw3LfHxHfoP0umKr+V+v5KPscs217IU58Kc9zE7WmAUD0JvjEQiw==",
+      "devices": [
+        {
+          "id": "fixed-vector-writer",
+          "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFuWo+8sD+baGIgMCzhpXDUge7iYQtD61miiOtZgsu8OOpPzkJUi1UB1Vs2EsAFjtLA8felynxgsot/E/C27ahg=="
+        }
+      ]
+    },
+    "signature": "+x8C/ok/ZhHTbb27uoGJE9oeERPvHpgDoY1GeGYlNmRF3zZjCQKaXu03vtBGz4mGpksPX1LS+BuoQKN9B4JJOQ=="
+  },
+  "trust": {
+    "vaultId": "8c844069-afbc-425e-a793-d7ed557536e2",
+    "rootFingerprint": "794a176063bda0a99c057185cb3d84a0aa6f36570750a531ddadcf58cbc93239"
+  },
+  "authorizationHash": "d6a5880239544525c1a9e48c18339aade90d87bf0b29f1e27d8c70d069343ace",
+  "publication": {
+    "vaultId": "8c844069-afbc-425e-a793-d7ed557536e2",
+    "revisionId": "4e0e97e4-5cf9-4b6d-9932-b16a950a3368"
+  },
+  "body": "{\"payload\":{\"kind\":\"securepass-signed-revision\",\"version\":1,\"author\":\"fixed-vector-writer\",\"authorization\":\"d6a5880239544525c1a9e48c18339aade90d87bf0b29f1e27d8c70d069343ace\",\"record\":{\"kind\":\"securepass-vault\",\"version\":2,\"vaultId\":\"8c844069-afbc-425e-a793-d7ed557536e2\",\"revision\":\"4e0e97e4-5cf9-4b6d-9932-b16a950a3368\",\"parents\":[],\"keyEpoch\":\"4e91140e-715c-4caa-9919-c812b2e5b43c\",\"updatedAt\":\"2026-11-05T15:37:13.946Z\",\"kdf\":{\"name\":\"PBKDF2\",\"iterations\":600000,\"salt\":\"jPf9HofYDjWEA7m/IvL+nA==\"},\"wrappedKey\":{\"iv\":\"FviRZd+YU11n/qvZ\",\"ciphertext\":\"PHoWFIeXhSKWOy8JK5ea1tF2W+7MR/6v3aNM3ti0VxdySioC9MRuSKGpZTqtAvyV\"},\"data\":{\"iv\":\"u7DnQfE1i6NHGCH3\",\"ciphertext\":\"/myJPyAXqVfglgMEt47AuMTiW8oyCcvSehN61kip\"}}},\"signature\":\"kqKCOGKoC+D7FdAtgjZf6zAoaq3o52zTjaD9+jqOlwWN0sxpMIrRyz8DOF0g5Kn0FvyoymE9K/rsC10q/aWvcw==\"}"
+}

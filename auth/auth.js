@@ -23,7 +23,7 @@ function showError(error) {
 }
 function expired() {
   invalidated = true; $('cancel').disabled = false;
-  controller?.abort(); $('usePassword').hidden = true; clearSecrets(); $('accounts').replaceChildren(); $('saveReview').hidden = $('save').hidden = $('unlockForm').hidden = $('unlock').hidden = $('biometric').hidden = true;
+  controller?.abort(); $('usePassword').hidden = $('keepWindow').hidden = true; clearSecrets(); $('accounts').replaceChildren(); $('saveReview').hidden = $('save').hidden = $('unlockForm').hidden = $('unlock').hidden = $('biometric').hidden = true;
   $('status').textContent = 'This request has expired. Return to the website and open SecurePass again.'; $('heading').textContent = 'Request expired';
   $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = true;
   $('manualUsername').value = '';
@@ -53,6 +53,10 @@ async function refresh() {
   if (invalidated || disposed) return;
   const state = (await send('VAULT_STATUS')).status;
   const next = await send('AUTH_REQUEST_DETAILS', { requestId }); if (disposed || invalidated) return;
+  if (state.unlocked && next.kind === 'fill' && next.anchored) {
+    await send('AUTH_REQUEST_HANDOFF', { requestId });
+    completed = true; disposed = true; window.close(); return;
+  }
   details = next; initialized = state.initialized; $('origin').textContent = details.origin;
   clearTimeout(expiry); expiry = setTimeout(expired, Math.max(0, details.expires - Date.now()));
   $('unlockForm').hidden = $('unlock').hidden = state.unlocked;
@@ -62,6 +66,7 @@ async function refresh() {
   const bio = await send('BIOMETRIC_STATUS'); if (disposed || invalidated) return;
   $('biometric').hidden = state.unlocked || !bio.enabled;
   $('usePassword').hidden = true;
+  $('keepWindow').hidden = !next.anchored || state.unlocked;
   $('accounts').replaceChildren(); $('saveReview').hidden = $('save').hidden = true;
   $('accounts').hidden = false; $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = true;
   $('manualUsername').value = '';
@@ -118,6 +123,7 @@ $('revealManualPassword').append(icon('eye'));
 $('revealManualPassword').addEventListener('click', () => {
   const reveal = $('manualPassword').type === 'password'; $('manualPassword').type = reveal ? 'text' : 'password'; $('revealManualPassword').setAttribute('aria-label', `${reveal ? 'Hide' : 'Show'} login password`); $('revealManualPassword').setAttribute('aria-pressed', String(reveal));
 });
+$('keepWindow').addEventListener('click', () => run(async () => { await send('AUTH_REQUEST_USE_WINDOW', { requestId }); await refresh(); }));
 $('addLogin').addEventListener('click', addLogin);
 $('backToAccounts').addEventListener('click', () => run(refresh));
 $('manualLoginForm').addEventListener('submit', event => {
@@ -146,7 +152,7 @@ async function unlockBiometric() {
   let authenticated = false;
   $('usePassword').disabled = false;
   $('unlockForm').hidden = $('unlock').hidden = true;
-  $('usePassword').hidden = false;
+  $('usePassword').hidden = false; $('keepWindow').hidden = true;
   $('heading').textContent = 'Unlock SecurePass';
   $('status').textContent = 'Confirm with your device to continue.';
   try {
@@ -158,7 +164,7 @@ async function unlockBiometric() {
   } finally {
     if (controller === attempt) controller = null;
     if (!disposed && !invalidated) {
-      $('usePassword').hidden = true;
+      $('usePassword').hidden = true; $('keepWindow').hidden = !details?.anchored;
       if (passwordRequested || !authenticated) {
         $('unlockForm').hidden = $('unlock').hidden = false;
         $('status').textContent = 'Enter your master password to continue.';
@@ -182,7 +188,7 @@ $('cancel').addEventListener('click', async () => { disposed = true; controller?
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('cancel').disabled) { event.preventDefault(); $('cancel').click(); } });
 window.addEventListener('pagehide', () => { disposed = true; clearTimeout(expiry); controller?.abort(); $('usePassword').hidden = true; clearSecrets(); if (!completed) chrome.runtime.sendMessage({ type: 'AUTH_REQUEST_CANCEL', requestId }).catch(() => {}); });
 chrome.runtime.onMessage.addListener(message => {
-  if (message.type === 'VAULT_LOCKED') { invalidated = true; controller?.abort(); $('usePassword').hidden = true; clearSecrets(); $('accounts').replaceChildren(); $('saveUsername').value = $('manualUsername').value = ''; $('saveReview').hidden = $('save').hidden = $('unlock').hidden = $('unlockForm').hidden = $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = true; $('status').textContent = 'Vault locked. Start a new request from the website.'; }
+  if (message.type === 'VAULT_LOCKED') { invalidated = true; controller?.abort(); $('usePassword').hidden = $('keepWindow').hidden = true; clearSecrets(); $('accounts').replaceChildren(); $('saveUsername').value = $('manualUsername').value = ''; $('saveReview').hidden = $('save').hidden = $('unlock').hidden = $('unlockForm').hidden = $('emptyLogins').hidden = $('manualLoginForm').hidden = $('saveManualLogin').hidden = true; $('status').textContent = 'Vault locked. Start a new request from the website.'; }
   if (message.type === 'SETTINGS_CHANGED') updateTheme().catch(() => {});
 });
 async function updateTheme() { const response = await send('PUBLIC_SETTINGS'); theme = response.settings.theme; applyTheme(theme); }

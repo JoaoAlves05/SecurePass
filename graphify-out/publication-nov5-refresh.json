@@ -1,0 +1,10 @@
+{
+  "sources": {
+    "ARCHITECTURE.md": "640bdc9a56c570184ba2a79bd1cb1b646649b67c38fbb502fe1a1fe1a1bd7185",
+    "docs/DRIVE_TRANSPORT.md": "409ac83debc082b7f1c7a2f8e77c83d991f9e3973f30d48f4777f16d5b0af9f2",
+    "docs/IMPLEMENTATION_CHECKLIST.md": "30de724c56d86dd33b5c2579a5c3acf91a21a932ab7892c5755f96c5a5517fde",
+    "docs/VALIDATION.md": "177e7adc4df56688d1dca8e9bc67e3dc329580b8d78e680859fd6d9e92c7716e"
+  },
+  "method": "Host scoped semantic incremental update; preserved original duplicate requirement node after shrink guard rejected first export",
+  "token_usage": "unavailable"
+}

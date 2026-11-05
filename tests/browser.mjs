@@ -70,8 +70,11 @@ try {
   assert.equal((await send(popup, 'LIST_CREDENTIALS')).entries[0].password, original.password);
   const site = await context.newPage(); await site.goto(`${origin}/${'long-login-path-'.repeat(20)}?return=${'x'.repeat(300)}`); await site.waitForSelector('#securepass-extension-root');
   await site.waitForTimeout(400);
-  const secureWindow = context.waitForEvent('page');
+  const secureWindow = context.waitForEvent('page'); secureWindow.catch(() => {});
   await shadowClick(site, '.securepass-floating');
+  for (let attempt = 0; attempt < 150 && !site.frames().some(frame => frame.url().includes('/selector/selector.html')); attempt++) await site.waitForTimeout(20);
+  assert.ok(site.frames().some(frame => frame.url().includes('/selector/selector.html')));
+  await shadowClick(site, '[data-action="native"]');
   const auth = await secureWindow; await auth.waitForURL('**/auth/auth.html?**');
   await auth.waitForSelector('#accounts button'); await auth.locator('#accounts button').click();
   await site.waitForFunction(() => document.querySelector('input[type=password]').value.length > 0);
@@ -88,6 +91,7 @@ try {
   await shadowClick(site, '.securepass-floating');
   const lockedAuth = await lockedWindow; await lockedAuth.waitForURL('**/auth/auth.html?**');
   await lockedAuth.waitForSelector('#unlockForm');
+  await send(lockedAuth, 'AUTH_REQUEST_USE_WINDOW', { requestId: new URL(lockedAuth.url()).searchParams.get('requestId') });
   await lockedAuth.locator('#passphrase').pressSequentially(passphrase);
   await lockedAuth.locator('#unlock').click();
   await lockedAuth.waitForSelector('#accounts button'); await lockedAuth.locator('#accounts button').click();
@@ -96,6 +100,9 @@ try {
   // Navigation revokes a previously approved document identity, even on the same origin.
   const staleWindow = context.waitForEvent('page');
   await shadowClick(site, '.securepass-floating');
+  for (let attempt = 0; attempt < 150 && !site.frames().some(frame => frame.url().includes('/selector/selector.html')); attempt++) await site.waitForTimeout(20);
+  assert.ok(site.frames().some(frame => frame.url().includes('/selector/selector.html')));
+  await shadowClick(site, '[data-action="native"]');
   const staleAuth = await staleWindow; await staleAuth.waitForURL('**/auth/auth.html?**'); await staleAuth.waitForSelector('#accounts button');
   const staleRequest = new URL(staleAuth.url()).searchParams.get('requestId');
   await site.goto(`${origin}/new-document`);

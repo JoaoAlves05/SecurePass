@@ -32,7 +32,8 @@ The [2026-10-26 backup/Advanced review](docs/REVIEW_BACKUP_ADVANCED.md) adds ide
 | `popup/state.js` | Popup state and shared constant icons; no bootstrap side effects |
 | `popup/modules/` | Independent UI features, dialogs, session view, data management, Sync and biometrics |
 | `popup/popup.js` | Bootstrap/listener composition only; feature modules never import it |
-| `auth/` | Extension-owned confirmation window; no embedding in a visited page |
+| `auth/` | Protected extension-owned authentication/save window; not web accessible |
+| `selector/` | Minimal extension-origin account list embedded beside the source field; no authentication or management messages |
 | `content/` | Field discovery, native value events and tools; no master password input or vault cache |
 | `tests/` | Unit/integration regressions and disposable Chromium scenarios |
 
@@ -75,13 +76,13 @@ Master-password changes use the inline `masterPassword.js` flow: fresh password 
 ## Message flows
 
 1. A login-field key directly requests autofill with its browser-supplied origin/document identity and a random per-field target. Repeated clicks refocus that same pending selector.
-2. The background reserves an `about:blank` window, records its tab identity, then loads the extension-owned auth page bound to that tab.
-3. The window unlocks through the master password or verified PRF. Its unlock response contains no full vault.
-4. The user explicitly chooses a credential filtered by exact origin, even when only one matches. Account metadata stays in the native selector for this flow.
+2. If locked, the background reserves an `about:blank` window, records its tab identity and loads the protected auth page. If unlocked, it authorizes the source to create the extension-origin selector frame.
+3. The window unlocks through the master password or verified PRF, then transfers ownership back to the anchored frame. Its unlock response contains no full vault. Explicit native fallback retains selection in that window.
+4. The user explicitly chooses a credential filtered by exact origin, even when only one matches. Account metadata is delivered to the bound selector frame or the explicit native fallback, never as a list to the content script.
 5. The background consumes the request, checks revocation and sends that single credential to the original document ID, requiring source acknowledgement.
 6. The content script checks its pending target, visibility and login context, applies native input/change events, restores field focus and shows pointer-transparent status feedback. It never submits the form.
 
-Management messages are restricted to the exact bundled popup page. The confirmation window has a smaller capability set. Content scripts cannot call general vault mutations, list all entries, unlock the vault or complete biometric ceremonies. Local/session/Sync storage is restricted before the background accepts requests. Public resource exposure includes only content modules and the form analyzer.
+Management messages are restricted to the exact bundled popup page. The confirmation window has a smaller capability set. Content scripts cannot call general vault mutations, list all entries, unlock the vault or complete biometric ceremonies. Local/session/Sync storage is restricted before the background accepts requests. Public resource exposure includes content modules, the form analyzer and only the selector HTML; auth and management HTML remain unlisted.
 
 [Account suggestions and inline login tools](docs/ACCOUNT_PROMPTS.md) use the popup visual tokens in extension-owned confirmation and a closed-shadow tools menu. Submission captures values before page listeners clear/navigate, without claiming login success. Metadata-only suggestions remain available after review cancellation and are removed on save/dismiss/expiry/lock. Inline review/dismiss checks the originating tab/document. Explicit same-origin save targets preserve notes/identity, bind the reviewed destination revision and serialize consumption with commit. Public status/account/Sync reads serialize against mutations; fill remains one-shot, document-bound and never submits. No permissions changed; auth may read only existing public presentation settings.
 
@@ -95,4 +96,12 @@ Registration requires the master password. A create ceremony is followed by a re
 
 The fill selector uses a compact extension-owned window, starts configured biometric authentication once while locked, and offers cancellation/password fallback. Account selection carries the displayed vault revision and fills without a second authentication while the session remains valid. Names stay hidden while locked. No embedded credential-list surface or new page capability was introduced.
 
-`src/sync/driveTransport.js` is an isolated read-only transport primitive, with token/binding injection, complete bounded pagination, bounded streaming download and typed errors. It is not registered in the worker or exposed in the UI; OAuth, publication, signed-device protocol, recovery kit and Drive migration remain unimplemented. See [transport status](docs/DRIVE_TRANSPORT.md) and [execution checklist](docs/IMPLEMENTATION_CHECKLIST.md).
+`src/sync/driveTransport.js` provides isolated read and immutable-publication primitives with token/binding injection, complete bounded pagination, bounded streaming download and typed errors. The 2026-11-05 increment adds publication verification plus `publication.js` scheduling and `publicationStore.js` account/generation-bound IndexedDB state. The vault repository accepts an explicit Drive operation for atomic record/checkpoint/outbox commit; normal mutation callers and worker scheduling do not yet prepare or activate signed Drive publication. It is not registered in the worker or exposed in the UI; OAuth, publication, signed-device protocol, recovery kit and Drive migration remain unimplemented. See [transport status](docs/DRIVE_TRANSPORT.md) and [execution checklist](docs/IMPLEMENTATION_CHECKLIST.md).
+
+## Internal signed authorization prototype — 2026-11-05
+
+`sync/signedProtocol.js` verifies domain-separated administrative chains against an independent root and known checkpoint, and signs/verifies strictly structured encrypted-v2 revision wrappers. `signingKeyProtection.js` separates master-protected administrative keys from content-key-protected writer keys. `authorizationStore.js` persists/reverifies the known chain with transactional compare-and-write. `signedPublication.js` prepares packets for the explicit atomic commit path. These prototypes have no message routes or UI activation and do not establish complete enrollment/revocation, a new encryption format, recovery, migration or release acceptance. [Protocol specification and gates](docs/SIGNED_PROTOCOL.md).
+
+## Anchored account selector — 2026-11-05
+
+The normal field-key flow renders `selector/selector.html` as an extension-origin frame after unlock. This frame has only selection-details/fill/cancel/layout/public-settings capabilities; metadata is not sent to the content script. Request ownership binds the source tab/document/field and the selector document. Master input and WebAuthn remain in the non-web-accessible auth window, which can hand ownership to the selector. Explicit native fallback supports CSP-blocked embedding and manual login creation. Only the selector HTML is newly web accessible; the global frame-ancestors directive now permits self/http/https ancestors for it, while auth/management remain outside web-accessible resources. See [security boundaries and acceptance limits](docs/ANCHORED_SELECTOR.md).

@@ -46,7 +46,21 @@ async function shadow(page, selector, mode = 'click') {
 async function waitShadow(page, selector, exists = true) { for (let attempt = 0; attempt < 60; attempt++) { if (await shadow(page, selector, 'exists') === exists) return; await new Promise(resolve => setTimeout(resolve, 50)); } assert.fail(`Shadow selector ${selector} expected ${exists}`); }
 async function waitShadowText(page, selector, pattern) { for (let attempt = 0; attempt < 60; attempt++) { if (pattern.test(await shadow(page, selector, 'text'))) return; await new Promise(resolve => setTimeout(resolve, 50)); } assert.fail(`Shadow text ${selector} expected ${pattern}`); }
 async function openTools(page) { await waitShadow(page, '.securepass-floating:not([hidden])'); await shadow(page, '.securepass-floating:not([hidden])'); await waitShadow(page, '.securepass-panel'); }
-async function openFill(site) { const created = nextPage(); await waitShadow(site, '.securepass-floating:not([hidden])'); await shadow(site, '.securepass-floating:not([hidden])'); const page = await created; page.on('pageerror', error => errors.push(error.message)); await page.waitForURL('**/auth/auth.html?**'); await page.locator('#origin').filter({ hasText: origin }).waitFor(); return page; }
+async function openFill(site) {
+  const created = nextPage(); let native;
+  created.then(page => { native = page; });
+  await waitShadow(site, '.securepass-floating:not([hidden])'); await shadow(site, '.securepass-floating:not([hidden])');
+  for (let attempt = 0; attempt < 150 && !native; attempt++) {
+    if (site.frames().some(frame => frame.url().includes('/selector/selector.html'))) {
+      await shadow(site, '[data-action="native"]'); break;
+    }
+    await site.waitForTimeout(20);
+  }
+  const page = await created; page.on('pageerror', error => errors.push(error.message));
+  await page.waitForURL('**/auth/auth.html?**'); await page.locator('#origin').filter({ hasText: origin }).waitFor();
+  await send(page, 'AUTH_REQUEST_USE_WINDOW', { requestId: new URL(page.url()).searchParams.get('requestId') });
+  return page;
+}
 async function openSaveEntered(site) {
   await site.evaluate(() => document.querySelector('#password').autocomplete = 'new-password');
   if (!await shadow(site, '.securepass-panel', 'exists')) {

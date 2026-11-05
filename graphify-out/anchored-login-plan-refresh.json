@@ -1,0 +1,8 @@
+{
+  "scope": {
+    "docs/SYNC_DATA_PLAN.md": "2f842ef284ee4ed3ab2d319d5842075c32eeb764c28dbfb901197b31c8e52c09",
+    "docs/IMPLEMENTATION_CHECKLIST.md": "186b5bebea12584b83e07e9e6f05ddae45c796e2b495903dd71303de2f9a2f7d"
+  },
+  "method": "Host semantic incremental update; unchanged source facts retained",
+  "token_usage": "unavailable"
+}

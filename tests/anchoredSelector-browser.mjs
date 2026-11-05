@@ -1,0 +1,106 @@
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+import http from 'node:http';
+import { mkdtemp, rm, mkdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+const projectRoot=fileURLToPath(new URL('../',import.meta.url));
+const root=process.env.SECUREPASS_EXTENSION_ROOT || projectRoot;
+const output=process.env.SECUREPASS_SCREENSHOT_ROOT || `${projectRoot}/docs/screenshots/anchored-selector`;
+const profile=await mkdtemp(`${tmpdir()}/securepass-selector-`);
+const server=http.createServer((req,res)=>{if(req.url.includes('block-frames'))res.setHeader('Content-Security-Policy',"frame-src 'none'");res.setHeader('Content-Type','text/html');res.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font:16px system-ui;padding:24px}input{display:block;width:240px;height:40px;margin:12px 0}</style><form><input name="username" autocomplete="username"><input id="password" type="password" autocomplete="current-password"><button>Sign in</button></form><script>window.submitted=0;document.querySelector("form").onsubmit=e=>{e.preventDefault();window.submitted++;};</script>');});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
+let context;
+async function send(page,type,data={}){const r=await page.evaluate(({type,data})=>chrome.runtime.sendMessage({type,...data}),{type,data});assert.equal(r.ok,true,r.error);return r;}
+async function shadowClick(page,selector){
+ const cdp=await context.newCDPSession(page);
+ try{const {root}=await cdp.send('DOM.getDocument',{depth:-1,pierce:true});
+ const find=node=>{if(node.attributes?.includes('securepass-extension-root'))return node.shadowRoots?.[0];for(const child of node.children||[]){const found=find(child);if(found)return found;}};
+ const shadow=find(root);assert.ok(shadow);const {nodeId}=await cdp.send('DOM.querySelector',{nodeId:shadow.nodeId,selector});assert.ok(nodeId,selector);
+ const {model}=await cdp.send('DOM.getBoxModel',{nodeId});const box=model.border;await page.mouse.click((box[0]+box[4])/2,(box[1]+box[5])/2);
+ }finally{await cdp.detach();}
+}
+async function frameFor(site){for(let i=0;i<1000;i++){const frame=site.frames().find(f=>f.url().includes('/selector/selector.html'));if(frame){await frame.locator('#origin').filter({hasText:origin}).waitFor();return frame;}await site.waitForTimeout(25);}throw new Error('Selector frame not opened');}
+try{
+ context=await chromium.launchPersistentContext(profile,{channel:'chromium',headless:true,args:[`--disable-extensions-except=${root}`,`--load-extension=${root}`,'--no-sandbox']});
+ let [worker]=context.serviceWorkers();if(!worker)worker=await context.waitForEvent('serviceworker');const extensionId=worker.url().split('/')[2];
+ const popup=await context.newPage();await popup.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+ const PASS='Fictional anchored selector master 123!';const LOGIN='Fictional selected password 123!';
+ await send(popup,'INITIALIZE_VAULT',{passphrase:PASS});const saved=(await send(popup,'STORE_CREDENTIAL',{entry:{site:origin,username:'fictional-user',password:LOGIN}})).entry;
+ await send(popup,'STORE_CREDENTIAL',{entry:{site:'https://other.example',username:'foreign-user',password:'Fictional foreign value'}});
+ const site=await context.newPage();await site.setViewportSize({width:400,height:600});await site.goto(origin);await site.waitForSelector('#securepass-extension-root');
+ await shadowClick(site,'.securepass-floating');let selector=await frameFor(site);await selector.locator('#accounts button').waitFor();
+ assert.equal(context.pages().filter(p=>p.url().includes('/auth/auth.html')).length,0);
+ assert.equal(await selector.locator('#accounts button').count(),1);
+ assert.equal((await site.content()).includes('fictional-user'),false);
+ assert.equal(await site.evaluate(()=>{try{return Boolean(window.frames[0].document);}catch{return false;}}),false,'Website cannot read extension-frame DOM');
+ const forbidden=await selector.evaluate(()=>chrome.runtime.sendMessage({type:'LIST_CREDENTIALS'}));assert.equal(forbidden.ok,false);
+ const token=new URL(selector.url()).searchParams.get('requestId');
+ await site.evaluate(url=>{const frame=document.createElement('iframe');frame.src=url;frame.id='forged';document.body.append(frame);},`chrome-extension://${extensionId}/selector/selector.html?requestId=${token}`);
+ await site.waitForTimeout(150);const forged=site.frames().filter(f=>f.url().includes('/selector/selector.html')).find(f=>f!==selector);
+ assert.ok(forged);assert.equal(await site.locator('#forged').evaluate(frame=>frame.contentDocument===null),true,'The website cannot read even a visible extension frame');const refused=await forged.evaluate(requestId=>chrome.runtime.sendMessage({type:'SELECTOR_DETAILS',requestId}),token);assert.equal(refused.ok,false);
+ await site.locator('#forged').evaluate(node=>node.remove());
+ await mkdir(output,{recursive:true});await site.screenshot({path:`${output}/list-light.png`});
+ await selector.locator('#accounts button').press('Escape');
+ for(let i=0;i<100 && site.frames().some(f=>f.url().includes('/selector/selector.html'));i++)await site.waitForTimeout(20);
+ await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').waitFor();
+ await site.evaluate(()=>document.getElementById('securepass-extension-root').style.opacity='0');
+ await selector.locator('#accounts button').click();
+ const obscured = await selector.evaluate(async () => {
+   const requestId = new URLSearchParams(location.search).get('requestId');
+   const details = await chrome.runtime.sendMessage({ type: 'SELECTOR_DETAILS', requestId });
+   return chrome.runtime.sendMessage({ type: 'SELECTOR_COMPLETE', requestId, credentialId: details.entries[0].id, expectedRevision: details.revision, interaction: { mode: 'pointer', x: 20, y: 35 } });
+ });
+ assert.equal(obscured.ok,false);assert.match(obscured.error,/hidden or obscured/);assert.equal(await site.locator('#password').inputValue(),'');
+ await site.evaluate(()=>document.getElementById('securepass-extension-root').style.opacity='');
+ await selector.waitForFunction(()=>!document.body.hasAttribute('aria-busy'));
+ if(await selector.locator('#refresh').isVisible())await selector.locator('#refresh').click();
+ await selector.locator('#accounts button:enabled').waitFor();await selector.locator('#accounts button').press('Enter');await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
+ assert.equal(await site.locator('#password').inputValue(),LOGIN);assert.equal(await site.evaluate(()=>window.submitted),0);
+ await send(popup,'LOCK_VAULT');await site.locator('#password').fill('');
+ await site.evaluate(()=>{window.captured=[];document.addEventListener('keydown',e=>window.captured.push(e.key),true);});
+ const created=context.waitForEvent('page');await shadowClick(site,'.securepass-floating');const auth=await created;await auth.waitForURL('**/auth/auth.html?**');
+ const authClosed=auth.waitForEvent('close');await auth.locator('#passphrase').pressSequentially(PASS);await auth.locator('#unlock').click();
+ selector=await frameFor(site);await selector.locator('#accounts button').waitFor();await authClosed;
+ assert.deepEqual(await site.evaluate(()=>window.captured),[]);
+ await selector.locator('#accounts button').click();await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
+ const settings=await send(popup,'LOAD_SETTINGS');await send(popup,'SAVE_SETTINGS',{patch:{theme:'dark'},expectedRevision:settings.revision});
+ await site.setViewportSize({width:320,height:520});
+ await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').waitFor();
+ await selector.waitForFunction(()=>document.body.dataset.theme==='dark');
+ let rect=await (await selector.frameElement()).boundingBox();assert.ok(rect.x>=0 && rect.x+rect.width<=320 && rect.y>=0 && rect.y+rect.height<=520);
+ await site.evaluate(()=>{const spacer=document.createElement('div');spacer.style.height='1000px';document.body.append(spacer);window.scrollBy(0,40);});
+ await site.waitForTimeout(80);rect=await (await selector.frameElement()).boundingBox();assert.ok(rect.y>=0 && rect.y+rect.height<=520);
+ await site.screenshot({path:`${output}/list-dark-narrow.png`});
+ const fallback=context.waitForEvent('page');await shadowClick(site,'[data-action="native"]');const native=await fallback;await native.waitForURL('**/auth/auth.html?**');await native.locator('#accounts button').waitFor();await native.locator('#cancel').click();
+ await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').waitFor();await send(popup,'LOCK_VAULT');
+ for(let i=0;i<100 && site.frames().some(f=>f.url().includes('/selector/selector.html'));i++)await site.waitForTimeout(20);
+ assert.equal(site.frames().some(f=>f.url().includes('/selector/selector.html')),false);
+ await send(popup,'UNLOCK_VAULT',{passphrase:PASS});await site.goto(`${origin}/?block-frames=1`);await site.waitForSelector('#securepass-extension-root');
+ await shadowClick(site,'.securepass-floating');
+ const blockedFallback=context.waitForEvent('page');
+ for(let attempt=0;attempt<100;attempt++){try{await shadowClick(site,'[data-action="native"]');break;}catch(error){if(attempt===99)throw error;await site.waitForTimeout(20);}}
+ const safeWindow=await blockedFallback;await safeWindow.waitForURL('**/auth/auth.html?**');await safeWindow.locator('#accounts button').waitFor();await safeWindow.locator('#cancel').click();
+ await send(popup,'DELETE_CREDENTIAL',{id:saved.id});await site.goto(origin);await site.waitForSelector('#securepass-extension-root');
+ await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#status').filter({hasText:'No saved logins'}).waitFor();
+ const manualWindow=context.waitForEvent('page');await shadowClick(site,'[data-action="native"]');const manual=await manualWindow;await manual.waitForURL('**/auth/auth.html?**');await manual.locator('#addLogin').click();
+ await manual.locator('#manualUsername').fill('manual-new-user');await manual.locator('#manualPassword').fill(LOGIN);await manual.locator('#saveManualLogin').click();
+ await popup.waitForFunction(async()=>{const result=await chrome.runtime.sendMessage({type:'LIST_CREDENTIALS'});return result.entries.some(entry=>entry.username==='manual-new-user');});
+ assert.equal(await site.locator('#password').inputValue(),'');
+ await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').waitFor();
+ await send(popup,'STORE_CREDENTIAL',{entry:{site:origin,username:'concurrent-user',password:'Fictional concurrent password'}});
+ await selector.locator('#accounts button').click();await selector.locator('#refresh').waitFor();assert.equal(await site.locator('#password').inputValue(),'');
+ await selector.locator('#refresh').click();await selector.locator('#accounts button').filter({hasText:'manual-new-user'}).click();await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
+ assert.equal(await site.locator('#password').inputValue(),LOGIN);assert.equal(await site.evaluate(()=>window.submitted),0);
+ for(let index=0;index<25;index++)await send(popup,'STORE_CREDENTIAL',{entry:{site:origin,username:`search-user-${String(index).padStart(2,'0')}`,password:`Fictional search password ${index}`}});
+ await site.locator('#password').fill('');await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').first().waitFor();
+ assert.equal(await selector.locator('#accounts button').count(),2);await selector.locator('#status').filter({hasText:'all saved logins'}).waitFor();
+ await site.screenshot({path:`${output}/many-logins.png`});
+ await selector.locator('#accounts button').nth(1).click();await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
+ assert.equal(await site.locator('#password').inputValue(),'Fictional concurrent password');
+ await site.locator('#password').fill('');await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').first().waitFor();
+ const allWindow=context.waitForEvent('page');await shadowClick(site,'[data-action="native"]');const all=await allWindow;await all.waitForURL('**/auth/auth.html?**');
+ await all.locator('#accounts button').filter({hasText:'search-user-24'}).click();await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
+ assert.equal(await site.locator('#password').inputValue(),'Fictional search password 24');assert.equal(await site.locator('[name="username"]').inputValue(),'search-user-24');
+ console.log('Anchored selector passed: inline selection, source-origin filtering, isolated frame DOM, denied capabilities/second frame, hidden-host rejection, protected unlock handoff, direct fill/no-submit, native/CSP fallback, lock cleanup, stale review, two inline suggestions and protected-window selection across 27 accounts.');
+}catch(error){console.error(error);if(context){for(const page of context.pages())for(const frame of page.frames())if(frame.url().includes('/selector/selector.html'))console.error('Selector status',await frame.locator('#status').textContent());console.error('Selector frames',context.pages().flatMap(p=>p.frames().map(f=>f.url())));console.error('Requests',await context.serviceWorkers()[0].evaluate(async()=>Object.values(await chrome.storage.session.get(null)).filter(v=>v?.kind==='fill').map(v=>({presentation:v.presentation,authTabId:v.authTabId,targetId:v.targetId,selectorDocumentId:v.selectorDocumentId}))));}throw error;}finally{if(context)await context.close();await new Promise(resolve=>server.close(resolve));await rm(profile,{recursive:true,force:true});}

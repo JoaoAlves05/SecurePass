@@ -14,7 +14,13 @@
     "test:sync-browser": "node tests/sync-browser.mjs",
     "package": "node scripts/package.mjs",
     "test:sync-setup-browser": "node tests/syncSetup-browser.mjs",
-    "test:account-prompts-browser": "node tests/accountPrompts-browser.mjs"
+    "test:account-prompts-browser": "node tests/accountPrompts-browser.mjs",
+    "test:drive-commit-browser": "node tests/driveCommit-browser.mjs",
+    "test:signed-protocol-browser": "node tests/signedProtocol-browser.mjs",
+    "test:anchored-browser": "node tests/anchoredSelector-browser.mjs",
+    "configure:google": "node scripts/configureGoogle.mjs",
+    "test:google-config-browser": "node tests/googleConfiguration-browser.mjs",
+    "test:package-browser": "node tests/package-browser.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.4",

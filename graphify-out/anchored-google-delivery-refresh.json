@@ -1,0 +1,19 @@
+{
+  "method": "Host scoped semantic incremental update; retained unchanged source facts, updated obsolete anchored-UI status, visually inspected three new captures. No token usage estimate available.",
+  "sources": {
+    "docs/SYNC_DATA_PLAN.md": "68e6bc224b0385567fb9d6ff5968a3593f52e3b9d5f16fd4b8b20cc2c3a88a15",
+    "docs/ANCHORED_SELECTOR.md": "7c1573fe574c45fb19db14725687d3fa44dc005e041bb9c5f33c480bd3765d66",
+    "README.md": "3e84d155c5a98df94b0e2b4a9fe119b1d542db16ce3dfa9f7bd0f339131f9a2d",
+    "ARCHITECTURE.md": "bc2695b00f46405fb30038cc7f04ee820681d692c546fbbdbb2a6f7b1ab17414",
+    "docs/screenshots/anchored-selector/list-dark-narrow.png": "03f6a584882b4bf3cbe3d4c0534173528b4fa7092240e68fbe03975bdb2a819b",
+    "docs/GOOGLE_CLOUD_SETUP.md": "3f0c5bb4dd2167c8854f0f2a6e43e2c38102e47cb6dc64bfbe58e22b34e40360",
+    "docs/IMPLEMENTATION_CHECKLIST.md": "0ad11026ba424adf37e101d90f143cabc518288bd96ac83da2cc13137064bab5",
+    "SECURITY.md": "8adeac2fcee1fc284c3359b849e30ff4fb51528573a05441a4427a9d14b8614f",
+    "docs/screenshots/anchored-selector/many-logins.png": "9a1963782f20fd96626c5ccbf477b0b04a0c9092d68cc11b1696c754e4c6c96d",
+    "docs/CONTEXTUAL_KEY.md": "701926ced02f162de97da5d9ba334a9b77e763e51461e968cd75cf4286c3f831",
+    "docs/screenshots/anchored-selector/list-light.png": "32e69aba0b80bcbebdea05d54ce7978f70c1aac4733bcc40048a89946f324aa5",
+    "docs/VALIDATION.md": "b6fa16acaa6204df706e791e478351d288cb27d636ef56df914ec947f8ac808a"
+  },
+  "nodes": 1834,
+  "edges": 4258
+}

@@ -474,6 +474,15 @@ O painel do autenticador é controlado pelo navegador/SO. Não prometer aspeto i
 
 ### 23.3 Conteúdo e apresentação
 
+**Estado de implementação em 05/11/2026:** a lista ancorada está implementada no working tree, com frame de origem da extensão, handoff após desbloqueio e fallback em janela. Ver [contrato e evidência](ANCHORED_SELECTOR.md). A descrição seguinte regista a decisão original; testes de hardware/sites/acessibilidade e revisão visual adversarial continuam pendentes.
+
+**Apresentação final confirmada pelo utilizador — implementação futura:** o seletor deve ser uma pequena lista de sugestões ancorada ao campo de login, semelhante à apresentação do gestor de passwords do Google nos formulários. Ao clicar na chave, o utilizador deve continuar no contexto do formulário; depois de desbloquear, vê as contas junto ao campo e escolhe uma para preencher diretamente. A janela separada de 360 × 400 atualmente implementada é uma etapa intermédia e **não satisfaz este requisito de apresentação**.
+
+- Implementar posicionamento junto ao campo, adaptação às margens do viewport e acompanhamento de scroll/resize, com altura limitada e navegação por teclado.
+- Manter nomes/contagens ocultos enquanto bloqueado e autenticação num contexto protegido da extensão. Desbloquear uma vez, regressar à lista ancorada e preencher ao selecionar, sem nova autenticação enquanto a sessão for válida.
+- Definir e validar o isolamento da superfície de sugestões antes de a disponibilizar. A janela protegida pode continuar como fallback de segurança/compatibilidade; não marcar a apresentação final concluída por esse fallback existir.
+- Critério de aceitação: no percurso normal suportado, as contas aparecem junto ao campo, sem abrir uma janela separada para as escolher; validar a apresentação, interação, origem e resistência a manipulação pelo site.
+
 - Lista curta, junto ao campo quando tecnicamente seguro e viável, com origem do site e uma linha por conta. Altura adapta-se ao conteúdo, com scroll para muitas contas; evitar cartões grandes, texto explicativo repetido e ações concorrentes.
 - Remover **Password options** e **Other options** do percurso de login/seleção de contas. Sem copiar passwords ou guardar o valor do campo como ações secundárias nesse seletor.
 - No estado sem contas, oferecer **Adicionar login** e fecho/voltar. Preservar criação explícita, origem imutável e revisão de destino; guardar não preenche automaticamente.
@@ -505,7 +514,7 @@ Os cenários AF abaixo são **requisitos a implementar e executar**, não evidê
 | AF08 | Zero/uma/muitas contas, nomes repetidos/longos | Estado vazio com adicionar, seleção inequívoca e scroll limitado; guardar não preenche por si só. |
 | AF09 | Login versus registo/alteração de password | Login sem os dois menus removidos; geração continua disponível no contexto correto e não altera password atual. |
 | AF10 | Página hostil e capacidades | Sem acesso da página a master/chaves/lista completa; pedidos forjados, sobreposição e redirecionamento testados conforme superfície escolhida. |
-| AF11 | Teclado/leitor de ecrã, claro/escuro, 320px, zoom, scroll/resize | Foco, fallback e cancelamento utilizáveis; lista ancorada ou janela compacta adequada; feedback não bloqueia o site. |
+| AF11 | Teclado/leitor de ecrã, claro/escuro, 320px, zoom, scroll/resize | Foco, fallback e cancelamento utilizáveis; lista ancorada ao campo no percurso normal; janela protegida apenas como fallback documentado; feedback não bloqueia o site. |
 | AF12 | Hardware e browser reais | Testar sucesso, falha/cancelamento e fallback nos SO/autenticadores alvo; registar limitações de ativação e toolbar sem equiparar PRF virtual a aceitação física. |
 
 Antes de entregar implementação: issue/branch focadas, regressões Node e Chromium significativas, capturas claro/escuro do novo fluxo, inspeção visual, `npm run check`, suites afetadas e `git diff --check`. Atualizar os contratos de chave contextual/arquitetura e [VALIDATION.md](VALIDATION.md) apenas com comportamento implementado e resultados efetivamente executados. A aceitação de Drive e do protocolo completo mantém os gates das secções 19–21.

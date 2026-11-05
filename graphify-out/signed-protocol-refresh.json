@@ -1,0 +1,32 @@
+{
+  "sources": {
+    "docs/SIGNED_PROTOCOL.md": "282bfb955431fb95a83de7805d4d57baee1af3af65d1193be987141b8d6befe6",
+    "docs/IMPLEMENTATION_CHECKLIST.md": "5e515c33dd30bbb0d5a077ec8f8361464f9baf5d427ef13fd436d447c6d80f79",
+    "docs/VALIDATION.md": "4a82bd8657efd802da789d6c0eb8df2b6a9ff8bc448e39423695e30b5c2cb32d",
+    "docs/DRIVE_TRANSPORT.md": "5dac0ad7f16bfe7f58f46eac145cd15395b2bc3b6886df913bbbeb3689e13ce8",
+    "ARCHITECTURE.md": "f4e0519596ecca3fde498bd52b345840be1070858c9323a216d12008dc1ccee8",
+    "docs/issues/SYNC_DATA_COMPLETION.md": "e6bb6cac92e525a17f3b6d275177ad1a86d071c3622cb8b45f2c058a608ddba4"
+  },
+  "verified_nodes": {
+    "docs/SIGNED_PROTOCOL.md": [
+      "docs_signed_protocol_status_nov5_0"
+    ],
+    "docs/IMPLEMENTATION_CHECKLIST.md": [
+      "signed_protocol_status_nov5_1"
+    ],
+    "docs/VALIDATION.md": [
+      "signed_protocol_status_nov5_2"
+    ],
+    "docs/DRIVE_TRANSPORT.md": [
+      "signed_protocol_status_nov5_3"
+    ],
+    "ARCHITECTURE.md": [
+      "signed_protocol_status_nov5_4"
+    ],
+    "docs/issues/SYNC_DATA_COMPLETION.md": [
+      "signed_protocol_status_nov5_5"
+    ]
+  },
+  "method": "Host semantic incremental update; verified normalized exported IDs for all six sources",
+  "token_usage": "unavailable"
+}

@@ -5,7 +5,7 @@ const root = resolve(new URL('../', import.meta.url).pathname);
 async function files(dir) {
   const result = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
-    if (['.git', 'node_modules', 'test-results'].includes(entry.name)) continue;
+    if (['.git', 'node_modules', 'test-results', 'dist', 'playwright-report'].includes(entry.name)) continue;
     const path = resolve(dir, entry.name);
     if (entry.isDirectory()) result.push(...await files(path)); else result.push(path);
   }

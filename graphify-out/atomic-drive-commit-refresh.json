@@ -1,0 +1,10 @@
+{
+  "sources": {
+    "ARCHITECTURE.md": "415cb873b1d3d01476659679116beceeedc51ab4a6eda3c9fe9af1407bc44b3e",
+    "docs/DRIVE_TRANSPORT.md": "b102d21659beb052035dae683ddef0c08193031212186a7a3f964f4880ac7743",
+    "docs/IMPLEMENTATION_CHECKLIST.md": "7ca0dabfa423f89dfde3818ed6e1a510f92ac0fbd14d94542e194d03329d5732",
+    "docs/VALIDATION.md": "e07030e9499859c5897634abeb6849be04ba9fbe4caa4f14045d2ac2858712ff"
+  },
+  "method": "Host semantic incremental update with original duplicate requirement nodes preserved",
+  "token_usage": "unavailable"
+}
