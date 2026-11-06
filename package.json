@@ -20,7 +20,8 @@
     "test:anchored-browser": "node tests/anchoredSelector-browser.mjs",
     "configure:google": "node scripts/configureGoogle.mjs",
     "test:google-config-browser": "node tests/googleConfiguration-browser.mjs",
-    "test:package-browser": "node tests/package-browser.mjs"
+    "test:package-browser": "node tests/package-browser.mjs",
+    "test:three-way-browser": "node tests/threeWayMerge-browser.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.4",

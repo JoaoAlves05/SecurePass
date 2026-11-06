@@ -22,6 +22,14 @@ Issue local: [DRIVE_INTEGRATION.md](issues/DRIVE_INTEGRATION.md). Branch: `featu
 
 ## Trabalho desta execução
 
+### Continuação — planeador de três vias (06/11)
+
+- [x] Planeador interno com base comum explícita, combinação de alterações independentes e conflitos de edição/eliminação; sem escolher por relógio ou juntar campos de versões incompatíveis.
+- [x] Preview opaco sem passwords, decisões completas vinculadas às revisões/época/cofre, prazo de dois minutos, rejeição após bloqueio/descarte e limites do resultado completo.
+- [x] Manter ambas cria ID determinístico e proveniência separada, sem alterar notas; replay/lados invertidos e colisões de IDs têm regressões.
+- [x] Permutações de três escritores com a mesma base testadas; identidade UTF-8 da cópia comparada entre Node e Chromium.
+- [ ] Integrar ancestral comum autenticado, tombstones persistidos/assinados, resolução administrativa e UI. O planeador não altera o merge legacy nem ativa escrita Drive; os SC completos continuam abertos. [Issue](issues/THREE_WAY_MERGE.md).
+
 - [x] Ler o plano completo e criar esta checklist.
 - [x] Criar branch `feature/sync-data-plan-completion`.
 - [x] Validar a revisão do cofre na seleção para autofill (parte de AF06): backend rejeita revisão ausente/alterada e a UI envia a revisão apresentada. Regressão em `tests/accountPrompts.test.js`; AF06 completo permanece aberto.

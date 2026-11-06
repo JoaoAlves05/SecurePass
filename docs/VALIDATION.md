@@ -2,6 +2,14 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+## Common-base three-way merge planner — 2026-11-06
+
+`vault/threeWayMerge.js` adds an internal planner over complete already-authenticated snapshots and explicit vault/epoch/base/local/remote references. Independent edits merge; deletion versus unchanged content stays deleted, while deletion versus edit requires an explicit decision. Same-revision different contents are rejected. The planner never chooses credentials by date or combines fields from different versions. Opaque in-memory reviews expose IDs/types/counts, expire after two minutes, reject clock rollback and require a synchronous live context guard. Decisions must cover exactly the reviewed conflicts. Discard or lock during asynchronous preparation prevents returning the result.
+
+Keep-both uses a deterministic SHA-256 copy ID and separate provenance, preserving maximal notes. Reversed sides and replay produce the same result; collisions with existing entries, pending conflicts or other generated copies fail before any commit. The complete result is validated against entry/byte limits. Twelve focused regressions cover these behaviors and six delivery permutations of independent writers sharing the same base. `npm run test:three-way-browser` passed in Chromium, including a Node-computed UTF-8 copy-ID comparison, full-length notes, replay, secret-free preview and discard. Final full run: **227 Node tests passed; 132 JavaScript modules checked; whitespace check passed.** No browser transport or production merge was activated.
+
+This is not authenticated tombstone persistence or complete distributed convergence. Selecting/verifying common ancestry, persistent provenance/tombstones, stale-device rebase, signed-format integration and resolution UI remain pending. The existing additive legacy merge is unchanged. [Issue and boundaries](issues/THREE_WAY_MERGE.md).
+
 ## Drive integration, resumable uploads and anchored search — 2026-11-06
 
 The user supplied the public OAuth client ID, stored in the Git-ignored local development configuration. The builder generates a stable-ID copy without changing the root manifest. Management-only routes/UI now support explicit Chrome Identity connection, complete read-only appData enumeration and disconnect. Drive `about.get` pins the token's permission ID before bound file access; email is display-only. Disconnect invalidates the durable connection generation and suspends the old outbox. Late OAuth completion cannot reconnect it. Tokens remain in Chrome Identity's cache, never extension storage/messages. Incomplete discovery cannot report an empty folder, and file counts are explicitly not authenticated-vault counts.
