@@ -13,6 +13,10 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`h
 let context;
 async function send(page,type,data={}){const r=await page.evaluate(({type,data})=>chrome.runtime.sendMessage({type,...data}),{type,data});assert.equal(r.ok,true,r.error);return r;}
 async function shadowClick(page,selector){
+ if(selector==='[data-action="native"]'){
+   const embedded=page.frames().find(frame=>frame.url().includes('/selector/selector.html'));
+   if(embedded)await embedded.waitForFunction(()=>!document.body.hasAttribute('aria-busy'));
+ }
  const cdp=await context.newCDPSession(page);
  try{const {root}=await cdp.send('DOM.getDocument',{depth:-1,pierce:true});
  const find=node=>{if(node.attributes?.includes('securepass-extension-root'))return node.shadowRoots?.[0];for(const child of node.children||[]){const found=find(child);if(found)return found;}};
@@ -94,13 +98,27 @@ try{
  assert.equal(await site.locator('#password').inputValue(),LOGIN);assert.equal(await site.evaluate(()=>window.submitted),0);
  for(let index=0;index<25;index++)await send(popup,'STORE_CREDENTIAL',{entry:{site:origin,username:`search-user-${String(index).padStart(2,'0')}`,password:`Fictional search password ${index}`}});
  await site.locator('#password').fill('');await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').first().waitFor();
- assert.equal(await selector.locator('#accounts button').count(),2);await selector.locator('#status').filter({hasText:'all saved logins'}).waitFor();
+ assert.equal(await selector.locator('#accounts button').count(),2);await selector.locator('#status').filter({hasText:'of 27 logins'}).waitFor();
  await site.screenshot({path:`${output}/many-logins.png`});
  await selector.locator('#accounts button').nth(1).click();await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
  assert.equal(await site.locator('#password').inputValue(),'Fictional concurrent password');
  await site.locator('#password').fill('');await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').first().waitFor();
+ await selector.locator('#next').click();
+ await selector.locator('#status').filter({hasText:'3–4 of 27'}).waitFor();
+ await selector.locator('#accounts button').nth(1).click();
+ await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
+ assert.equal(await site.locator('#password').inputValue(),'Fictional search password 1');
+ await site.locator('#password').fill('');await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').first().waitFor();
+ await selector.locator('#next').click();await selector.locator('#status').filter({hasText:'3–4 of 27'}).waitFor();
+ await selector.locator('#previous').click();
+ await selector.locator('#status').filter({hasText:'1–2 of 27'}).waitFor();
+ await selector.locator('#search').fill('no such account');await selector.locator('#status').filter({hasText:'No matching logins'}).waitFor();
+ await selector.locator('#search').fill('search-user-24');await selector.locator('#accounts button').filter({hasText:'search-user-24'}).click();
+ await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
+ assert.equal(await site.locator('#password').inputValue(),'Fictional search password 24');
+ await site.locator('#password').fill('');await shadowClick(site,'.securepass-floating');selector=await frameFor(site);await selector.locator('#accounts button').first().waitFor();
  const allWindow=context.waitForEvent('page');await shadowClick(site,'[data-action="native"]');const all=await allWindow;await all.waitForURL('**/auth/auth.html?**');
  await all.locator('#accounts button').filter({hasText:'search-user-24'}).click();await site.waitForFunction(()=>document.querySelector('#password').value.length>0);
  assert.equal(await site.locator('#password').inputValue(),'Fictional search password 24');assert.equal(await site.locator('[name="username"]').inputValue(),'search-user-24');
- console.log('Anchored selector passed: inline selection, source-origin filtering, isolated frame DOM, denied capabilities/second frame, hidden-host rejection, protected unlock handoff, direct fill/no-submit, native/CSP fallback, lock cleanup, stale review, two inline suggestions and protected-window selection across 27 accounts.');
+ console.log('Anchored selector passed: inline selection, source-origin filtering, isolated frame DOM, denied capabilities/second frame, hidden-host rejection, protected unlock handoff, direct fill/no-submit, native/CSP fallback, lock cleanup, stale review, paginated/searchable inline selection and protected-window fallback across 27 accounts.');
 }catch(error){console.error(error);if(context){for(const page of context.pages())for(const frame of page.frames())if(frame.url().includes('/selector/selector.html'))console.error('Selector status',await frame.locator('#status').textContent());console.error('Selector frames',context.pages().flatMap(p=>p.frames().map(f=>f.url())));console.error('Requests',await context.serviceWorkers()[0].evaluate(async()=>Object.values(await chrome.storage.session.get(null)).filter(v=>v?.kind==='fill').map(v=>({presentation:v.presentation,authTabId:v.authTabId,targetId:v.targetId,selectorDocumentId:v.selectorDocumentId}))));}throw error;}finally{if(context)await context.close();await new Promise(resolve=>server.close(resolve));await rm(profile,{recursive:true,force:true});}

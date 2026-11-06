@@ -42,6 +42,6 @@ async function main() {
   const output = await mkdtemp(join(root,'dist','SecurePass-google-'));
   for (const name of runtimeFiles) await cp(join(root,name),join(output,name),{recursive:true});
   await writeFile(join(output,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
-  console.log(`Prepared ${output}\nExtension ID: ${config.extensionId}\nOAuth manifest configuration only; Google credentials must exist and Drive activation remains gated by protocol integration/review.`);
+  console.log(`Prepared ${output}\nExtension ID: ${config.extensionId}\nConnect and check the app folder in Settings > Advanced > Google Drive. Vault publication remains blocked pending protocol review and lifecycle acceptance.`);
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main().catch(error => { console.error(error.message); process.exitCode = 1; });

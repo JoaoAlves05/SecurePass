@@ -5,11 +5,13 @@ import { loadSettings, saveSettings } from '../settings.js';
 import { writeLocalVaultRecordRaw, readLocalVaultRecordRaw, recordRevision, getStorage, removeStorage, clearStorage, deleteIndexedDb, setStorage } from '../utils/storage.js';
 import { clearHibpCache } from '../hibp.js';
 import * as session from './session.js';
+import { publicationStore } from '../sync/publicationStore.js';
 // Caller holds the shared operation lock. This is safe to repeat after a worker restart.
 export async function finishLocalRecovery() {
   const pending = (await getStorage('local', 'localRestorePending')).localRestorePending;
   if (!pending) return;
   if (pending.operation === 'erase') throw new Error('Local erasure was interrupted. Repeat Delete local SecurePass data to finish.');
+  await publicationStore.disable();
   await saveSettings({ ...await loadSettings(), useSync: false }, { allowSyncChange: true });
   await removeStorage('local', [...(pending.preserveBiometric ? [] : ['securepassBiometric']), 'syncStatus', 'syncRetryState']);
   // Keep publication suppressed until every cleanup step has completed.
@@ -23,7 +25,7 @@ export async function commitLocalRecovery(next, entries, expectedRecord, epoch) 
   // This durable safety marker suppresses publication even if a later storage write fails.
   await setStorage('local', { localRestorePending: { revision: next.record.revision, preserveBiometric: Boolean(expectedRecord && expectedRecord.keyEpoch === next.record.keyEpoch) } });
   session.assertGeneration(epoch);
-  await writeLocalVaultRecordRaw(next.record, recordRevision(expectedRecord));
+  await writeLocalVaultRecordRaw(next.record, recordRevision(expectedRecord), { suspendDrive: true });
   await finishLocalRecovery();
   await session.activate(next.record, entries, next.bytes, epoch);
 }

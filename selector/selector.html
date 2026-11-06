@@ -3,6 +3,8 @@
 <head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SecurePass logins</title><link rel="stylesheet" href="selector.css"></head>
 <body>
   <p id="origin"></p>
+  <label id="searchLabel" hidden><span class="visually-hidden">Search saved logins</span><input id="search" type="search" placeholder="Search logins" autocomplete="off" maxlength="255"></label>
+  <nav id="pagination" aria-label="Login pages" hidden><button id="previous" type="button">Previous</button><button id="next" type="button">Next</button></nav>
   <div id="accounts" aria-label="Saved logins"></div>
   <p id="status" role="status" aria-live="polite">Loading logins…</p>
   <button id="refresh" hidden>Review accounts again</button>

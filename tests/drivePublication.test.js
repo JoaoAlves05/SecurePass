@@ -39,7 +39,7 @@ test('off-mode and invalid protocol reject before any upload', async () => {
 });
 test('oversized packets are rejected before validation or network', async () => {
   const state = fixture();
-  await assert.rejects(state.client.publish({}, { ...packet, body: 'x'.repeat(5 * 1024 * 1024) }), /publication-too-large/);
+  await assert.rejects(state.client.publish({}, { ...packet, body: 'x'.repeat(16 * 1024 * 1024 + 1) }), /publication-too-large/);
   assert.equal(state.uploads(), 0);
 });
 test('all duplicate file IDs must match the selected immutable contents', async () => {

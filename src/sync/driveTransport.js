@@ -1,4 +1,5 @@
 // Bounded Drive transport. Production activation requires the reviewed signed protocol.
+import { MAX_PUBLICATION_BYTES, MULTIPART_BYTES, UPLOAD_CHUNK_BYTES, validateUploadSession } from './publicationLimits.js';
 const API = 'https://www.googleapis.com/drive/v3/files';
 const MAX_RESPONSE = 16 * 1024 * 1024;
 const MAX_LIST = 1024 * 1024;
@@ -45,8 +46,8 @@ function createDriveClient({ getToken, assertBinding, assertWritable, validatePu
   async function guard(binding) {
     try { await assertBinding(binding); } catch { throw new DriveError('binding-changed'); }
   }
-  async function request(url, binding, limit, signal, init = {}) {
-    const writing = init.method === 'POST';
+  async function request(url, binding, limit, signal, init = {}, details = false) {
+    const writing = init.method === 'POST' || init.method === 'PUT';
     const writeGuard = async () => { if (writing) await assertWritable(binding); };
     await writeGuard();
     signal?.throwIfAborted(); await guard(binding);
@@ -60,8 +61,9 @@ function createDriveClient({ getToken, assertBinding, assertWritable, validatePu
       const response = await fetchImpl(url, { ...init, method: init.method || 'GET', headers: { ...init.headers, Authorization: `Bearer ${token}` }, signal: controller.signal, redirect: 'error', credentials: 'omit', cache: 'no-store' });
       const text = await bounded(response, response.ok ? limit : Math.min(limit, 65536));
       signal?.throwIfAborted(); await guard(binding);
-      if (!response.ok) { let error; try { error = JSON.parse(text); } catch {} throw classify(response, error); }
-      return text;
+      if (!response.ok && !(details && response.status === 308)) { let error; try { error = JSON.parse(text); } catch {} throw classify(response, error); }
+      await writeGuard();
+      return details ? { text, status: response.status, location: response.headers.get('location'), range: response.headers.get('range') } : text;
     } catch (error) {
       if (signal?.aborted) throw signal.reason || new DOMException('Cancelled', 'AbortError');
       if (error instanceof DriveError) throw error;
@@ -70,6 +72,11 @@ function createDriveClient({ getToken, assertBinding, assertWritable, validatePu
     } finally { clearTimeout(timer); signal?.removeEventListener('abort', cancel); }
   }
   const reader = {
+    async account(binding, { signal } = {}) {
+      const result = parse(await request('https://www.googleapis.com/drive/v3/about?fields=user(permissionId,emailAddress)', binding, 65536, signal));
+      if (typeof result?.user?.permissionId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(result.user.permissionId)) throw new DriveError('invalid-account');
+      return { accountId: result.user.permissionId, email: typeof result.user.emailAddress === 'string' ? result.user.emailAddress.slice(0, 254) : '' };
+    },
     async list(binding, { signal } = {}) {
       const files = []; const ids = new Set(); const tokens = new Set(); let pageToken;
       for (let page = 0; page < maxPages; page++) {
@@ -96,17 +103,70 @@ function createDriveClient({ getToken, assertBinding, assertWritable, validatePu
   };
   if (!writable) return reader;
   if (typeof assertWritable !== 'function' || typeof validatePublication !== 'function') throw new Error('Publication needs a write guard and a protocol validator.');
+  async function uploadResumable(binding, metadata, data, digest, { signal, uploadSession, saveUploadSession } = {}) {
+    let session;
+    if (uploadSession) {
+      try { session = validateUploadSession(uploadSession); } catch { throw new DriveError('invalid-upload-session'); }
+      if (session.total !== data.length || session.digest !== digest) throw new DriveError('invalid-upload-session');
+    }
+    let offset = 0;
+    const persist = async value => { if (saveUploadSession) await saveUploadSession(value); };
+    const acceptedOffset = (result, maximum) => {
+      if (!result.range) return 0;
+      const match = /^bytes=0-(\d+)$/.exec(result.range);
+      const next = match ? Number(match[1]) + 1 : NaN;
+      if (!Number.isSafeInteger(next) || next < 1 || next > maximum) throw new DriveError('invalid-upload-progress');
+      return next;
+    };
+    if (session) {
+      try {
+        const result = await request(session.url, binding, 65536, signal, { method: 'PUT', headers: { 'Content-Range': `bytes */${data.length}` }, body: new Uint8Array() }, true);
+        if (result.status !== 308) return parse(result.text);
+        offset = acceptedOffset(result, data.length);
+      } catch (error) {
+        if (error.code !== 'missing') throw error;
+        // An expired session has no authority to complete a new revision. The
+        // caller already enumerated complete revisions before this status probe.
+        await persist(null); session = null;
+      }
+    }
+    if (!session) {
+      const result = await request('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', binding, 65536, signal, {
+        method: 'POST', headers: { 'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': 'application/json', 'X-Upload-Content-Length': String(data.length) }, body: metadata
+      }, true);
+      try { session = validateUploadSession({ url: result.location, total: data.length, digest }); }
+      catch { throw new DriveError('invalid-upload-session'); }
+      // No data bytes leave before the URI is durable. On worker restart query
+      // the provider's offset, never assume that a previous PUT failed remotely.
+      await persist(session);
+    }
+    for (let part = 0; part < 128 && offset < data.length; part++) {
+      const end = Math.min(offset + UPLOAD_CHUNK_BYTES, data.length);
+      const result = await request(session.url, binding, 65536, signal, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Content-Range': `bytes ${offset}-${end - 1}/${data.length}` }, body: data.slice(offset, end) }, true);
+      if (result.status !== 308) {
+        if (end !== data.length) throw new DriveError('invalid-upload-progress');
+        return parse(result.text);
+      }
+      const next = acceptedOffset(result, end);
+      if (next <= offset) throw new DriveError('upload-stalled', { retryable: true });
+      offset = next;
+    }
+    throw new DriveError('publication-unconfirmed', { retryable: true });
+  }
   let pending = Promise.resolve();
-  async function publish(binding, publication, { signal } = {}) {
+  async function publish(binding, publication, options = {}) {
+    const { signal } = options;
     const { vaultId, revisionId, body } = publication || {};
     if (![vaultId, revisionId].every(id => typeof id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(id)) || typeof body !== 'string') throw new DriveError('invalid-publication');
     // The transport only handles an immutable serialized ciphertext packet. The caller
     // verifies the signed format; it must never pass plaintext entries here.
-    if (body.length > 5 * 1024 * 1024 - 4096 || new TextEncoder().encode(body).length > 5 * 1024 * 1024 - 4096) throw new DriveError('publication-too-large');
+    if (body.length > MAX_PUBLICATION_BYTES) throw new DriveError('publication-too-large');
+    const data = new TextEncoder().encode(body);
+    if (data.length > MAX_PUBLICATION_BYTES) throw new DriveError('publication-too-large');
     const pinned = Object.freeze({ vaultId, revisionId });
     await validatePublication(body, pinned);
     signal?.throwIfAborted(); await guard(binding); await assertWritable(binding);
-    const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body)))].map(value => value.toString(16).padStart(2, '0')).join('');
+    const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', data))].map(value => value.toString(16).padStart(2, '0')).join('');
     const verify = async files => {
       const matches = files.filter(file => file.appProperties?.vaultId === vaultId && file.appProperties?.revisionId === revisionId);
       for (const file of matches) {
@@ -122,7 +182,9 @@ function createDriveClient({ getToken, assertBinding, assertWritable, validatePu
     const boundary = `securepass_${crypto.randomUUID()}`;
     const metadata = JSON.stringify({ name: revisionId, parents: ['appDataFolder'], mimeType: 'application/json', appProperties: { vaultId, revisionId, digest } });
     const multipart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
-    const created = parse(await request('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', binding, 65536, signal, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body: multipart }));
+    const created = data.length > MULTIPART_BYTES || options.uploadSession
+      ? await uploadResumable(binding, metadata, data, digest, options)
+      : parse(await request('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', binding, 65536, signal, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body: multipart }));
     if (!idPattern.test(created?.id || '')) throw new DriveError('publication-unconfirmed', { retryable: true });
     if (await reader.download(binding, created.id, { signal }) !== body) throw new DriveError('revision-content-conflict');
     // Re-enumerate before acknowledgement so conflicting duplicates cannot be hidden

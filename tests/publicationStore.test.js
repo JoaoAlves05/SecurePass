@@ -29,3 +29,15 @@ test('disabled transport accepts no new work or acknowledgement, and returned sn
   await assert.rejects(store.enqueue(binding, packet), /disabled/);
   await assert.rejects(store.markSending(operation, { attempts: 1 }), /disabled/);
 });
+
+test('resumable upload capability persists only on the original current operation', async () => {
+  await store.configure(binding, true); await store.enqueue(binding, packet);
+  const operation = await store.next();
+  const session = { url: 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&upload_id=fictional', digest: 'a'.repeat(64), total: new TextEncoder().encode(packet.body).length };
+  await store.saveUploadSession(operation, session);
+  assert.deepEqual((await store.next()).uploadSession, session);
+  await assert.rejects(async () => store.saveUploadSession(operation, { ...session, url: 'https://attacker.invalid/?upload_id=x' }), /Invalid upload/);
+  await store.disable(); await assert.rejects(store.saveUploadSession(operation, null), /disabled/);
+  await store.configure(binding, true); assert.deepEqual((await store.next()).uploadSession, session);
+  await store.saveUploadSession(operation, null); assert.equal((await store.next()).uploadSession, undefined);
+});

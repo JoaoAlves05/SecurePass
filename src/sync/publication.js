@@ -17,7 +17,10 @@ export function createPublicationCoordinator({ store, transport, now = Date.now,
     // Persist uncertainty before I/O; a crash must resume the same revision.
     await store.markSending(operation, { attempts, outcome: 'unknown' });
     try {
-      const result = await transport.publish(operation.binding, operation.publication);
+      const result = await transport.publish(operation.binding, operation.publication, {
+        uploadSession: operation.uploadSession,
+        saveUploadSession: store.saveUploadSession ? session => store.saveUploadSession(operation, session) : undefined
+      });
       if (result?.verified !== true || result.revisionId !== operation.publication.revisionId) throw Object.assign(new Error('Publication not verified'), { code: 'publication-unconfirmed', retryable: true });
       await store.assertCurrent(operation);
       await store.acknowledge(operation, result);

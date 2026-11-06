@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 import { generateKeyPairSync, createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -18,5 +18,34 @@ try{
  let [worker]=context.serviceWorkers();if(!worker)worker=await context.waitForEvent('serviceworker');assert.equal(worker.url().split('/')[2],extensionId);
  const page=await context.newPage();await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
  assert.deepEqual(await page.evaluate(()=>({id:chrome.runtime.id,identity:typeof chrome.identity.getAuthToken,scopes:chrome.runtime.getManifest().oauth2.scopes})),{id:extensionId,identity:'function',scopes:['https://www.googleapis.com/auth/drive.appdata']});
- console.log('Google build passed in Chromium: public key/extension ID, runtime resources and identity scope. Fictional client; no Google authorization attempted.');
+ // Exercise actual UI/background routes with an emulated identity provider. No
+ // real Google login, token or Drive file is used by this disposable scenario.
+ await worker.evaluate(() => {
+   chrome.identity.getAuthToken = async () => ({ token: 'fictional-browser-token', grantedScopes: ['https://www.googleapis.com/auth/drive.appdata'] });
+   chrome.identity.clearAllCachedAuthTokens = async () => {};
+   globalThis.googleRequests = [];
+   globalThis.fetch = async (url, options) => {
+     googleRequests.push({ url, method: options.method });
+     return url.includes('/about?') ? Response.json({ user: { permissionId: 'fictional-account', emailAddress: 'fictional@example.com' } }) : Response.json({ files: [] });
+   };
+ });
+ await page.goto(`chrome-extension://${extensionId}/popup/popup.html?manage=1#advancedSection`);
+ await page.locator('#connectGoogle:enabled').waitFor();
+ await page.locator('#connectGoogle').click();
+ await page.locator('#googleConnectionStatus').filter({ hasText: 'fictional@example.com' }).waitFor();
+ await page.locator('#inspectGoogle').click();
+ await page.locator('#googleConnectionResult').filter({ hasText: '0 app files found' }).waitFor();
+ assert.equal(await worker.evaluate(() => googleRequests.every(value => value.method === 'GET')), true);
+ assert.equal(await worker.evaluate(async () => JSON.stringify(await chrome.storage.local.get(null)).includes('fictional-browser-token')), false);
+ const captures = join(root, 'docs/screenshots/google-connection'); await mkdir(captures, { recursive: true });
+ await page.setViewportSize({ width: 1200, height: 900 });
+ await page.locator('.settings-scroll-container').evaluate(node => { node.scrollTop = 0; });
+ await page.screenshot({ path: join(captures, 'management.png'), fullPage: true });
+ await page.setViewportSize({ width: 320, height: 560 });
+ await page.locator('.settings-scroll-container').evaluate(node => { node.scrollTop = 0; });
+ assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+ await page.screenshot({ path: join(captures, 'narrow.png'), fullPage: true });
+ await page.locator('#disconnectGoogle').click(); await page.locator('#connectGoogle:enabled').waitFor();
+ assert.equal(await page.locator('#inspectGoogle').isVisible(), false);
+ console.log('Google build/UI passed in Chromium: public identity, connect, complete read-only inspection, disconnect, no persisted tokens and narrow layout. Provider emulated; no Google authorization attempted.');
 }finally{if(context)await context.close();if(output?.startsWith(join(root,'dist','SecurePass-google-')))await rm(output,{recursive:true,force:true});await rm(temporary,{recursive:true,force:true});}

@@ -69,7 +69,7 @@ export async function current(record, { touch = false } = {}) {
   }
   if (stored.deadline <= Date.now()) { await revokeSession(); throw new Error('Vault is locked'); }
   assertGeneration(expected);
-  const snapshot = { record, entries: structuredClone(memory.entries), bytes: new Uint8Array(memory.bytes), epoch: expected, authenticatedAt: stored.authenticatedAt };
+  const snapshot = { record, entries: structuredClone(memory.entries), bytes: new Uint8Array(memory.bytes), epoch: expected, authenticatedAt: stored.authenticatedAt, deadline: stored.deadline };
   if (touch) await activate(record, snapshot.entries, snapshot.bytes, expected);
   return snapshot;
 }

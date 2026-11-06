@@ -4,6 +4,8 @@ Data original: 25/10/2026. Atualização: 04/11/2026. Versão do plano: 3. Estad
 
 A execução é acompanhada em [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md), com entregáveis, cenários e dependências de aceitação.
 
+Estado de execução em 06/11/2026: ligação Google/inspeção de leitura, assinatura automática para inscrição interna, uploads retomáveis e worker com escrita bloqueada por revisão foram integrados; pesquisa/paginação ancorada passou testes Chromium. O client ID público já foi fornecido. Estes incrementos e respetivos limites estão na checklist e em [VALIDATION.md](VALIDATION.md); não fecham o plano nem ativam sincronização Drive de produção.
+
 Origem: [23 problemas SD e sete melhorias UX](REVIEW_SETTINGS_SYNC_DATA.md). [VALIDATION.md](VALIDATION.md) continua a ser o registo de evidência executada. Nenhum SD é fechado por escrever este plano.
 
 A [secção 23](#23-retoma-e-fluxo-compacto-de-login--04112026) regista as decisões de login acordadas em 04/11/2026 e a ordem de retoma, incluindo implementação e aceitação pendentes. O contrato de [chave contextual](CONTEXTUAL_KEY.md) continua a descrever o comportamento implementado em 28/10; o novo fluxo abaixo é trabalho planeado.

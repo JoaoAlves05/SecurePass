@@ -4,7 +4,9 @@ O percurso normal passa a ser chave no campo → desbloqueio protegido se necess
 
 A lista é renderizada por `selector/selector.html`, de origem da extensão, num iframe dentro do host visual do content script. O site não recebe a lista de nomes através de mensagens nem partilha o DOM desse frame. A password mestra, PRF e criação/gestão de logins ficam na janela protegida existente. Só a conta escolhida é entregue ao documento/campo originais pelo percurso de autofill já validado.
 
-Nesta entrega aparecem até **duas sugestões** junto ao campo. As restantes contas continuam utilizáveis através de **Open SecurePass window**, sem nova autenticação numa sessão válida. A tentativa de paginação dentro do iframe falhou no teste de ponteiro do Chromium; foi retirada, em vez de ser declarada concluída. Pesquisa/paginação ancorada e aceitação de listas longas continuam pendentes (AF08/AF11). Nomes longos têm elipse visual e rótulo/título completos.
+Atualização de 06/11: aparecem até **duas sugestões por página**, com pesquisa local por username e navegação Previous/Next para todas as contas da origem. Pesquisa sem resultados não altera o cofre. A altura da lista longa fica estável durante pesquisa/paginação; os controlos de paginação estão antes das contas. O posicionamento anterior desses controlos abaixo de uma lista com scroll pintava-os, mas não recebia cliques reais no Chromium testado; esse desenho não foi aceite. A solução compacta evita o scroll interno de cinco linhas e passou cliques de navegação/seleção em duas páginas e pesquisa da última de 27 contas. A causa interna do comportamento Chromium não foi estabelecida. Nomes longos têm elipse visual e rótulo/título completos; duplicados incluem um identificador curto.
+
+**Open SecurePass window** continua disponível sem nova autenticação numa sessão válida. AF08/AF11 permanecem abertos para a aceitação ampla de extremos, sites, zoom e acessibilidade física, sem confundir a cobertura Chromium com essa matriz.
 
 ## Capacidades e vinculação
 
@@ -23,6 +25,6 @@ Uma página pode impedir o frame com a sua CSP, movê-lo, escondê-lo ou tentar 
 
 ## Evidência
 
-`npm run test:anchored-browser` testa origem correta, uma conta, preenchimento direto/sem submit, isolamento do DOM, capacidades negadas, segundo frame recusado, handoff após desbloqueio, teclado/Escape/reabertura, layout claro/escuro a 320px, scroll, lock cleanup, fallback com `frame-src 'none'`, criação no estado vazio e revisão desatualizada/refrescada. O cenário adicional cria 27 contas, verifica a segunda sugestão diretamente e escolhe a última na janela protegida. Dados e perfis são descartáveis. Capturas em `screenshots/anchored-selector/`.
+`npm run test:anchored-browser` testa origem correta, uma conta, preenchimento direto/sem submit, isolamento do DOM, capacidades negadas, segundo frame recusado, handoff após desbloqueio, teclado/Escape/reabertura, layout claro/escuro a 320px, scroll, lock cleanup, fallback com `frame-src 'none'`, criação no estado vazio e revisão desatualizada/refrescada. O cenário adicional cria 27 contas, verifica seleção na primeira e segunda páginas, Previous/Next, pesquisa sem resultados, pesquisa/seleção ancorada da última conta e alternativa na janela protegida. Dados e perfis são descartáveis. Capturas em `screenshots/anchored-selector/`.
 
 As suites existentes de account prompts e browser geral exercitam explicitamente o fallback em janela para preservar os percursos de guardar/atualizar, backup e PRF virtual. Os testes Node adicionais exercitam vinculação e metadados sem password. Hardware/SSO/sites reais, leitores de ecrã e revisão adversarial visual mais ampla continuam na matriz de aceitação, sem serem declarados concluídos por estes testes.

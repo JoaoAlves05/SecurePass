@@ -12,15 +12,19 @@ import { removeStorage } from '../src/utils/storage.js';
 import { cancelMasterAuthorization } from '../src/vault/masterAuthorization.js';
 import { clearCheckpointPreviews } from '../src/vault/checkpoints.js';
 import { withVaultLock } from '../src/vault/queue.js';
+import { driveHandlers } from '../src/messageHandlers/driveHandlers.js';
+import { driveRuntime } from '../src/sync/driveRuntime.js';
 
-const handlers = new Map([...vaultHandlers, ...biometricHandlers, ...utilHandlers]);
+const handlers = new Map([...vaultHandlers, ...biometricHandlers, ...utilHandlers, ...driveHandlers]);
 // Set access levels before processing even the first request after a worker restart.
 const ready = Promise.all(['local', 'sync', 'session'].map(area => chrome.storage[area].setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })))
   .then(() => Promise.all([removeStorage('session', 'biometricSessionPassphrase'), removeStorage('local', 'securepassTrustedDeviceKey')]));
 
 ready.then(async () => {
   await chrome.alarms.create('syncOutboxRetry', { periodInMinutes: 1 });
+  await chrome.alarms.create('driveOutboxRetry', { periodInMinutes: 1 });
   await retryPendingSync();
+  await driveRuntime.run();
 }).catch(() => {});
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
@@ -51,6 +55,7 @@ onVaultLock(() => {
 });
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === 'syncOutboxRetry') retryPendingSync().catch(() => {});
+  if (alarm.name === 'driveOutboxRetry') driveRuntime.run().catch(() => {});
   if (alarm.name === 'authRequestCleanup') expireRequests().catch(() => {});
   if (alarm.name === 'webauthnCleanup') expireCeremonies().catch(() => {});
   if (alarm.name === 'candidateCleanup') listCandidates().catch(() => {});

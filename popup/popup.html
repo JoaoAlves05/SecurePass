@@ -485,6 +485,16 @@
             </section>
             <section id="advancedSection" class="settings-section" aria-labelledby="advancedHeading" hidden>
               <div class="section-header"><h3 id="advancedHeading" tabindex="-1">Advanced</h3></div>
+              <div class="settings-group-heading"><h4>Google Drive</h4><p class="row-sub">Check your Google connection. Vault synchronization is not available yet.</p></div>
+              <div class="card legacy-card">
+                <p id="googleConnectionStatus" class="settings-status" role="status" aria-live="polite">Checking Google configuration…</p>
+                <p id="googleConnectionResult" class="settings-info" role="status" hidden></p>
+                <div class="management-button-row">
+                  <button id="connectGoogle" class="secondary compact-btn" type="button" disabled>Connect Google account</button>
+                  <button id="inspectGoogle" class="secondary compact-btn" type="button" hidden>Check app folder</button>
+                  <button id="disconnectGoogle" class="secondary compact-btn" type="button" hidden>Disconnect</button>
+                </div>
+              </div>
               <div class="settings-group-heading"><h4>Chrome Sync</h4><p class="row-sub">Make encrypted vault copies available through Chrome. Restoring or combining copies on another device is manual.</p></div>
               <div class="card legacy-card">
                 <p id="syncStatus" class="settings-status" role="status" aria-live="polite">Checking automatic sending…</p>

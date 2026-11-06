@@ -110,7 +110,7 @@ export async function readLocalVaultRecordRaw() {
 
 export const CHECKPOINT_LIMIT = 3;
 
-export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendingSync = false, recoveryRecords, expectedRecoveryRecords, historyOnly = false, saveCheckpoint = true, drivePublication } = {}) {
+export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendingSync = false, recoveryRecords, expectedRecoveryRecords, historyOnly = false, saveCheckpoint = true, drivePublication, expectedDriveBinding, validateCommit, suspendDrive = false } = {}) {
   const expectedDriveAuthorization = drivePublication?.authorization;
   if (expectedDriveAuthorization !== undefined && (typeof expectedDriveAuthorization !== 'string' || !/^[a-f0-9]{64}$/.test(expectedDriveAuthorization))) throw new Error('Invalid Drive authorization checkpoint.');
   const preparedDrive = drivePublication ? preparePublication(drivePublication.binding, drivePublication.publication, expectedDriveAuthorization) : null;
@@ -122,6 +122,7 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendi
     let failure;
     const request = store.get(VAULT_KEY);
     request.onsuccess = () => {
+      try { validateCommit?.(); } catch (error) { failure = error; tx.abort(); return; }
       const previous = request.result || null;
       if (expectedRevision !== undefined && recordRevision(previous) !== expectedRevision) {
         failure = new Error('Vault changed in another context. Unlock again.');
@@ -130,6 +131,7 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendi
       }
       const recovery = store.get('recovery');
       recovery.onsuccess = () => {
+        try { validateCommit?.(); } catch (error) { failure = error; tx.abort(); return; }
         const existing = recovery.result || [];
         if (expectedRecoveryRecords !== undefined && JSON.stringify(existing) !== JSON.stringify(expectedRecoveryRecords)) {
           failure = new Error('Recovery history changed. Review the checkpoints again.');
@@ -142,13 +144,18 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendi
           store.put(record, VAULT_KEY);
           if (pendingSync) store.put({ revision: record.revision, vaultId: record.vaultId }, 'syncOutbox');
           else store.delete('syncOutbox');
-          if (preparedDrive) {
+          if (preparedDrive || expectedDriveBinding !== undefined || suspendDrive) {
             const driveRequest = store.get(PUBLICATION_STATE_KEY);
             driveRequest.onsuccess = () => {
               try {
                 const state = driveRequest.result || { enabled: false, binding: null, operations: [] };
+                if (suspendDrive) { state.enabled = false; store.put(state, PUBLICATION_STATE_KEY); return; }
+                if (!preparedDrive) {
+                  if (state.enabled) throw new Error('Drive binding changed before commit. Retry the operation.');
+                  return;
+                }
                 const enqueue = () => {
-                  try { enqueuePublication(state, preparedDrive); store.put(state, PUBLICATION_STATE_KEY); }
+                  try { validateCommit?.(); enqueuePublication(state, preparedDrive); store.put(state, PUBLICATION_STATE_KEY); }
                   catch (error) { failure = error; tx.abort(); }
                 };
                 if (expectedDriveAuthorization !== undefined) {

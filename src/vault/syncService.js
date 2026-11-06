@@ -8,6 +8,7 @@ import { withVaultOperation as operation } from './queue.js';
 import * as session from './session.js';
 import { validateMaster } from '../validation.js';
 import { commitLocalRecovery, finishLocalRecovery } from './recovery.js';
+import { publicationStore } from '../sync/publicationStore.js';
 
 const lockVault = session.revokeSession;
 const digest = async record => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(record)))), b => b.toString(16).padStart(2, '0')).join('');
@@ -23,6 +24,7 @@ export function changeSyncMode(target, strategy, passphrase, options = {}) {
       await lockVault();
       return { requiresResolution: false };
     }
+    if ((await publicationStore.context()).enabled) throw new Error('Disconnect Drive before enabling Chrome Sync.');
     const local = await readLocalVaultRecordRaw();
     if (options.expectedRevision !== undefined && recordRevision(local) !== options.expectedRevision) throw new Error('Local vault changed. Review the storage choice again.');
     const heads = await syncHeads();

@@ -46,7 +46,37 @@ try {
     };
   });
   assert.deepEqual(result, { committed: true, queued: true, checkpoint: true, rejected: true, unchangedHistory: true, unchangedQueue: true });
-  console.log('Real IndexedDB Drive commit passed: atomic vault/checkpoint/outbox and full rollback on queue failure. No Google transport used.');
+  const automatic = await page.evaluate(async () => {
+    const vault = await import('../src/cryptoVault.js');
+    const storage = await import('../src/utils/storage.js');
+    const protocol = await import('../src/sync/signedProtocol.js');
+    const { createDeviceKey } = await import('../src/sync/signingKeyProtection.js');
+    const { pinAuthorization } = await import('../src/sync/authorizationStore.js');
+    const { installLocalWriter } = await import('../src/sync/mutationPublication.js');
+    const { publicationStore: store } = await import('../src/sync/publicationStore.js');
+    await vault.lockVault(); await storage.deleteIndexedDb('SecurePassDB');
+    await vault.initializeVault('Fictional automatic browser master 123!');
+    const active = await vault.requireVault();
+    const admin = await protocol.generateSigningKey(); const writer = await createDeviceKey(active.bytes, active.record);
+    const genesis = await protocol.createAuthorization({ kind: 'securepass-authorization', version: 1, vaultId: active.record.vaultId, keyEpoch: active.record.keyEpoch, revision: crypto.randomUUID(), previous: null, adminKey: admin.publicKey, devices: [{ id: 'browser-writer', publicKey: writer.envelope.publicKey }] }, admin.privateKey);
+    const authorization = await pinAuthorization([genesis], { vaultId: active.record.vaultId, rootFingerprint: await protocol.signingKeyFingerprint(admin.publicKey) });
+    const binding = { accountId: 'fictional-account', vaultId: active.record.vaultId, generation: 'automatic' };
+    await store.configure(binding, true); await installLocalWriter(binding, 'browser-writer', writer.envelope);
+    const entry = await vault.storeCredential({ site: 'https://example.com', password: 'fictional' });
+    const created = await store.next();
+    await protocol.verifySignedPublication(created.publication.body, created.publication, authorization);
+    await store.acknowledge(created, { verified: true, revisionId: created.publication.revisionId });
+    await vault.updateCredential(entry.id, { password: 'fictional replacement' });
+    const updated = await store.next();
+    const verified = await protocol.verifySignedPublication(updated.publication.body, updated.publication, authorization);
+    await store.acknowledge(updated, { verified: true, revisionId: updated.publication.revisionId });
+    await vault.deleteCredential(entry.id);
+    const deleted = await store.next();
+    await protocol.verifySignedPublication(deleted.publication.body, deleted.publication, authorization);
+    return { ancestry: verified.record.parents.includes(created.publication.revisionId), empty: (await vault.listCredentials()).length === 0, queued: deleted.publication.revisionId === (await storage.readLocalVaultRecordRaw()).revision, noLegacy: await storage.readSyncOutbox() === null };
+  });
+  assert.deepEqual(automatic, { ancestry: true, empty: true, queued: true, noLegacy: true });
+  console.log('Real IndexedDB/WebCrypto Drive commit passed: atomic rollback and automatic signed create/update/delete through normal vault mutations. Internal enrollment fixture; no Google transport used.');
 } finally {
   if (context) await context.close();
   await rm(profile, { recursive: true, force: true });

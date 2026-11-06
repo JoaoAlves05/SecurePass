@@ -1,6 +1,8 @@
 import { readLocalVaultRecordRaw, writeLocalVaultRecordRaw, getStorage, setStorage, recordRevision, readSyncOutbox, acknowledgeSync } from '../utils/storage.js';
 import { loadSettings } from '../settings.js';
 import { syncHeads, publishGeneration, inspectSync, publicationCapacity } from './sync.js';
+import { prepareMutationPublication } from '../sync/mutationPublication.js';
+import { publicationStore } from '../sync/publicationStore.js';
 export async function loadRecord() {
   const local = await readLocalVaultRecordRaw();
   if (local) return local;
@@ -13,6 +15,7 @@ export async function loadRecord() {
 }
 export async function publishLocalRecord(record) {
   if (!(await loadSettings()).useSync) throw new Error('Sync is off. No remote changes were made.');
+  if ((await publicationStore.context()).enabled) throw new Error('Drive and Chrome Sync cannot publish the same vault.');
   try {
     await setStorage('local', { syncStatus: { pending: true, revision: record.revision, storingAt: Date.now() } });
     await publishGeneration(record);
@@ -24,7 +27,11 @@ export async function publishLocalRecord(record) {
 }
 export async function commitRecord(record, expected, options = {}) {
   const enabled = (await loadSettings()).useSync;
-  await writeLocalVaultRecordRaw(record, expected, { ...options, pendingSync: enabled });
+  const prepared = options.drivePublication ? null : await prepareMutationPublication(record, expected);
+  await writeLocalVaultRecordRaw(record, expected, {
+    ...options, pendingSync: enabled,
+    ...(prepared ? { drivePublication: prepared.packet, expectedDriveBinding: prepared.binding, validateCommit: prepared.assertSession } : {})
+  });
   if (enabled) await publishLocalRecord(record);
 }
 export async function assertCurrent(record) {
@@ -60,6 +67,6 @@ export async function getSyncStatus({ inspectRemote = false, localOnly = false }
     enabled, remoteError, issues: remote.issues, bytesUsed: remote.bytesUsed, itemCount: remote.itemCount,
     recoveryArchiveCount: (stored.syncRecovery || []).length,
     restorePending: Boolean(stored.localRestorePending),
-    drive: { available: false, reason: 'Google OAuth and the signed-device protocol are not configured. Local vault and backups are available.' }
+    drive: { available: false, reason: 'Drive vault synchronization is not available yet. Account access can be checked in Advanced.' }
   };
 }

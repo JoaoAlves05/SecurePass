@@ -2,11 +2,11 @@
 
 Esta é uma configuração feita pelo responsável pela extensão, uma vez por identidade/projeto; não deve ser exigida a cada utilizador final da versão distribuída.
 
-Estado em 05/11/2026: o utilizador confirmou que ainda não existe configuração Google. Estes passos preparam a identidade/OAuth; não ativam automaticamente a sincronização nem substituem a integração/revisão do protocolo que continua na checklist.
+Estado em 06/11/2026: o utilizador forneceu o client ID público, guardado na configuração local ignorada por Git. A cópia configurada permite autorizar a conta e inspecionar a pasta da aplicação sem enviar o cofre. A autorização Google real ainda precisa de ser executada no Chrome; o teste automatizado usa um fornecedor emulado. A escrita Drive continua bloqueada no código até revisão/aceitação do protocolo e conclusão do ciclo administrativo.
 
 ## 1. Escolher a identidade da extensão
 
-Para desenvolvimento local sem uma identidade Web Store, foi gerado `dist/google-development.json` com uma chave **pública** e um ID estável; o campo `clientId` está vazio. Nenhuma chave privada foi guardada. Manter esse ficheiro: regenerar uma identidade altera o ID que deve estar registado no Google.
+Para desenvolvimento local sem uma identidade Web Store, foi gerado `dist/google-development.json` com uma chave **pública** e o ID estável `mhppemdaompjbcooeomnaoailgcpbjjg`. O client ID fornecido foi acrescentado nesse ficheiro local. Nenhuma chave privada foi guardada. Manter esse ficheiro: regenerar uma identidade altera o ID que deve estar registado no Google.
 
 Para criar esse ficheiro noutro checkout: `npm run configure:google -- --create-development-identity`. O comando recusa sobrescrever uma identidade existente. Esta identidade de desenvolvimento não reserva um ID de publicação na Web Store.
 
@@ -25,6 +25,10 @@ Usar um perfil Chrome descartável para configurar/testar a nova identidade. Uma
 
 A aplicação OAuth tem de corresponder à identidade efetivamente carregada. O código não consegue criar nem validar as permissões do teu projeto Google apenas a partir de um client ID. [Fluxo OAuth para extensões](https://developer.chrome.com/docs/extensions/how-to/integrate/oauth).
 
+Podes entrar no Cloud com o teu Gmail pessoal. Na configuração da aplicação, podes usar esse email em **User support email** e **Developer contact information**. Para contas pessoais, escolher audiência **External**, manter **Testing** e adicionar o próprio Gmail em **Audience → Test users**; acrescentar outras contas se forem usadas nos testes. Esta configuração é do responsável pela extensão, não uma tarefa de cada utilizador final.
+
+No formulário de cliente, selecionar **Chrome Extension**, nome `SecurePass Desenvolvimento` e **Item ID** `mhppemdaompjbcooeomnaoailgcpbjjg`. Não são necessários URIs de redirecionamento de uma aplicação web.
+
 ## 3. Gerar uma cópia de desenvolvimento
 
 Executar:
@@ -35,7 +39,17 @@ npm run configure:google -- --config dist/google-development.json
 
 O comando valida a correspondência entre chave pública e ID, recusa campos como `client_secret`/tokens e cria uma pasta nova `dist/SecurePass-google-…`. Adiciona `identity`, apenas o scope appData, o host Google e o client ID ao manifesto dessa cópia. O manifesto principal permanece sem configuração Google inventada.
 
-Carregar essa pasta através de **Load unpacked** em `chrome://extensions` no perfil de teste e confirmar que o ID apresentado coincide com o registado no Google. Depois será necessário testar o fluxo OAuth real quando os handlers/interface de ligação estiverem integrados. A existência de `oauth2` no manifesto ou de uma cópia gerada não significa que o cofre esteja ligado nem que uma publicação tenha sido entregue.
+Carregar a pasta indicada pelo comando através de **Load unpacked** em `chrome://extensions` num perfil Chrome de teste e confirmar que o ID apresentado é `mhppemdaompjbcooeomnaoailgcpbjjg`. Não substituir a instalação que contém um cofre real.
+
+1. Abrir SecurePass → Settings → **Advanced → Google Drive**. É possível abrir a gestão numa tab para evitar que o popup feche durante a autorização.
+2. Escolher **Connect Google account** e autorizar com uma conta incluída nos test users. O email apresentado vem do Drive; não é usado como identidade técnica do vínculo.
+3. Escolher **Check app folder**. O resultado distingue enumeração concluída de erro e conta ficheiros, sem afirmar que foram autenticados como cofres. Não cria, descarrega conteúdos de cofres ou publica dados.
+4. Escolher **Disconnect** para esquecer a ligação local e suspender a fila. Isto não apaga ficheiros Drive nem afirma revogar globalmente a permissão Google.
+5. Registar se a ligação e a inspeção passam. Em caso de erro, comunicar apenas o texto/código mostrado e o passo; não enviar tokens ou dados do cofre.
+
+A autorização usa somente `drive.appdata`; a identidade estável da conta é confirmada por `about.get`, também permitido por esse scope. Tokens ficam na cache da API Chrome Identity, nunca no armazenamento/mensagens da extensão. [Chrome Identity](https://developer.chrome.com/docs/extensions/reference/api/identity), [Drive about.get](https://developers.google.com/workspace/drive/api/reference/rest/v3/about/get).
+
+A existência de `oauth2` no manifesto e uma ligação autorizada não significam que o cofre esteja sincronizado. Não existe controlo de ativação de escrita Drive nesta entrega.
 
 ## Dados necessários para continuar a integração real
 

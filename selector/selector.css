@@ -2,8 +2,18 @@
 body[data-theme="dark"] { color-scheme: dark; --bg: #101013; --text: #f5f5f7; --muted: #b7b7c2; --hover: #28282e; --focus: #a8baff; }
 * { box-sizing: border-box; }
 body { margin: 0; padding: 8px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; max-height: 240px; overflow: hidden; }
+body[data-expanded="true"] { height: 210px; }
 #origin { margin: 0 0 8px; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #accounts { display: grid; min-height: 0; max-height: 148px; overflow-y: auto; flex-shrink: 1; }
+#searchLabel { display: block; margin-bottom: 4px; }
+#search { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--muted); border-radius: 4px; color: var(--text); background: var(--bg); font: inherit; caret-color: var(--focus); }
+#search:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+#search::placeholder { color: var(--muted); opacity: 1; }
+#pagination { display: flex; justify-content: space-between; flex-shrink: 0; }
+#pagination button { min-height: 28px; font-size: 12px; padding: 4px 8px; }
+#accounts { overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--muted) var(--bg); }
+::selection { color: var(--bg); background: var(--focus); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 button, input, #origin { flex-shrink: 0; }
 button { color: var(--text); font: inherit; cursor: pointer; border: 0; border-radius: 4px; background: transparent; text-align: left; min-height: 36px; padding: 8px; }
 #accounts button { width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

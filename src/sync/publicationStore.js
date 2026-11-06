@@ -1,6 +1,7 @@
 import { getDB } from '../utils/storage.js';
 import { DB_STORE_NAME } from '../constants.js';
 import { PUBLICATION_STATE_KEY as KEY, sameBinding, preparePublication, enqueuePublication } from './publicationModel.js';
+import { validateUploadSession } from './publicationLimits.js';
 function current(state, operation, authorizationHead) {
   if (!state.enabled || !sameBinding(state.binding, operation.binding)) throw new Error('Drive binding changed or disabled.');
   const found = state.operations.find(value => value.id === operation.id && sameBinding(value.binding, operation.binding));
@@ -22,7 +23,7 @@ async function access(mutate, write = false) {
           if (write) store.put(state, KEY);
         } catch (error) { failure = error; tx.abort(); }
       };
-      if (state.operations.some(operation => operation.authorization !== undefined) && state.binding) {
+      if (state.binding) {
         const authorization = store.get(`driveAuthorization:${state.binding.vaultId}`);
         authorization.onsuccess = () => finish(authorization.result?.head);
       } else finish(undefined);
@@ -37,9 +38,21 @@ export const publicationStore = {
   configure(binding, enabled = false) {
     if (typeof enabled !== 'boolean' || !binding || !['accountId', 'vaultId', 'generation'].every(key => typeof binding[key] === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(binding[key]))) throw new Error('Invalid Drive binding.');
     const pinned = { accountId: binding.accountId, vaultId: binding.vaultId, generation: binding.generation };
-    return access(state => { state.binding = pinned; state.enabled = enabled; }, true);
+    return access(state => {
+      if (!sameBinding(state.binding, pinned)) delete state.writer;
+      state.binding = pinned; state.enabled = enabled;
+    }, true);
   },
   disable() { return access(state => { state.enabled = false; }, true); },
+  context() { return access(state => ({ enabled: state.enabled, binding: state.binding, writer: state.writer || null })); },
+  installWriter(binding, writer, authorization, validateCommit) {
+    const pinned = structuredClone(writer);
+    return access((state, head) => {
+      validateCommit?.();
+      if (!state.enabled || !sameBinding(state.binding, binding) || head !== authorization) throw new Error('Drive binding or authorization changed.');
+      state.writer = pinned;
+    }, true);
+  },
   enqueue(binding, publication) {
     const prepared = preparePublication(binding, publication);
     return access(state => enqueuePublication(state, prepared), true);
@@ -47,6 +60,15 @@ export const publicationStore = {
   next() { return access(state => state.enabled ? state.operations.find(value => sameBinding(value.binding, state.binding)) || null : null); },
   assertCurrent(operation) { return access((state, head) => { current(state, operation, head); }); },
   markSending(operation, values) { return access((state, head) => { Object.assign(current(state, operation, head), { attempts: values.attempts, outcome: values.outcome }); }, true); },
+  saveUploadSession(operation, session) {
+    const pinned = session === null ? null : validateUploadSession(session);
+    return access((state, head) => {
+      const found = current(state, operation, head);
+      if (pinned && pinned.total !== new TextEncoder().encode(found.publication.body).length) throw new Error('Upload size mismatch.');
+      if (pinned) found.uploadSession = pinned;
+      else delete found.uploadSession;
+    }, true);
+  },
   recordFailure(operation, values) { return access((state, head) => { Object.assign(current(state, operation, head), { attempts: values.attempts, code: values.code, nextAttempt: values.nextAttempt, outcome: values.outcome, blocked: values.blocked }); }, true); },
   acknowledge(operation, result) {
     return access((state, head) => {

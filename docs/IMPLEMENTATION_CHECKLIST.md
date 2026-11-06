@@ -1,8 +1,24 @@
 # Checklist de implementação e aceitação
 
-Atualizada em 05/11/2026. Fonte: [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md), versão 3. Release ainda não aceite.
+Atualizada em 06/11/2026. Fonte: [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md), versão 3. Release ainda não aceite.
 
 Uma caixa marcada exige implementação e evidência indicada. Caixas abertas incluem trabalho parcial e aceitação ainda não demonstrada. Os incrementos existentes estão descritos em [SETTINGS_UX_IMPLEMENTATION.md](SETTINGS_UX_IMPLEMENTATION.md); resultados históricos em [VALIDATION.md](VALIDATION.md) não equivalem a testes desta execução.
+
+## Integração de 06/11/2026
+
+Issue local: [DRIVE_INTEGRATION.md](issues/DRIVE_INTEGRATION.md). Branch: `feature/drive-integration-completion`.
+
+- [x] Client ID público fornecido pelo utilizador e guardado na configuração local ignorada; cópia com identidade estável gerada. Não equivale a autorização Google executada.
+- [x] Rotas de gestão e UI para ligar/desligar conta e inspecionar completamente a pasta appData, sem escrever ou aplicar conteúdos remotos. Conta técnica verificada via `about.get`; token nunca persiste em storage/mensagens da extensão.
+- [x] Mudança de conta, cancelamento durante OAuth e disconnect invalidam resultados tardios e suspendem operações antigas; descoberta incompleta nunca se apresenta como pasta vazia.
+- [x] Preparação automática de assinaturas nas mutações normais para um writer interno previamente inscrito; commit do cofre/checkpoint/fila compara vínculo, autorização e sessão. Enrollment do protótipo continua sem rota pública.
+- [x] Coordenador ligado ao arranque/alarme do worker, com escrita bloqueada por condição de release no código. Runtime exercitado com política de teste explícita e fornecedor emulado.
+- [x] Restauro local suspende Drive na mesma transação; não publica a revisão restaurada nem elimina silenciosamente a fila anterior. Rotação de época não autorizada é recusada antes do commit.
+- [x] Upload retomável até 16 MiB de pacote, blocos de 1 MiB, URI durável antes de enviar conteúdo, consulta de offset após restart e recuperação da resposta perdida. Mantém validação de bytes e reenumeração antes do acknowledgement.
+- [x] Pesquisa e paginação ancoradas, duas contas por página e controlos antes da lista. Cliques reais, pesquisa sem resultados, seleção na página seguinte e pesquisa da última de 27 contas exercitados em Chromium; fallback protegido preservado.
+- [ ] Executar ligação/inspeção com o cliente real no Chrome e registar o resultado; o utilizador faz a autorização no seu browser.
+- [ ] Rever independentemente formato/nonces/bootstrap e concluir ciclo administrativo, inscrição/revogação/rotação, kit, convergência e migração antes de habilitar escrita Drive.
+- [ ] Concluir AF/SC e matriz física/acessibilidade/sites. Os novos testes não fecham automaticamente os problemas SD nem a release.
 
 ## Trabalho desta execução
 
@@ -35,9 +51,9 @@ Validação: 161 testes Node e check de 101 módulos aprovados; suites de browse
 - [x] Coordenador com estado de envio incerto persistido antes de I/O, backoff/jitter/Retry-After, limite de 20 tentativas e bloqueio de erros permanentes.
 - [x] Fila IndexedDB vinculada a conta/cofre/geração, preservada ao mudar de vínculo; acknowledgement rejeitado após desligar/mudar de conta.
 - [x] API `commitRecord`/`writeLocalVaultRecordRaw` aceita operação Drive explícita e grava cofre/checkpoint/fila na mesma transação. Regressões cobrem sucesso, mudança de vínculo e abort após put.
-- [ ] Produzir automaticamente o pacote assinado em cada mutação e passar a operação à API transacional; o protocolo ainda não está integrado no produto.
-- [ ] Integrar coordenador/alarme/router, OAuth e UI, após formato assinado validado. Nenhuma publicação Drive foi ativada no produto.
-- [ ] Uploads acima do limite multipart de 5 MiB menos margem exigem percurso resumable antes de prometer toda a capacidade; os atuais são rejeitados antes da rede.
+- [x] Produzir automaticamente o pacote assinado nas mutações normais quando existe inscrição interna válida; integração e regressões de 06/11 acima. Não ativa inscrição/escrita no produto.
+- [x] Integrar coordenador/alarme/router e OAuth/UI de inspeção em 06/11; publicação de produção continua bloqueada até revisão e lifecycle completos.
+- [x] Implementar percurso resumable para pacotes acima do limite multipart; até 16 MiB de pacote. Aceitação Google e capacidade de todo o produto continuam separadas.
 - [ ] Concluir formato de cifragem e ciclo administrativo de produção, kit, convergência e migração; o protótipo de autorização assinada já existe.
 - [x] Lista ancorada ao campo implementada com frame isolado e vinculação de documento; revisão visual adversarial ampla e aceitação manual continuam pendentes.
 
@@ -50,7 +66,7 @@ Verificação atual: **166 testes Node e check de 104 módulos aprovados**; `npm
 - [x] Recusar publicação simultânea pelo transporte legacy e pelo Drive na mesma gravação.
 - [x] Confirmar rollback do cofre/checkpoint/fila quando a gravação da fila aborta ou a geração do vínculo muda.
 - [x] Testar limite persistido de retentativas sem novo I/O.
-- [ ] Integrar assinatura/preparação automática do pacote nas mutações normais e ligar o worker/OAuth/UI. Esta continuação não ativa publicação remota.
+- [x] Integrar assinatura/preparação automática, worker e OAuth/UI de inspeção em 06/11. Mantém condição de release e inscrição internas sem rota de ativação.
 
 ## Continuação — autorização e revisões assinadas (protótipo interno)
 
@@ -72,12 +88,12 @@ Verificação desta continuação: **180 testes Node e check de 113 módulos apr
 
 - [x] Seletor ancorado com até duas sugestões utilizável na extensão, com handoff de desbloqueio e alternativa em janela; atestação de visibilidade/foco/oclusão recusa preenchimento através de host transparente.
 - [x] Muitas contas continuam utilizáveis: duas sugestões diretas e seleção completa na janela protegida; cenário Chromium com 27 contas aprovado.
-- [ ] Pesquisa/paginação de todas as contas dentro do seletor ancorado: tentativa retirada após falha de clique no Chromium; manter fallback protegido (AF08/AF11).
+- [x] Pesquisa/paginação de todas as contas dentro do seletor ancorado em 06/11: duas contas por página, navegação no topo e seleção via cliques reais; fallback protegido preservado (aceitação ampla AF08/AF11 continua aberta).
 - [x] Empacotamento inclui HTML/CSS/JS do seletor e partilha os runtime roots com a ferramenta de configuração; `test:package-browser` executa o percurso ancorado completo a partir do ZIP extraído.
 - [x] Ferramenta de configuração pública Google valida chave/ID e gera cópia de desenvolvimento; não aceita secrets/tokens.
 - [x] Identidade pública de desenvolvimento gerada em `dist/google-development.json`, sem guardar chave privada.
 - [x] Guia de configuração Cloud em [GOOGLE_CLOUD_SETUP.md](GOOGLE_CLOUD_SETUP.md); o utilizador confirmou que ainda não configurou OAuth.
-- [ ] Criar/configurar projeto e cliente OAuth no Google Cloud, preencher client ID real e testar autorização Google. Depende da conta/projeto do utilizador.
+- [ ] Configuração pública recebida em 06/11; concluir autorização Google real e verificar ligação/inspeção. Depende da conta/projeto do utilizador.
 - [ ] Ativar sincronização Drive completa após terminar integração/lifecycle/protocolo e condições de revisão. A ferramenta de manifesto não conclui esses requisitos.
 
 Validação da integração visível: **186 testes Node e check de 120 módulos**, suites Chromium ancorada, account prompts, geral/PRF virtual, configuração Google e ZIP extraído aprovados. O cliente Google do teste é fictício e não foi autenticado. O plano completo continua por concluir: integração Drive/OAuth, lifecycle de dispositivos/chaves, kit de recuperação, convergência, migração e revisão independente. Esta entrega não os declara disponíveis.

@@ -40,3 +40,11 @@ test('SC56: new backup/cache/recovery management handlers remain forbidden to co
   }
   assert.equal(authorizeMessage({ type: 'COMMIT_BACKUP' }, { id: chrome.runtime.id, url: chrome.runtime.getURL('popup/popup.html?manage=1') }), 'management');
 });
+
+test('Google account routes are exclusive to management, including selector frames', () => {
+  for (const type of ['GOOGLE_CONNECT', 'GOOGLE_DISCONNECT', 'GOOGLE_INSPECT', 'GOOGLE_CONNECTION_STATUS']) {
+    assert.throws(() => authorizeMessage({ type }, content), /Forbidden/);
+    for (const path of ['auth/auth.html', 'selector/selector.html']) assert.throws(() => authorizeMessage({ type }, { id: chrome.runtime.id, url: chrome.runtime.getURL(path) }), /Forbidden/);
+    assert.equal(authorizeMessage({ type }, { id: chrome.runtime.id, url: chrome.runtime.getURL('popup/popup.html') }), 'management');
+  }
+});

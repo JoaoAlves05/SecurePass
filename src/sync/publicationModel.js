@@ -1,7 +1,8 @@
+import { MAX_PUBLICATION_BYTES } from './publicationLimits.js';
 export const PUBLICATION_STATE_KEY = 'drivePublicationState';
 export const sameBinding = (a, b) => a && b && ['accountId', 'vaultId', 'generation'].every(key => a[key] === b[key]);
 export function preparePublication(binding, publication, authorization) {
-  if (!binding || !['accountId', 'vaultId', 'generation'].every(key => typeof binding[key] === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(binding[key])) || !publication || publication.vaultId !== binding.vaultId || typeof publication.revisionId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(publication.revisionId) || typeof publication.body !== 'string' || publication.body.length > 5 * 1024 * 1024 - 4096 || new TextEncoder().encode(publication.body).length > 5 * 1024 * 1024 - 4096) throw new Error('Invalid bounded publication.');
+  if (!binding || !['accountId', 'vaultId', 'generation'].every(key => typeof binding[key] === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(binding[key])) || !publication || publication.vaultId !== binding.vaultId || typeof publication.revisionId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(publication.revisionId) || typeof publication.body !== 'string' || publication.body.length > MAX_PUBLICATION_BYTES || new TextEncoder().encode(publication.body).length > MAX_PUBLICATION_BYTES) throw new Error('Invalid bounded publication.');
   if (authorization !== undefined && (typeof authorization !== 'string' || !/^[a-f0-9]{64}$/.test(authorization))) throw new Error('Invalid publication authorization.');
   return {
     ...(authorization === undefined ? {} : { authorization }),
