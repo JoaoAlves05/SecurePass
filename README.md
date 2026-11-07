@@ -59,7 +59,7 @@ Gestão do cofre e das definições no popup ou num separador dedicado, com tema
 | **Cofre local cifrado** | Criar, pesquisar, adicionar, editar e remover credenciais, alterar a palavra-passe mestra e bloquear o acesso. |
 | **Gerador configurável** | Definir comprimento, conjuntos de caracteres e exclusões, com suporte para um subconjunto de regras dos formulários. Regras impossíveis ou não suportadas geram um erro explícito. |
 | **Análise de palavras-passe** | Obter uma avaliação heurística local e consultar, por pedido explícito, ocorrências no Have I Been Pwned. |
-| **Preenchimento assistido** | Selecionar uma de até duas sugestões junto ao campo, após desbloqueio protegido quando necessário; todas as contas ficam disponíveis na alternativa em janela e o formulário não é submetido automaticamente. |
+| **Preenchimento assistido** | Pesquisar e percorrer as contas do site junto ao campo, duas por página, após desbloqueio protegido quando necessário. A janela protegida mantém-se como alternativa; o formulário não é submetido automaticamente. |
 | **Sugestões de gravação** | Rever e confirmar a gravação ou atualização de credenciais detetadas na submissão de um formulário. |
 | **Backups e recuperação** | Exportar ficheiros cifrados, pré-visualizar importações, resolver duplicados e restaurar versões anteriores. |
 | **Bloqueio automático** | Bloquear o cofre por inatividade, ao bloquear o sistema operativo ou ao fechar a última janela do browser. |
@@ -133,27 +133,33 @@ Consulta [SECURITY.md](SECURITY.md) para o modelo de ameaça e os limites de pro
 
 Os backups normais são ficheiros JSON cifrados com uma palavra-passe própria de, pelo menos, **12 caracteres**. A importação apresenta entradas novas, idênticas e em conflito, com opções para manter ambas, ignorar ou substituir.
 
-O projeto conserva até **cinco versões locais anteriores** e um arquivo local de até **20 registos remotos**. As cópias de recuperação são exportadas individualmente; arquivos agregados antigos de grande dimensão ainda exigem o leitor de migração previsto no plano.
+O projeto conserva até **três checkpoints locais anteriores** e um arquivo local de até **20 registos remotos**. As cópias de recuperação são exportadas individualmente; arquivos agregados antigos de grande dimensão ainda exigem o leitor de migração previsto no plano.
 
-Restaurar uma versão anterior aplica-a localmente e desativa a sincronização. Alterar a palavra-passe mestra protege o cofre atual com uma nova chave e revoga a configuração biométrica local; backups e versões históricas mantêm as palavras-passe que os protegiam.
+Restaurar uma versão anterior aplica-a localmente e desativa a sincronização. Alterar a palavra-passe mestra protege o cofre atual e os checkpoints locais retidos com a nova chave/password, numa transação, e revoga a configuração biométrica local. Backups já exportados e cópias remotas/arquivadas conservam a proteção anterior. Checkpoints ilegíveis impedem a rotação até serem revistos ou removidos explicitamente.
 
 **Mantém backups cifrados independentes da sincronização.** Apagar este dispositivo remove os dados locais, incluindo o histórico, mas deixa as cópias remotas. Não existe um fluxo implementado para apagar todos os dispositivos.
 
 ## Sincronização e estado atual
 
-O cofre local em IndexedDB é a referência para as operações normais. Quando a sincronização está ativa, as alterações de credenciais são primeiro gravadas localmente e depois publicadas como versões cifradas. Uma falha de publicação fica assinalada como pendente.
+O cofre local em IndexedDB é a referência para as operações normais. Quando o Chrome Sync legacy está ativo, as alterações de credenciais são primeiro gravadas localmente e depois publicadas como versões cifradas. Uma falha de publicação fica assinalada como pendente.
 
 | Área | Estado atual |
 | --- | --- |
 | **Cofre local, gerador e análise** | Implementados, com cobertura automatizada descrita no registo de validação. |
 | **Backups e recuperação local** | Implementados; a migração de grandes arquivos antigos continua pendente. |
 | **Chrome Sync** | Transporte legado com resolução explícita de conflitos. As quotas podem impedir novas publicações, mesmo quando uma versão inicial cabe no armazenamento. |
-| **Google Drive** | Planeado e indisponível na versão atual. OAuth e o novo protocolo de sincronização e autorização de dispositivos ainda não estão implementados. |
+| **Google Drive — ligação** | A cópia de desenvolvimento configurada permite autorizar a conta, verificar a pasta da aplicação em modo de leitura e desligar a ligação. A autorização Google real ainda aguarda validação. O manifesto principal não inclui configuração Google. |
+| **Google Drive — sincronização do cofre** | Publicação, fila transacional, uploads retomáveis e assinaturas existem internamente. A publicação de produção permanece bloqueada; inscrição de dispositivos, ciclo de chaves, recuperação e migração não estão concluídos. |
+| **Merge de três vias** | Planeador interno com conflitos de edição/eliminação, revisões vinculadas e cópias determinísticas. Não altera o merge legacy; ancestral comum autenticado, tombstones persistidos e interface de resolução continuam pendentes. |
 | **Validação para distribuição** | Pendente: inclui autenticadores físicos, transporte autenticado Google e cenários de falha e recuperação entre dispositivos. |
 
 Os testes de sincronização utilizam transporte emulado entre dois perfis Chromium; os testes de PRF utilizam um autenticador virtual. Estes resultados não demonstram compatibilidade com todo o hardware nem com o transporte Google autenticado.
 
 O estado detalhado está na [revisão de settings, Sync e dados](docs/REVIEW_SETTINGS_SYNC_DATA.md), nas [correções locais implementadas](docs/SETTINGS_UX_IMPLEMENTATION.md) e na [revisão de backups e opções avançadas](docs/REVIEW_BACKUP_ADVANCED.md). O [plano de evolução](docs/SYNC_DATA_PLAN.md) descreve propostas ainda por implementar e validar.
+
+A [checklist atual](docs/IMPLEMENTATION_CHECKLIST.md) identifica entregas e pendências. A última execução registada, correspondente ao código integrado em `82933d8`, passou **227 testes Node e o check de 132 módulos**; o cenário Chromium do planeador de três vias também passou. Os resultados anteriores permanecem datados no registo de validação, sem implicar que todas as suites tenham sido repetidas nesse último incremento.
+
+Para testar a ligação Google, segue o [guia de configuração](docs/GOOGLE_CLOUD_SETUP.md). Este teste verifica acesso à conta/pasta da aplicação; não ativa sincronização do cofre.
 
 ## Compatibilidade e limites
 
@@ -190,6 +196,11 @@ npm run test:sync-browser
 | `npm run test:settings-browser` | Validar percursos de definições e gestão de dados. |
 | `npm run test:backup-dialogs-browser` | Validar os diálogos de backup e restauro. |
 | `npm run test:sync-browser` | Exercitar sincronização com dois perfis e transporte emulado. |
+| `npm run test:three-way-browser` | Validar o planeador interno e comparar a identidade UTF-8 das cópias entre Node e Chromium. |
+| `npm run test:anchored-browser` | Exercitar pesquisa, paginação, isolamento e preenchimento junto ao campo. |
+| `npm run test:google-config-browser` | Validar a cópia configurada e a ligação/inspeção Google com fornecedor emulado. |
+| `npm run test:package-browser` | Executar o percurso ancorado a partir do ZIP extraído. |
+| `npm run configure:google -- --config dist/google-development.json` | Gerar uma cópia com a configuração pública Google local; consultar o guia antes de a carregar. |
 | `npm run package` | Gerar `dist/SecurePass-0.2.0.zip` com os ficheiros de execução e a documentação de segurança/licença. |
 
 Os testes utilizam dados fictícios e perfis descartáveis; alguns atualizam capturas em `docs/screenshots/`. Os resultados executados e a aceitação pendente estão em [docs/VALIDATION.md](docs/VALIDATION.md). Criar o ZIP não constitui validação para distribuição.

@@ -1,6 +1,6 @@
 # Settings UX — journeys, screens and acceptance map
 
-Design baseline 2026-10-25, linked to [the complete plan](SYNC_DATA_PLAN.md) and [local issue](issues/SETTINGS_UX.md). This is the interaction contract, not a statement that every SC is implemented. Google OAuth is not configured; Drive enrollment, signed-device protocol and recovery-kit paths must remain unavailable until their prerequisites are implemented and verified.
+Design baseline 2026-10-25, linked to [the complete plan](SYNC_DATA_PLAN.md) and [local issue](issues/SETTINGS_UX.md). This is the interaction contract, not a statement that every SC is implemented. Reconciled on 2026-11-07: public Google client configuration and read-only connection/inspection are available in a configured development copy; real Google authorization remains unverified. Production Drive enrollment/publication, full signed-device lifecycle and recovery-kit paths remain unavailable pending review and integration. The original information architecture below is a design baseline; current four-category navigation and delivered increments are documented in SETTINGS_UX_IMPLEMENTATION.md and IMPLEMENTATION_CHECKLIST.md.
 
 ## Information architecture
 
@@ -94,8 +94,8 @@ stateDiagram-v2
 
 | Scenario | Screen | Expected outcome from plan | Design status |
 |---|---|---|---|
-| SC01 — Criar offline no primeiro dispositivo | U01 | Cofre local válido; Sync não é pré-requisito. | Designed; acceptance pending |
-| SC02 — Criar com passwords de confirmação diferentes | U01 | Não criar; permitir correção sem perder contexto não sensível. | Designed; acceptance pending |
+| SC01 — Criar offline no primeiro dispositivo | U01 | Cofre local válido; Sync não é pré-requisito. | Local acceptance recorded; see checklist |
+| SC02 — Criar com passwords de confirmação diferentes | U01 | Não criar; permitir correção sem perder contexto não sensível. | Local acceptance recorded; see checklist |
 | SC03 — Segundo dispositivo, conta/cofre/password corretos | U01 | Desbloqueio e inscrição verificáveis; mesma identidade/época. | Designed; acceptance pending |
 | SC04 — Segundo dispositivo, password errada | U01 | Nenhuma criação, escrita ou substituição; tentativas limitadas localmente. | Designed; acceptance pending |
 | SC05 — Password correta mas dados adulterados | U01 | Rejeitar; não atribuir automaticamente a culpa à password. | Designed; acceptance pending |

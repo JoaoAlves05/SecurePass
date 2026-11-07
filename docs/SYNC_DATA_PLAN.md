@@ -1,14 +1,14 @@
 # Plano completo — Settings, Sync, dispositivos e Data Management
 
-Data original: 25/10/2026. Atualização: 04/11/2026. Versão do plano: 3. Estado: **plano completo ainda não implementado nem aceite; existem incrementos locais/legacy documentados separadamente**. Baseline da revisão: SecurePass 0.2.0, commit `e97f4c6558be23e50016a9b473441ce4c431490a`. O utilizador concordou com a direção de cofre local cifrado, sincronização opcional e proteção ponta a ponta e pediu cobertura dos diferentes cenários. Este plano concretiza essa direção sem apresentar decisões técnicas por validar como garantias já existentes.
+Data original: 25/10/2026. Atualização documental: 07/11/2026. Versão do plano: 3. Estado: **plano completo ainda não implementado nem aceite; existem incrementos locais/legacy documentados separadamente**. Baseline da revisão: SecurePass 0.2.0, commit `e97f4c6558be23e50016a9b473441ce4c431490a`. O utilizador concordou com a direção de cofre local cifrado, sincronização opcional e proteção ponta a ponta e pediu cobertura dos diferentes cenários. Este plano concretiza essa direção sem apresentar decisões técnicas por validar como garantias já existentes.
 
 A execução é acompanhada em [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md), com entregáveis, cenários e dependências de aceitação.
 
-Estado de execução em 06/11/2026: ligação Google/inspeção de leitura, assinatura automática para inscrição interna, uploads retomáveis e worker com escrita bloqueada por revisão foram integrados; pesquisa/paginação ancorada passou testes Chromium. O client ID público já foi fornecido. Estes incrementos e respetivos limites estão na checklist e em [VALIDATION.md](VALIDATION.md); não fecham o plano nem ativam sincronização Drive de produção.
+Estado de execução em 06/11/2026: ligação Google/inspeção de leitura, assinatura automática para inscrição interna, uploads retomáveis e worker com escrita bloqueada por revisão foram integrados; pesquisa/paginação ancorada passou testes Chromium. O planeador interno de três vias e os testes de permutações com base comum também foram entregues, sem integração de tombstones persistidos ou resolução no produto. O client ID público já foi fornecido. Estes incrementos e respetivos limites estão na checklist e em [VALIDATION.md](VALIDATION.md); não fecham o plano nem ativam sincronização Drive de produção.
 
 Origem: [23 problemas SD e sete melhorias UX](REVIEW_SETTINGS_SYNC_DATA.md). [VALIDATION.md](VALIDATION.md) continua a ser o registo de evidência executada. Nenhum SD é fechado por escrever este plano.
 
-A [secção 23](#23-retoma-e-fluxo-compacto-de-login--04112026) regista as decisões de login acordadas em 04/11/2026 e a ordem de retoma, incluindo implementação e aceitação pendentes. O contrato de [chave contextual](CONTEXTUAL_KEY.md) continua a descrever o comportamento implementado em 28/10; o novo fluxo abaixo é trabalho planeado.
+A [secção 23](#23-retoma-e-fluxo-compacto-de-login--04112026) regista as decisões de login acordadas em 04/11/2026 e a ordem de retoma, incluindo implementação e aceitação pendentes. O contrato de [chave contextual](CONTEXTUAL_KEY.md) continua a descrever o comportamento implementado em 28/10; o seletor ancorado e a pesquisa/paginação já estão implementados; os critérios completos de aceitação AF continuam discriminados na checklist.
 
 ## 1. Resultado e decisões recomendadas
 
@@ -435,7 +435,7 @@ Antes de codificar o formato novo, fechar numa revisão técnica: serialização
 
 ### 23.1 Estado de partida e ordem de trabalho
 
-Última integração funcional consultada: `3c2be42`, de 28/10/2026, na versão 0.2.0. Inclui chave contextual, sugestões de guardar/atualizar, ferramentas de geração, comparação/recuperação de checkpoints e configuração guiada de Chrome Sync. Estes incrementos não significam implementação integral das fases P0–P6 nem fecho dos SD01–SD23. As evidências e os seus limites permanecem em [VALIDATION.md](VALIDATION.md), [SETTINGS_UX_IMPLEMENTATION.md](SETTINGS_UX_IMPLEMENTATION.md) e [REVIEW_BACKUP_ADVANCED.md](REVIEW_BACKUP_ADVANCED.md).
+Baseline histórica desta secção, consultada em 04/11: `3c2be42`, de 28/10/2026, na versão 0.2.0. A execução avançou depois para `f7fb780` e `82933d8`, integrados em `main`; consultar o estado consolidado da checklist. Inclui chave contextual, sugestões de guardar/atualizar, ferramentas de geração, comparação/recuperação de checkpoints e configuração guiada de Chrome Sync. Estes incrementos não significam implementação integral das fases P0–P6 nem fecho dos SD01–SD23. As evidências e os seus limites permanecem em [VALIDATION.md](VALIDATION.md), [SETTINGS_UX_IMPLEMENTATION.md](SETTINGS_UX_IMPLEMENTATION.md) e [REVIEW_BACKUP_ADVANCED.md](REVIEW_BACKUP_ADVANCED.md).
 
 Ordem de retoma:
 
@@ -449,18 +449,18 @@ Pendências a manter explícitas no backlog, além do login:
 | Área | Trabalho ainda necessário para o plano completo |
 |---|---|
 | Settings, Sync e dados atuais | Consolidar aceitação por SD/UX; capacidade/quota e recuperação de histórico cheio; recolha segura de uploads abandonados; retoma completa de transições entre armazenamentos e falhas em cada fronteira. Reavaliar as mitigações posteriores à revisão original antes de declarar um defeito ainda reproduzível. |
-| Drive e identidade | OAuth, descoberta/seleção e troca de conta/cofre, vínculo da outbox à conta, adaptador de produção, erros/quota/retry e operações remotas retomáveis. |
+| Drive e identidade | OAuth de leitura, vínculo da outbox, retry e upload retomável já existem internamente. Faltam autorização Google real, descoberta/seleção autenticada de cofre, ciclo de vínculos no produto e ativação do adaptador de produção. |
 | Chaves e dispositivos | Formato/protocolo revistos, autorização assinada, inscrição e revogação, épocas e conflitos de chaves, kit de recuperação e limites de frescura no bootstrap. |
-| Convergência e retenção | Fast-forward remoto automático, merge de três vias, tombstones, rebase de dispositivos antigos, checkpoints autenticados, compactação e testes de convergência por permutação de eventos. |
+| Convergência e retenção | Planeador interno de três vias e permutações com a mesma base entregues. Faltam fast-forward remoto, ancestral comum autenticado, tombstones/proveniência persistidos, rebase, checkpoints/compactação de causalidade e convergência distribuída completa. |
 | Backups e migração | Leitura incremental limitada de arquivos legacy grandes, limites de tamanho/memória, exportação em lote, migração retomável, escritas tardias de clientes antigos e tratamento de downgrade. |
 | Eliminação e concorrência | Eliminação remota explícita e retomável, corridas de wipe/respostas antigas, operações em múltiplos contextos e testes alargados das capacidades dos futuros handlers. |
 | Aceitação e distribuição | Autenticadores físicos/PRF, Chrome Sync autenticado e futuro Drive real em contas descartáveis, popup na toolbar, sites reais/login/SSO, teclado/leitor de ecrã/SO, clipboard sleep/wake, suspensão/restart, atualização/migração, revisão de segurança independente e pacote final. |
 
-Os testes emulados e o autenticador virtual não substituem estas verificações. A última evidência contextual registada é de 138 testes Node, 93 módulos e cenários Chromium; a suite completa precedeu o último ajuste de feedback e não foi repetida por esta atualização documental.
+Os testes emulados e o autenticador virtual não substituem estas verificações. Os 138 testes/93 módulos eram a evidência contextual de 04/11. A última execução de código registada passou 227 testes Node, check de 132 módulos e cenário Chromium de três vias; outras suites permanecem datadas por incremento em VALIDATION.md. Esta reconciliação documental não repete testes de execução.
 
 ### 23.2 Experiência acordada
 
-Objetivo: aproximar a rapidez e a simplicidade do seletor do gestor de passwords do Google, preservando a identidade do SecurePass e as suas garantias verificáveis. A janela atual de 420 × 560 não é um requisito de segurança nem deve definir o desenho futuro.
+Objetivo: aproximar a rapidez e a simplicidade do seletor do gestor de passwords do Google, preservando a identidade do SecurePass e as suas garantias verificáveis. As dimensões da antiga janela de 420 × 560 não são um requisito de segurança; a lista ancorada é hoje o percurso normal suportado e a janela protegida é a alternativa.
 
 **Fluxo principal:** chave junto ao campo → desbloquear apenas se necessário → lista compacta de contas do site → clicar numa conta e preencher imediatamente.
 
@@ -476,16 +476,16 @@ O painel do autenticador é controlado pelo navegador/SO. Não prometer aspeto i
 
 ### 23.3 Conteúdo e apresentação
 
-**Estado de implementação em 05/11/2026:** a lista ancorada está implementada no working tree, com frame de origem da extensão, handoff após desbloqueio e fallback em janela. Ver [contrato e evidência](ANCHORED_SELECTOR.md). A descrição seguinte regista a decisão original; testes de hardware/sites/acessibilidade e revisão visual adversarial continuam pendentes.
+**Estado de implementação em 06/11/2026:** a lista ancorada está integrada em `main`, com frame de origem da extensão, handoff após desbloqueio, pesquisa/paginação de duas contas por página e fallback em janela. Ver [contrato e evidência](ANCHORED_SELECTOR.md). A descrição seguinte regista a decisão original; testes de hardware/sites/acessibilidade e revisão visual adversarial continuam pendentes.
 
-**Apresentação final confirmada pelo utilizador — implementação futura:** o seletor deve ser uma pequena lista de sugestões ancorada ao campo de login, semelhante à apresentação do gestor de passwords do Google nos formulários. Ao clicar na chave, o utilizador deve continuar no contexto do formulário; depois de desbloquear, vê as contas junto ao campo e escolhe uma para preencher diretamente. A janela separada de 360 × 400 atualmente implementada é uma etapa intermédia e **não satisfaz este requisito de apresentação**.
+**Requisito de apresentação implementado no percurso normal suportado:** pequena lista junto ao campo, com origem e escolha direta de conta após desbloqueio protegido. A antiga seleção exclusivamente em janela de 360 × 400 foi substituída pela lista ancorada; a janela continua como alternativa protegida. Isto não fecha a aceitação ampla de hardware, sites/SSO, acessibilidade ou resistência a engano visual.
 
 - Implementar posicionamento junto ao campo, adaptação às margens do viewport e acompanhamento de scroll/resize, com altura limitada e navegação por teclado.
 - Manter nomes/contagens ocultos enquanto bloqueado e autenticação num contexto protegido da extensão. Desbloquear uma vez, regressar à lista ancorada e preencher ao selecionar, sem nova autenticação enquanto a sessão for válida.
 - Definir e validar o isolamento da superfície de sugestões antes de a disponibilizar. A janela protegida pode continuar como fallback de segurança/compatibilidade; não marcar a apresentação final concluída por esse fallback existir.
 - Critério de aceitação: no percurso normal suportado, as contas aparecem junto ao campo, sem abrir uma janela separada para as escolher; validar a apresentação, interação, origem e resistência a manipulação pelo site.
 
-- Lista curta, junto ao campo quando tecnicamente seguro e viável, com origem do site e uma linha por conta. Altura adapta-se ao conteúdo, com scroll para muitas contas; evitar cartões grandes, texto explicativo repetido e ações concorrentes.
+- Lista curta, junto ao campo quando tecnicamente seguro e viável, com origem do site e uma linha por conta. Na implementação atual, muitas contas usam pesquisa e paginação de duas linhas, com altura estável durante a interação; evitar cartões grandes, texto explicativo repetido e ações concorrentes.
 - Remover **Password options** e **Other options** do percurso de login/seleção de contas. Sem copiar passwords ou guardar o valor do campo como ações secundárias nesse seletor.
 - No estado sem contas, oferecer **Adicionar login** e fecho/voltar. Preservar criação explícita, origem imutável e revisão de destino; guardar não preenche automaticamente.
 - Geração e opções de comprimento/símbolos pertencem aos campos de registo/nova password e ao gerador principal. Preservar preenchimento da confirmação e proteção do campo da password atual. A gestão de contas continua acessível pelo popup principal.

@@ -1,12 +1,27 @@
 # Checklist de implementação e aceitação
 
-Atualizada em 06/11/2026. Fonte: [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md), versão 3. Release ainda não aceite.
+Atualizada em 07/11/2026. Fonte: [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md), versão 3. Release ainda não aceite.
 
 Uma caixa marcada exige implementação e evidência indicada. Caixas abertas incluem trabalho parcial e aceitação ainda não demonstrada. Os incrementos existentes estão descritos em [SETTINGS_UX_IMPLEMENTATION.md](SETTINGS_UX_IMPLEMENTATION.md); resultados históricos em [VALIDATION.md](VALIDATION.md) não equivalem a testes desta execução.
 
+## Estado consolidado
+
+Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável) e `82933d8` (planeador de três vias). Última validação de código registada: **227 testes Node, check de 132 módulos e cenário Chromium de três vias aprovados**. Esta reconciliação documental não repete testes de execução.
+
+| Área | Entregue | Ainda necessário para fechar |
+|---|---|---|
+| Login junto ao campo | Autenticação protegida, pesquisa, duas contas por página, preenchimento direto e fallback | Matriz completa AF08/AF10–AF12, sites/SSO, acessibilidade e hardware |
+| Ligação Google | Client ID recebido, cópia estável gerada, OAuth/inspeção de leitura e disconnect | Autorizar no Chrome real e registar acesso/enumeração com a conta de teste |
+| Publicação Drive | Assinaturas internas, cofre/checkpoint/fila atómicos, runtime com condição de release e uploads retomáveis | Revisão independente, inscrição/gestão de chaves e ativação de produção |
+| Merge de três vias | Planeador interno, decisões vinculadas, eliminação versus edição e cópias estáveis | Ancestral comum autenticado, tombstones persistidos, rebase e UI; convergência distribuída completa |
+| Dados e migração | Correções locais/legacy e regressões documentadas por incremento | Arquivos grandes, retenção/GC, todas as fronteiras de falha e migração Drive |
+| Aceitação | SC01/SC02 e AF03/AF09 fechados nos limites documentados | 56 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
+
+As caixas por secção abaixo representam aceitação integral, não ausência de implementação. Componentes internos não equivalem a funcionalidades ativadas na interface.
+
 ## Integração de 06/11/2026
 
-Issue local: [DRIVE_INTEGRATION.md](issues/DRIVE_INTEGRATION.md). Branch: `feature/drive-integration-completion`.
+Issue local: [DRIVE_INTEGRATION.md](issues/DRIVE_INTEGRATION.md). Branch de implementação: `feature/drive-integration-completion`, integrada em `main` por `f7fb780`.
 
 - [x] Client ID público fornecido pelo utilizador e guardado na configuração local ignorada; cópia com identidade estável gerada. Não equivale a autorização Google executada.
 - [x] Rotas de gestão e UI para ligar/desligar conta e inspecionar completamente a pasta appData, sem escrever ou aplicar conteúdos remotos. Conta técnica verificada via `about.get`; token nunca persiste em storage/mensagens da extensão.
@@ -20,15 +35,17 @@ Issue local: [DRIVE_INTEGRATION.md](issues/DRIVE_INTEGRATION.md). Branch: `featu
 - [ ] Rever independentemente formato/nonces/bootstrap e concluir ciclo administrativo, inscrição/revogação/rotação, kit, convergência e migração antes de habilitar escrita Drive.
 - [ ] Concluir AF/SC e matriz física/acessibilidade/sites. Os novos testes não fecham automaticamente os problemas SD nem a release.
 
-## Trabalho desta execução
+## Planeador de três vias — 06/11
 
-### Continuação — planeador de três vias (06/11)
+Branch de implementação: `feature/three-way-sync-merge`, integrada em `main` por `82933d8`.
 
 - [x] Planeador interno com base comum explícita, combinação de alterações independentes e conflitos de edição/eliminação; sem escolher por relógio ou juntar campos de versões incompatíveis.
 - [x] Preview opaco sem passwords, decisões completas vinculadas às revisões/época/cofre, prazo de dois minutos, rejeição após bloqueio/descarte e limites do resultado completo.
 - [x] Manter ambas cria ID determinístico e proveniência separada, sem alterar notas; replay/lados invertidos e colisões de IDs têm regressões.
 - [x] Permutações de três escritores com a mesma base testadas; identidade UTF-8 da cópia comparada entre Node e Chromium.
 - [ ] Integrar ancestral comum autenticado, tombstones persistidos/assinados, resolução administrativa e UI. O planeador não altera o merge legacy nem ativa escrita Drive; os SC completos continuam abertos. [Issue](issues/THREE_WAY_MERGE.md).
+
+## Baseline histórica — execução inicial
 
 - [x] Ler o plano completo e criar esta checklist.
 - [x] Criar branch `feature/sync-data-plan-completion`.
@@ -45,7 +62,8 @@ Issue local: [DRIVE_INTEGRATION.md](issues/DRIVE_INTEGRATION.md). Branch: `featu
 - [x] Cancelamento do cliente biométrico antes/depois da resposta do autenticador: três regressões aprovadas.
 - [x] Settings Chromium e Sync emulado de dois perfis novamente aprovados.
 - [x] Login compacto: suite dedicada Chromium aprovada, incluindo fallback, escolha direta, guardar/atualizar e geração contextual. O fallback durante diálogo nativo usa dispatch programático no teste; cliques com diálogo do SO aberto e PRF físico continuam em AF12.
-- [ ] Ligar transporte a OAuth/estado persistente e UI após protocolo revisto.
+- [x] Ligar OAuth, estado persistente e UI de inspeção de leitura em 06/11; ver incremento acima.
+- [ ] Concluir ligação/seleção de cofre e escrita Drive de produção após revisão do protocolo e ciclo administrativo.
 - [ ] Integrar a publicação e autorização assinada no produto e concluir migração; os componentes internos já implementados estão registados nas secções seguintes.
 
 ## Incremento de 05/11/2026 — publicação e persistência Drive
@@ -67,7 +85,7 @@ Validação: 161 testes Node e check de 101 módulos aprovados; suites de browse
 
 ## Continuação — commit atómico da fila Drive
 
-Verificação atual: **166 testes Node e check de 104 módulos aprovados**; `npm run test:drive-commit-browser` aprovado em IndexedDB real (commit e rollback). O cenário não usa Google nem testa o protocolo assinado.
+Evidência histórica desta continuação: **166 testes Node e check de 104 módulos aprovados**; `npm run test:drive-commit-browser` aprovado em IndexedDB real (commit e rollback). O cenário foi posteriormente ampliado para CRUD assinado; ver resultados de 06/11 em [VALIDATION.md](VALIDATION.md).
 
 - [x] Extrair modelo de fila sem dependência de storage para evitar ciclos de imports.
 - [x] Enfileirar uma operação explícita em conjunto com cofre e checkpoint; validar revisão, identidade e vínculo dentro da transação.
@@ -88,23 +106,24 @@ Verificação atual: **166 testes Node e check de 104 módulos aprovados**; `npm
 - [ ] Rever protocolo independentemente, definir formato de cifragem novo/limites de nonces e integrar ciclo administrativo/UI. O protótipo não está ativado no produto.
 - [ ] Implementar inscrição/revogação/rotação completas, gestão de chaves e kit de recuperação nas superfícies autorizadas.
 - [x] Pacotes assinados preparados incluem o checkpoint esperado: a transação de commit verifica-o, e a fila recusa envio/acknowledgement se a autorização mudou.
-- [ ] Integrar estes mecanismos nas mutações e envios normais do produto, com rebase de pacotes antigos e resolução administrativa.
+- [x] Preparação automática nas mutações e runtime de envio integrados internamente em 06/11, sem rota de inscrição/ativação de produção.
+- [ ] Concluir rebase de pacotes antigos, resolução administrativa e ativação de produção após revisão.
 
 Verificação desta continuação: **180 testes Node e check de 113 módulos aprovados**; `npm run test:signed-protocol-browser` aprovado para vetor fixo, checkpoint e proteção de chaves no WebCrypto real do Chromium; cenário de commit/rollback em IndexedDB real repetido e aprovado após as guardas de autorização. Os estados SC correspondentes continuam abertos para integração e aceitação completas.
 
 ## Integração visível e preparação Google
 
 - [x] Seletor ancorado com até duas sugestões utilizável na extensão, com handoff de desbloqueio e alternativa em janela; atestação de visibilidade/foco/oclusão recusa preenchimento através de host transparente.
-- [x] Muitas contas continuam utilizáveis: duas sugestões diretas e seleção completa na janela protegida; cenário Chromium com 27 contas aprovado.
+- [x] Muitas contas utilizáveis por pesquisa/paginação ancorada, duas por página, e alternativa protegida; cenário Chromium com 27 contas aprovado.
 - [x] Pesquisa/paginação de todas as contas dentro do seletor ancorado em 06/11: duas contas por página, navegação no topo e seleção via cliques reais; fallback protegido preservado (aceitação ampla AF08/AF11 continua aberta).
 - [x] Empacotamento inclui HTML/CSS/JS do seletor e partilha os runtime roots com a ferramenta de configuração; `test:package-browser` executa o percurso ancorado completo a partir do ZIP extraído.
 - [x] Ferramenta de configuração pública Google valida chave/ID e gera cópia de desenvolvimento; não aceita secrets/tokens.
 - [x] Identidade pública de desenvolvimento gerada em `dist/google-development.json`, sem guardar chave privada.
-- [x] Guia de configuração Cloud em [GOOGLE_CLOUD_SETUP.md](GOOGLE_CLOUD_SETUP.md); o utilizador confirmou que ainda não configurou OAuth.
+- [x] Guia Cloud e configuração pública local preparados; client ID real recebido em 06/11. Autorização Google real permanece por verificar.
 - [ ] Configuração pública recebida em 06/11; concluir autorização Google real e verificar ligação/inspeção. Depende da conta/projeto do utilizador.
 - [ ] Ativar sincronização Drive completa após terminar integração/lifecycle/protocolo e condições de revisão. A ferramenta de manifesto não conclui esses requisitos.
 
-Validação da integração visível: **186 testes Node e check de 120 módulos**, suites Chromium ancorada, account prompts, geral/PRF virtual, configuração Google e ZIP extraído aprovados. O cliente Google do teste é fictício e não foi autenticado. O plano completo continua por concluir: integração Drive/OAuth, lifecycle de dispositivos/chaves, kit de recuperação, convergência, migração e revisão independente. Esta entrega não os declara disponíveis.
+Evidência histórica da integração visível de 05/11: **186 testes Node e check de 120 módulos**, suites Chromium ancorada, account prompts, geral/PRF virtual, configuração Google e ZIP extraído aprovados. OAuth de leitura, assinaturas automáticas, upload retomável e planeador de três vias foram acrescentados em 06/11; os resultados atuais estão no resumo acima. A sincronização Drive de produção, lifecycle de dispositivos/chaves, kit, convergência completa, migração e revisão independente continuam pendentes.
 
 ## Entregáveis por secção
 
@@ -207,9 +226,9 @@ SC01/SC02 foram fechados para criação local pelas regressões de cofre e percu
 - [ ] **AF11** — Teclado/leitor de ecrã, claro/escuro, 320px, zoom, scroll/resize — Foco, fallback e cancelamento utilizáveis; lista ancorada ao campo no percurso normal; janela protegida apenas como fallback documentado; feedback não bloqueia o site.
 - [ ] **AF12** — Hardware e browser reais — Testar sucesso, falha/cancelamento e fallback nos SO/autenticadores alvo; registar limitações de ativação e toolbar sem equiparar PRF virtual a aceitação física.
 
-## Evidência atual das correções locais
+## Evidência das correções locais — baseline de 04/11
 
-Suite completa desta execução: **147 testes Node aprovados**. Check: **96 módulos**. Suites Chromium geral/PRF virtual, account prompts, Settings e Sync emulado aprovadas. A aceitação completa dos cenários permanece separada dos testes abaixo.
+Evidência histórica de 04/11: **147 testes Node aprovados**. Check: **96 módulos**. Consultar o estado consolidado acima para a última execução. Suites Chromium geral/PRF virtual, account prompts, Settings e Sync emulado aprovadas. A aceitação completa dos cenários permanece separada dos testes abaixo.
 
 | Requisitos | Comportamento já implementado e exercitado | Evidência |
 |---|---|---|
@@ -254,7 +273,8 @@ Cada SD deve ser reconciliado com as correções posteriores, testes persistente
 
 ## Dependências externas e condições de release
 
-- [ ] Configurar OAuth Google para a identidade estável da extensão; não inventar client ID nem credenciais.
+- [x] Receber client ID público Google e gerar cópia com identidade estável; configuração local ignorada por Git.
+- [ ] Verificar configuração efetiva do projeto/contas de teste e concluir autorização/inspeção Google real no Chrome.
 - [ ] Revisar formato, serialização canónica, assinaturas, cadeia administrativa, nonces e bootstrap antes de habilitar escrita Drive.
 - [ ] Testar Google autenticado com contas/perfis descartáveis e entrega real.
 - [ ] Testar PRF/autenticadores físicos e sistemas operativos suportados.
@@ -264,8 +284,9 @@ Cada SD deve ser reconciliado com as correções posteriores, testes persistente
 
 ## Próximos blocos de implementação
 
-1. Consolidar SD/UX e condições de falha sobre a baseline atual.
-2. Login compacto e biometria inicial, mantendo autenticação isolada e nomes protegidos.
-3. Fechar persistência/recuperação, quotas e arquivos legacy.
-4. Especificar e revisar protocolo novo, depois implementar Drive, autorização de dispositivos, recuperação, convergência e migração.
-5. Executar aceitação externa e atualizar o estado de cada cenário.
+1. Rever formato, serialização, nonces e bootstrap antes de habilitar escrita Drive; concluir inscrição/revogação/rotação, gestão de chaves e kit.
+2. Executar autorização/inspeção Google real em paralelo com a implementação restante; integrar descoberta/seleção de cofre e vínculos no produto.
+3. Ligar o planeador de três vias ao ancestral comum autenticado, tombstones/proveniência persistidos, rebase e UI; validar convergência de histórias completas.
+4. Fechar fronteiras de falha, persistência/recuperação, quotas/GC, retenção e arquivos legacy grandes.
+5. Implementar e validar migração retomável, coexistência com clientes antigos e downgrade.
+6. Executar aceitação Google/hardware/sites/acessibilidade e revisão independente; reconciliar cada SD/SC/AF com evidência antes de fechar a release.

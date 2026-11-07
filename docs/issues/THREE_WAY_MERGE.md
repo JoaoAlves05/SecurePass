@@ -1,6 +1,6 @@
 # Merge de três vias — SC22–SC25, SC34–SC35
 
-Implementar o planeador interno sobre snapshots já autenticados, com base comum
+Objetivo do incremento, entregue internamente em `82933d8` e integrado em `main`: planeador sobre snapshots já autenticados, com base comum
 explícita, conflitos de edição/eliminação e decisões vinculadas às revisões.
 Preservar notas, password do destino, identidades e heads não selecionados.
 

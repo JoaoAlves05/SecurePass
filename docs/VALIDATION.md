@@ -2,6 +2,8 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
+Current code baseline: `82933d8`, integrated in `main`. Latest executed results: **227 Node tests, 132 checked modules and the dedicated Chromium three-way scenario passed**. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+
 ## Common-base three-way merge planner — 2026-11-06
 
 `vault/threeWayMerge.js` adds an internal planner over complete already-authenticated snapshots and explicit vault/epoch/base/local/remote references. Independent edits merge; deletion versus unchanged content stays deleted, while deletion versus edit requires an explicit decision. Same-revision different contents are rejected. The planner never chooses credentials by date or combines fields from different versions. Opaque in-memory reviews expose IDs/types/counts, expire after two minutes, reject clock rollback and require a synchronous live context guard. Decisions must cover exactly the reviewed conflicts. Discard or lock during asynchronous preparation prevents returning the result.

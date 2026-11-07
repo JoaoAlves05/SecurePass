@@ -1,12 +1,22 @@
 # Implementation tracking — current and historical status
 
-Updated 2026-10-25. Current documentation baseline: version 0.2.0, commit `e97f4c6558be23e50016a9b473441ce4c431490a`. The historical phase used branch `feature/phase1-hardening`; this is not a statement of the current checkout branch. Scope of that phase: findings F01–F32 in REVIEW_PHASE1.md.
+Documentation reconciled 2026-11-07. Current code baseline: version 0.2.0, commit `82933d8`, following Drive integration `f7fb780`, both in `main`. The original review baseline was `e97f4c6558be23e50016a9b473441ce4c431490a`. The historical phase used branch `feature/phase1-hardening`; this is not a statement of the current checkout branch. Scope of that phase: findings F01–F32 in REVIEW_PHASE1.md.
 
-Historical note: the phase-1 local work item recorded that GitHub CLI was unavailable and no remote issue/PR was published. This documentation update did not create a remote issue, commit, PR, package or deployment.
+Historical note: the phase-1 local work item recorded that GitHub CLI was unavailable and no remote issue/PR was published. That 2026-10-25 documentation update did not create a remote issue, commit, PR, package or deployment.
+
+## Current execution — 2026-11-06
+
+- [x] Read-only Google account connection/inspection, signed mutation preparation, atomic Drive outbox and resumable transport implemented; production publication remains gated. See [Drive increment](issues/DRIVE_INTEGRATION.md).
+- [x] Anchored account search/pagination and protected authentication/fallback implemented.
+- [x] Internal common-base three-way planner, explicit conflicts and deterministic conflict copies implemented. See [merge increment](issues/THREE_WAY_MERGE.md).
+- [ ] Complete reviewed format, administrative/device/key lifecycle, recovery kit, authenticated ancestry/tombstone persistence, UI, full convergence and migration.
+- [ ] Complete real Google/hardware/site/accessibility acceptance, independent review and per-SD/SC/AF reconciliation.
+
+Latest executed evidence: **227 Node tests, 132 checked modules and dedicated Chromium three-way scenario passed**. Earlier broader suites remain dated separately in [VALIDATION.md](VALIDATION.md). This is a documentation-only reconciliation; full-plan acceptance remains open in [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md).
 
 ## Settings/data UX increment — 2026-10-25
 
-The [implemented increment](SETTINGS_UX_IMPLEMENTATION.md) adds real local/legacy flows and regression evidence for the [screen design](SETTINGS_UX_DESIGN.md). The original SD findings are not all closed. Google OAuth is unconfigured; Drive, signed devices and recovery kits are unavailable. Refer to the increment’s coverage boundary rather than interpreting phase-1 checkboxes as acceptance.
+The [implemented increment](SETTINGS_UX_IMPLEMENTATION.md) adds real local/legacy flows and regression evidence for the [screen design](SETTINGS_UX_DESIGN.md). The original SD findings are not all closed. At that baseline OAuth was unconfigured. Current read-only Google access and internal prototypes are described above; production vault synchronization, full device lifecycle and recovery kits remain unavailable. Refer to the increment’s coverage boundary rather than interpreting phase-1 checkboxes as acceptance.
 
 ## Original open-work baseline
 
