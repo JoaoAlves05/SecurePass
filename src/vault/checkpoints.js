@@ -75,7 +75,7 @@ export function unlockCheckpoint(id, passphrase, expectedRevision) {
     const history = await readRecoveryRecords();
     const record = await findCheckpoint(id);
     const opened = await decryptRecord(record, passphrase);
-    const protectedRecord = await protectCheckpoint(record, opened.entries, active.record, active.bytes);
+    const protectedRecord = await protectCheckpoint(record, opened.entries, active.record, active.bytes, opened);
     const next = [];
     for (const item of history) next.push(await snapshotId(item) === id ? protectedRecord : item);
     session.assertGeneration(epoch);
@@ -141,7 +141,7 @@ export function recoverCheckpoint(token, entryId, owner) {
     const differences = compare(historical, active.entries);
     if (preview.mode === 'vault' && !differences.missing && !differences.changed && !differences.newer) return { unchanged: true };
     await assertCurrent(active.record);
-    const next = { record: await encryptEntries(active.record, entries, active.bytes), bytes: active.bytes };
+    const next = { record: await encryptEntries(active.record, entries, active.bytes, undefined, { allowRestore: true }), bytes: active.bytes };
     session.assertGeneration(epoch);
     if (preview.mode === 'vault') await commitLocalRecovery(next, entries, active.record, epoch);
     else {

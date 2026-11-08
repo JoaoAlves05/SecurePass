@@ -1,5 +1,5 @@
 import { verifySignedPublication } from '../sync/signedProtocol.js';
-import { decryptWithKey } from './crypto.js';
+import { decryptPayloadWithKey } from './crypto.js';
 import { planThreeWayMerge } from './threeWayMerge.js';
 
 export const MAX_HISTORY_RECORDS = 256;
@@ -67,11 +67,19 @@ export async function planAuthenticatedMerge({ packets, local, remote, authoriza
     const base = commonBase(records, local, remote);
     const snapshots = [];
     for (const id of [base, local, remote]) {
-      snapshots.push(await decryptWithKey(records.get(id), key, { requireIdentity: true }));
+      snapshots.push(await decryptPayloadWithKey(records.get(id), key, { requireIdentity: true }));
       checkCurrent(assertCurrent);
     }
+    // A compacted base may no longer contain an old ID. Its absence alone must
+    // never turn a concurrent stale copy into a new credential.
+    const baseIds = new Set(snapshots[0].entries.map(entry => entry.id));
+    for (const [left, right] of [[snapshots[1], snapshots[2]], [snapshots[2], snapshots[1]]]) {
+      const live = new Set(right.entries.map(entry => entry.id));
+      const baseDeleted = new Map(snapshots[0].tombstones.map(item => [item.id, item.revision]));
+      if (left.tombstones.some(item => live.has(item.id) && !baseIds.has(item.id) && baseDeleted.get(item.id) !== item.revision)) throw new Error('Unresolved deletion history. Preserve branches and restore the entry explicitly.');
+    }
     const record = records.get(base);
-    return planThreeWayMerge({ base: snapshots[0], local: snapshots[1], remote: snapshots[2], identity: { vaultId: record.vaultId, keyEpoch: record.keyEpoch, base, local, remote }, assertCurrent });
+    return planThreeWayMerge({ base: snapshots[0].entries, local: snapshots[1].entries, remote: snapshots[2].entries, identity: { vaultId: record.vaultId, keyEpoch: record.keyEpoch, base, local, remote }, assertCurrent });
   } finally {
     key.fill(0);
   }

@@ -72,10 +72,12 @@ try {
     await store.acknowledge(updated, { verified: true, revisionId: updated.publication.revisionId });
     await vault.deleteCredential(entry.id);
     const deleted = await store.next();
-    await protocol.verifySignedPublication(deleted.publication.body, deleted.publication, authorization);
-    return { ancestry: verified.record.parents.includes(created.publication.revisionId), empty: (await vault.listCredentials()).length === 0, queued: deleted.publication.revisionId === (await storage.readLocalVaultRecordRaw()).revision, noLegacy: await storage.readSyncOutbox() === null };
+    const deletion = await protocol.verifySignedPublication(deleted.publication.body, deleted.publication, authorization);
+    const { decryptPayloadWithKey } = await import('../src/vault/crypto.js');
+    const payload = await decryptPayloadWithKey(deletion.record, active.bytes);
+    return { ancestry: verified.record.parents.includes(created.publication.revisionId), empty: (await vault.listCredentials()).length === 0, queued: deleted.publication.revisionId === (await storage.readLocalVaultRecordRaw()).revision, noLegacy: await storage.readSyncOutbox() === null, tombstone: payload.tombstones.length === 1 && payload.tombstones[0].id === entry.id && payload.tombstones[0].revision === deletion.record.revision };
   });
-  assert.deepEqual(automatic, { ancestry: true, empty: true, queued: true, noLegacy: true });
+  assert.deepEqual(automatic, { ancestry: true, empty: true, queued: true, noLegacy: true, tombstone: true });
   console.log('Real IndexedDB/WebCrypto Drive commit passed: atomic rollback and automatic signed create/update/delete through normal vault mutations. Internal enrollment fixture; no Google transport used.');
 } finally {
   if (context) await context.close();

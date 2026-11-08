@@ -216,9 +216,9 @@
     "semantic_hash": "7cdded380c41c74b7a55ba5768fffe37"
   },
   "src/cryptoVault.js": {
-    "mtime": 1793103378.3655624,
-    "seen": 1793103942.7726784,
-    "ast_hash": "c3cb911b39e670f9d53bcfce7d40f683",
+    "mtime": 1794150701.9622386,
+    "seen": 1794150997.298481,
+    "ast_hash": "fc87bd2431dc2aa7c77eb0be50484b32",
     "semantic_hash": ""
   },
   "src/encoding.js": {
@@ -312,9 +312,9 @@
     "semantic_hash": "7f91f5c8c13ffac3ab11d6c9f41ab46d"
   },
   "src/vault/crypto.js": {
-    "mtime": 1794145110.2775009,
-    "seen": 1794145159.9202712,
-    "ast_hash": "3be67e047d66a9949ffb609ec617144e",
+    "mtime": 1794150660.9875076,
+    "seen": 1794150997.2985866,
+    "ast_hash": "be4243d8a9069e12bcfffb6ff73472ee",
     "semantic_hash": ""
   },
   "src/vault/queue.js": {
@@ -324,9 +324,9 @@
     "semantic_hash": "dc62a451fa917bfe3298218b7c5a69d5"
   },
   "src/vault/recovery.js": {
-    "mtime": 1793936060.1213636,
-    "seen": 1793936062.885083,
-    "ast_hash": "1259b31e81168b47155d3cd8d1a7b9d3",
+    "mtime": 1794150701.9662776,
+    "seen": 1794150997.2986023,
+    "ast_hash": "6d9590451d9f6805c35a7951cce46b5d",
     "semantic_hash": ""
   },
   "src/vault/repository.js": {
@@ -348,9 +348,9 @@
     "semantic_hash": ""
   },
   "src/vault/syncService.js": {
-    "mtime": 1793936060.1213636,
-    "seen": 1793936062.8850992,
-    "ast_hash": "d4a5543c56cca98e61cadf5bd58782b7",
+    "mtime": 1794150701.970317,
+    "seen": 1794150997.298618,
+    "ast_hash": "2b7ed4821a5094498991fffd15ce1c6e",
     "semantic_hash": ""
   },
   "tests/biometric.test.js": {
@@ -408,10 +408,10 @@
     "semantic_hash": "596b636dbb30b786b39621e7a2791b45"
   },
   "ARCHITECTURE.md": {
-    "mtime": 1794145715.348529,
-    "seen": 1794145943.070468,
+    "mtime": 1794151009.3192458,
+    "seen": 1794151212.3208888,
     "ast_hash": "",
-    "semantic_hash": "bbcd57f2fd06f0b3c88085d2cb22edb4"
+    "semantic_hash": "882c127d6a9a48ef387eb15933a24938"
   },
   "README.md": {
     "mtime": 1793937151.5850868,
@@ -444,10 +444,10 @@
     "semantic_hash": "52fa42d087caf2bf7c6e47c007eb087f"
   },
   "docs/VALIDATION.md": {
-    "mtime": 1794145715.3497405,
-    "seen": 1794145943.0704901,
+    "mtime": 1794151172.523938,
+    "seen": 1794151212.320907,
     "ast_hash": "",
-    "semantic_hash": "1524474ba946929bf513a3704e5ac744"
+    "semantic_hash": "9ab00a9eda199c16c03461232c313520"
   },
   "offscreen.html": {
     "mtime": 1775164609.297193,
@@ -510,10 +510,10 @@
     "semantic_hash": "d0568731ff8548d919d03288ebd4131c"
   },
   "docs/SYNC_DATA_PLAN.md": {
-    "mtime": 1794145754.0320177,
-    "seen": 1794145943.070487,
+    "mtime": 1794151009.3204703,
+    "seen": 1794151212.3209038,
     "ast_hash": "",
-    "semantic_hash": "2236f67688df1b3dc46d5123f80779ac"
+    "semantic_hash": "3adfd885b599259e7bbc63347d75fcd4"
   },
   "popup/modules/management.js": {
     "mtime": 1792974176.038641,
@@ -534,10 +534,10 @@
     "semantic_hash": "7d5d28770f05faac1ce9a5b2d03c5533"
   },
   "src/vault/backupService.js": {
-    "mtime": 1792974176.034641,
-    "seen": 1793036894.8059568,
-    "ast_hash": "833a27984d80cce6abc2b88a2635535c",
-    "semantic_hash": "833a27984d80cce6abc2b88a2635535c"
+    "mtime": 1794150701.9662776,
+    "seen": 1794150997.2985818,
+    "ast_hash": "698ddf4cdfdd9d5ff82c0e62c9d94b42",
+    "semantic_hash": ""
   },
   "src/vault/retry.js": {
     "mtime": 1793116463.889914,
@@ -786,9 +786,9 @@
     "semantic_hash": ""
   },
   "src/vault/checkpoints.js": {
-    "mtime": 1793103740.3210123,
-    "seen": 1793103942.7727454,
-    "ast_hash": "13634fca37f3190023873c9c233cf41e",
+    "mtime": 1794150701.970317,
+    "seen": 1794150997.2985842,
+    "ast_hash": "ea6d33f54f98355abeb0164e517db6eb",
     "semantic_hash": ""
   },
   "tests/checkpoints-browser.mjs": {
@@ -870,58 +870,58 @@
     "semantic_hash": "4b652b462942a71470cba75890f201ed"
   },
   "docs/screenshots/checkpoint-review/management-dark.png": {
-    "mtime": 1793140715.2529812,
-    "seen": 1793140866.7139065,
-    "ast_hash": "85f6fdfbeb83fd15b0533a3199e2840d",
-    "semantic_hash": "85f6fdfbeb83fd15b0533a3199e2840d"
+    "mtime": 1794150867.3553758,
+    "seen": 1794150997.2989585,
+    "ast_hash": "70e9217be4000577f066d1a1a2e91499",
+    "semantic_hash": ""
   },
   "docs/screenshots/checkpoint-review/management-light.png": {
-    "mtime": 1793140714.8449812,
-    "seen": 1793140866.7139173,
-    "ast_hash": "587314d74ee16188c364e486e6a4d3c9",
-    "semantic_hash": "587314d74ee16188c364e486e6a4d3c9"
+    "mtime": 1794150866.8638654,
+    "seen": 1794150997.2989612,
+    "ast_hash": "93bef97bd9978f578148f18cd7c9d381",
+    "semantic_hash": ""
   },
   "docs/screenshots/checkpoint-review/popup-dark.png": {
-    "mtime": 1793140729.0254138,
-    "seen": 1793140866.7139034,
-    "ast_hash": "2183801c05e6a36a85c300738ea42716",
-    "semantic_hash": "2183801c05e6a36a85c300738ea42716"
+    "mtime": 1794150883.7348535,
+    "seen": 1794150997.2989638,
+    "ast_hash": "d0d47d67d807d96a542e6a1891e27468",
+    "semantic_hash": ""
   },
   "docs/screenshots/checkpoint-review/popup-light.png": {
-    "mtime": 1793140727.3534138,
-    "seen": 1793140866.7138999,
-    "ast_hash": "3a21b3692d1daa83dc5486aef46f5ed1",
-    "semantic_hash": "3a21b3692d1daa83dc5486aef46f5ed1"
+    "mtime": 1794150882.5891123,
+    "seen": 1794150997.2989662,
+    "ast_hash": "f18b5127284bf48d22cdc3bfda211adb",
+    "semantic_hash": ""
   },
   "docs/screenshots/checkpoint-review/recover-entry.png": {
-    "mtime": 1793140716.2369812,
-    "seen": 1793140866.7138968,
-    "ast_hash": "99131b6df1edcf19e6259fb8dcb8679f",
-    "semantic_hash": "99131b6df1edcf19e6259fb8dcb8679f"
+    "mtime": 1794150868.9111485,
+    "seen": 1794150997.2989686,
+    "ast_hash": "91ae96cdc58546612ddcaae0be709b53",
+    "semantic_hash": ""
   },
   "docs/screenshots/checkpoint-review/restore-whole-vault.png": {
-    "mtime": 1793140720.1593559,
-    "seen": 1793140866.7139142,
-    "ast_hash": "b0dfa86e349c55ae9d1920ccb11af2e7",
-    "semantic_hash": "b0dfa86e349c55ae9d1920ccb11af2e7"
+    "mtime": 1794150873.013839,
+    "seen": 1794150997.2989707,
+    "ast_hash": "acb283ef7e9e4812e76d092933e3f8fc",
+    "semantic_hash": ""
   },
   "docs/screenshots/checkpoint-review/review-management-dark.png": {
-    "mtime": 1793140715.628981,
-    "seen": 1793140866.7139118,
-    "ast_hash": "d0c48d5b09a302f9d27f47d41ff03e7e",
-    "semantic_hash": "d0c48d5b09a302f9d27f47d41ff03e7e"
+    "mtime": 1794150867.9240656,
+    "seen": 1794150997.298973,
+    "ast_hash": "0db4af1253ab0472b3eb812546d79bc7",
+    "semantic_hash": ""
   },
   "docs/screenshots/checkpoint-review/review-popup-dark.png": {
-    "mtime": 1793140729.717414,
-    "seen": 1793140866.7139091,
-    "ast_hash": "d94fedc52c736eb98ea9bb9a6aa724fc",
-    "semantic_hash": "d94fedc52c736eb98ea9bb9a6aa724fc"
+    "mtime": 1794150884.1736479,
+    "seen": 1794150997.2989752,
+    "ast_hash": "0b4a7c6b84a8ef0d963d8220a87c80d8",
+    "semantic_hash": ""
   },
   "docs/screenshots/checkpoint-review/review-popup-light.png": {
-    "mtime": 1793140727.881414,
-    "seen": 1793140866.7138925,
-    "ast_hash": "451f9a15f4e679cf32156ccc00b2597d",
-    "semantic_hash": "451f9a15f4e679cf32156ccc00b2597d"
+    "mtime": 1794150883.1782346,
+    "seen": 1794150997.2989776,
+    "ast_hash": "2a74b611439d6c42c84cb44ff93cca3d",
+    "semantic_hash": ""
   },
   "popup/modules/vaultUnlock.js": {
     "mtime": 1793103430.1241937,
@@ -1242,10 +1242,10 @@
     "semantic_hash": "3476c1ec93a151dc8ef99445b085a165"
   },
   "docs/IMPLEMENTATION_CHECKLIST.md": {
-    "mtime": 1794145767.4170034,
-    "seen": 1794145943.0704827,
+    "mtime": 1794151009.3222847,
+    "seen": 1794151212.3208983,
     "ast_hash": "",
-    "semantic_hash": "17a300ebbf777c33945b6dfb2542bdd6"
+    "semantic_hash": "d653b25222c9f96108376b315cd4ebff"
   },
   "src/sync/driveTransport.js": {
     "mtime": 1793936060.1213636,
@@ -1267,9 +1267,9 @@
   },
   "docs/DRIVE_TRANSPORT.md": {
     "mtime": 1794145715.3500624,
-    "seen": 1794145943.0704777,
-    "ast_hash": "",
-    "semantic_hash": "fd43249c2ba826b544a0fe48df721485"
+    "seen": 1794150997.2987897,
+    "ast_hash": "fd43249c2ba826b544a0fe48df721485",
+    "semantic_hash": ""
   },
   "docs/issues/SYNC_DATA_COMPLETION.md": {
     "mtime": 1793936861.8901775,
@@ -1350,9 +1350,9 @@
     "semantic_hash": ""
   },
   "tests/driveCommit-browser.mjs": {
-    "mtime": 1793936060.1213636,
-    "seen": 1793936062.8851311,
-    "ast_hash": "ead482ac1a38df5f189db343c1068e73",
+    "mtime": 1794150891.5092132,
+    "seen": 1794150997.2986586,
+    "ast_hash": "4370496e60b9162d1456f4d17fa9f7d2",
     "semantic_hash": ""
   },
   "tests/driveCommit.test.js": {
@@ -1561,14 +1561,14 @@
   },
   "docs/issues/THREE_WAY_MERGE.md": {
     "mtime": 1794145715.3503747,
-    "seen": 1794145943.070495,
-    "ast_hash": "",
-    "semantic_hash": "fa5e38456ec5bd20397d4b6fd1eaebfd"
+    "seen": 1794150997.2988572,
+    "ast_hash": "fa5e38456ec5bd20397d4b6fd1eaebfd",
+    "semantic_hash": ""
   },
   "src/vault/authenticatedMerge.js": {
-    "mtime": 1794145891.0108705,
-    "seen": 1794145912.8308742,
-    "ast_hash": "56d7e239ba24ba911b3f21cd58fda2a7",
+    "mtime": 1794150785.9272027,
+    "seen": 1794150997.2985792,
+    "ast_hash": "f2619032bb965d6d43327dc8857d2ce4",
     "semantic_hash": ""
   },
   "tests/authenticatedMerge.test.js": {
@@ -1597,8 +1597,32 @@
   },
   "docs/issues/AUTHENTICATED_DRIVE_HISTORY.md": {
     "mtime": 1794145827.0147083,
-    "seen": 1794145943.0704927,
+    "seen": 1794150997.298835,
+    "ast_hash": "4cd8f39014c686d2f078b5da21a974ed",
+    "semantic_hash": ""
+  },
+  "src/vault/payload.js": {
+    "mtime": 1794150701.9622386,
+    "seen": 1794150997.2985952,
+    "ast_hash": "81f9f3ec10695b6f3b67d87e16aad92b",
+    "semantic_hash": ""
+  },
+  "tests/tombstones.test.js": {
+    "mtime": 1794150862.8795495,
+    "seen": 1794150997.2987483,
+    "ast_hash": "f0618b9fee68107e195c18d6791d261b",
+    "semantic_hash": ""
+  },
+  "docs/VAULT_PAYLOAD.md": {
+    "mtime": 1794150973.1226742,
+    "seen": 1794151212.32091,
     "ast_hash": "",
-    "semantic_hash": "4cd8f39014c686d2f078b5da21a974ed"
+    "semantic_hash": "e4eb68ffe8fde80dabde2ced50005fed"
+  },
+  "docs/issues/PERSISTENT_TOMBSTONES.md": {
+    "mtime": 1794150973.201659,
+    "seen": 1794151212.3209126,
+    "ast_hash": "",
+    "semantic_hash": "3712b279221facb329b272998c0dcc26"
   }
 }

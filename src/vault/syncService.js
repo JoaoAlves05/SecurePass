@@ -124,8 +124,8 @@ export function resolveSyncGeneration(revision, passphrase, merge = false, expec
       // A download is a local recovery operation, never an implicit remote publication.
       const active = local ? await session.current(local) : null;
       const next = active
-        ? { record: await encryptEntries(active.record, remote.entries, active.bytes), bytes: active.bytes }
-        : await createRecord(remote.entries, passphrase, { vaultId: chosen.vaultId });
+        ? { record: await encryptEntries(active.record, remote.entries, active.bytes, undefined, { allowRestore: true }), bytes: active.bytes }
+        : await createRecord(remote.entries, passphrase, { vaultId: chosen.vaultId, history: remote });
       session.assertGeneration(epoch);
       await commitLocalRecovery(next, remote.entries, local, epoch);
     } else {

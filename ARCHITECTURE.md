@@ -25,6 +25,7 @@ The [2026-10-26 backup/Advanced review](docs/REVIEW_BACKUP_ADVANCED.md) adds ide
 | `src/vault/session.js` | Restricted volatile data key, deadline, restoration after worker suspension, immediate generation revocation |
 | `src/vault/queue.js` | Serial operations and a Web Lock across extension contexts |
 | `src/vault/repository.js` | Local-first normal commits, local-preferred reads, internal mutation signing and transactional publication references |
+| `src/vault/payload.js` | Versioned encrypted content, persistent tombstones, explicit restoration provenance and aggregate history capacity |
 | `src/vault/driveMerge.js` | Internal bounded read-only Drive history retrieval and inventory recheck before authenticated merge planning |
 | `src/vault/authenticatedMerge.js` | Internal signed-history verification, unique common-base selection and guarded decryption before planning; same authorization/epoch only |
 | `src/vault/threeWayMerge.js` | Internal common-base merge planning, opaque revision-bound reviews and deterministic conflict copies; no production integration |
@@ -60,11 +61,11 @@ The local IndexedDB record is authoritative. Normal writes commit record, previo
 
 Legacy Chrome Sync uses immutable revision chunks and checksum-bearing manifests. `inspectSync()` separates valid heads from incomplete/corrupt generations and inventories legacy and v2 together. `syncHeads()` remains strict for mutation/compaction, so incomplete histories cannot silently resolve other heads. Preflight covers total/per-item/item-count quotas; rate errors are reported as pending. Missing matching chunks can be repaired; different content under the same revision is rejected.
 
-First remote adoption requires its master password. Selected-version restore writes locally and disables publication, preserving the prior encrypted local record. Local selected-version restore reads its independently complete generation even if another generation is incomplete. Selected-version merge validates the complete payload, retains the destination key/password and resolves only selected ancestry; unselected heads remain. Conflict copies retain exact user notes and receive distinct IDs. Automatic remote fast-forward and persistent authenticated tombstones are not implemented. Signed-device authorization exists as an internal prototype; production enrollment/revocation/rotation remain unavailable.
+First remote adoption requires its master password. Selected-version restore writes locally and disables publication, preserving the prior encrypted local record. Local selected-version restore reads its independently complete generation even if another generation is incomplete. Selected-version merge validates the complete payload, retains the destination key/password and resolves only selected ancestry; unselected heads remain. Conflict copies retain exact user notes and receive distinct IDs. Automatic remote fast-forward is not implemented. Local mutations now persist encrypted tombstones; distributed merge/retention integration remains pending. Signed-device authorization exists as an internal prototype; production enrollment/revocation/rotation remain unavailable.
 
 Compaction traverses published ancestry and preserves active v2/unversioned copies and unreferenced uploads. Abandoned-upload cleanup, checkpoint-based history retirement and guaranteed capacity for two complete versions remain open. Local recovery uses a durable publication-suppression marker before its local write; a partial operation remains safe from accidental publication, but full cross-store recovery is still an acceptance gap. Production Drive publication remains blocked pending protocol review, device lifecycle and acceptance; public client configuration has already been supplied.
 
-`vault/threeWayMerge.js` is a separate internal planner over already-authenticated snapshots and an explicit common base. It combines independent changes and requires decisions for edit/edit or delete/edit conflicts, preserving notes through stable copy IDs and separate provenance. Opaque reviews expire, bind all revisions/vault/epoch and invoke a live synchronous guard before returning contents. Proposed deleted IDs are not persistent authenticated tombstones. The internal `authenticatedMerge.js` adapter now verifies common ancestry within one authorization/epoch; production integration, stale-device rebase and resolution UI remain required; the legacy additive merge is unchanged. See [scope and evidence](docs/issues/THREE_WAY_MERGE.md).
+`vault/threeWayMerge.js` is a separate internal planner over already-authenticated snapshots and an explicit common base. It combines independent changes and requires decisions for edit/edit or delete/edit conflicts, preserving notes through stable copy IDs and separate provenance. Opaque reviews expire, bind all revisions/vault/epoch and invoke a live synchronous guard before returning contents. Proposed deleted IDs are not persistent authenticated tombstones. The internal `authenticatedMerge.js` adapter now verifies common ancestry within one authorization/epoch; production integration, stale-device rebase and resolution UI remain required; the legacy additive merge now refuses to reintroduce locally tombstoned IDs. See [scope and evidence](docs/issues/THREE_WAY_MERGE.md).
 
 ## Settings and data-management contracts
 
@@ -124,8 +125,8 @@ selects a unique nearest common ancestor. It decrypts the three snapshots with
 complete entry identities/dates required before import defaults, then delegates
 to the revision-bound opaque planner. Its synchronous caller guard must pin the
 live session, account binding, authorization and heads. It has no storage,
-transport, handler or UI effects. Cross-authorization history, persistent
-tombstones, checkpoint retention and production integration remain pending.
+transport, handler or UI effects. Cross-authorization history, merge-result tombstone persistence, checkpoint
+retention and production integration remain pending.
 See [scope and conservative failure behavior](docs/issues/THREE_WAY_MERGE.md).
 
 
@@ -138,3 +139,16 @@ history, cancellation, changed context or changed inventory aborts preparation.
 It shares the adapter's 256-packet/32-MiB aggregate bounds, including duplicates.
 No handler/UI or local/remote write is added; listing cannot establish provider
 freshness or complete convergence. [Retrieval contract](docs/issues/AUTHENTICATED_DRIVE_HISTORY.md).
+
+
+## Persistent encrypted deletion history — 2026-11-08
+
+`vault/payload.js` validates encrypted state version 1 with entries, tombstones
+and restoration provenance. Existing entry-only payloads remain readable and
+migrate only on writes. `encryptEntries` authenticates previous content, preserves
+history, records deletions and refuses implicit reuse of deleted IDs. Explicit
+recovery/reviewed import opts into restoration and records provenance. Master
+rotation and checkpoint re-protection preserve metadata. Capacity includes history
+and never silently truncates it. Older clients reject the new plaintext kind.
+The signed wrapper covers this ciphertext; production Drive remains gated.
+See [format, migration and remaining merge scope](docs/VAULT_PAYLOAD.md).

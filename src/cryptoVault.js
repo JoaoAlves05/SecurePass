@@ -1,7 +1,7 @@
 // Public vault service. Only background handlers call mutations; UI and content use messages.
 import { getStorage, setStorage, removeStorage, readLocalVaultRecordRaw, writeLocalVaultRecordRaw, readRecoveryRecords, recordRevision, snapshotId } from './utils/storage.js';
 import { validateEntry, validateImportData, validateMaster, MAX_ENTRIES, MAX_VAULT_BYTES } from './validation.js';
-import { createRecord, decryptRecord, decryptWithKey, encryptEntries, protectCheckpoint, validateRecord } from './vault/crypto.js';
+import { createRecord, decryptRecord, decryptWithKey, decryptPayloadWithKey, encryptEntries, protectCheckpoint, validateRecord } from './vault/crypto.js';
 import { withVaultOperation as operation } from './vault/queue.js';
 import { loadRecord, commitRecord, assertCurrent, getSyncStatus as readSyncStatus } from './vault/repository.js';
 import * as session from './vault/session.js';
@@ -71,7 +71,7 @@ export async function requireVault({ touch = false } = {}) {
   return session.current(record, { touch });
 }
 
-async function mutate(transform, epoch) {
+async function mutate(transform, epoch, options = {}) {
   const state = await requireVault();
   await assertCurrent(state.record);
   session.assertGeneration(epoch);
@@ -80,7 +80,7 @@ async function mutate(transform, epoch) {
   const entries = await transform(state.entries);
   if (contents(entries) === previousContents) return state.entries;
   if (entries.length > MAX_ENTRIES || new TextEncoder().encode(JSON.stringify({ entries })).length > MAX_VAULT_BYTES) throw new Error('Vault capacity reached (5,000 entries or 3 MB). Export a backup before reducing entries.');
-  const record = await encryptEntries(state.record, entries, state.bytes);
+  const record = await encryptEntries(state.record, entries, state.bytes, undefined, options);
   session.assertGeneration(epoch);
   await commitRecord(record, state.record.revision);
   await session.activate(record, entries, state.bytes, epoch);
@@ -153,7 +153,7 @@ export function importVaultData(data, _passphrase, strategy = 'skip') {
         count++;
       }
       return [...byId.values()];
-    }, epoch);
+    }, epoch, { allowRestore: true });
     return count;
   });
 }
@@ -193,12 +193,13 @@ async function rotateMasterPassword(state, newPassphrase, epoch) {
   const history = await readRecoveryRecords();
   const contents = [];
   for (const checkpoint of history) {
-    try { contents.push(await decryptWithKey(checkpoint, state.bytes)); }
+    try { contents.push(await decryptPayloadWithKey(checkpoint, state.bytes)); }
     catch { throw new Error('An older checkpoint needs its previous password or is damaged. Review it in Backups & recovery before changing your master password. No password was changed.'); }
   }
-  const rotated = await createRecord(state.entries, newPassphrase, { vaultId: state.record.vaultId, parents: [state.record.revision, ...state.record.parents] });
+  const historyState = await decryptPayloadWithKey(state.record, state.bytes);
+  const rotated = await createRecord(state.entries, newPassphrase, { vaultId: state.record.vaultId, parents: [state.record.revision, ...state.record.parents], history: historyState });
   const protectedHistory = [];
-  for (let i = 0; i < history.length; i++) protectedHistory.push(await protectCheckpoint(history[i], contents[i], rotated.record, rotated.bytes));
+  for (let i = 0; i < history.length; i++) protectedHistory.push(await protectCheckpoint(history[i], contents[i].entries, rotated.record, rotated.bytes, contents[i]));
   session.assertGeneration(epoch);
   await commitRecord(rotated.record, state.record.revision, { recoveryRecords: protectedHistory, expectedRecoveryRecords: history });
   await removeStorage('local', ['securepassBiometric', 'securepassTrustedDeviceKey']);
@@ -236,8 +237,8 @@ export function restoreRecovery(identity, passphrase, expectedRevision) {
     const active = current ? await session.current(current) : null;
     if (active && !session.hasRecentAuthentication(active)) throw new Error('Confirm your identity again before restoring the whole vault.');
     const next = active
-      ? { record: await encryptEntries(active.record, recovered.entries, active.bytes), bytes: active.bytes }
-      : await createRecord(recovered.entries, passphrase, { vaultId: record.vaultId });
+      ? { record: await encryptEntries(active.record, recovered.entries, active.bytes, undefined, { allowRestore: true }), bytes: active.bytes }
+      : await createRecord(recovered.entries, passphrase, { vaultId: record.vaultId, history: recovered });
     await commitLocalRecovery(next, recovered.entries, current, epoch);
   });
 }

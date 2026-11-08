@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **244 Node tests, 137 checked modules and the extended Chromium three-way/authenticated-history/Drive retrieval scenario passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **251 Node tests, 139 checked modules and Chromium three-way/authenticated-history, Drive atomic-commit and checkpoint scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -305,3 +305,25 @@ as suites gerais repetidas no primeiro bloco mantêm essa evidência. A recolha 
 interna e de leitura; não aplica resultados, não estabelece frescura contra
 rollback do fornecedor e não fecha lifecycle/tombstones/rebase/release. Critérios
 em [AUTHENTICATED_DRIVE_HISTORY.md](issues/AUTHENTICATED_DRIVE_HISTORY.md).
+
+
+## Persistent encrypted tombstones — 2026-11-08
+
+`npm test`: **251/251 passed**; `npm run check`: **139 modules passed**.
+Seven new tombstone regressions cover delete/clear across unlock and later edits,
+recreation refusal without record/checkpoint effects, explicit restore provenance,
+repeated deletion, live/history rekey, old payload read/write migration, previous
+client refusal, schema/collision/UTF-8 limits, stale resurrection against an empty
+base, and mutation rollback at the 20,000-item history limit.
+
+Chromium `test:three-way-browser`, `test:drive-commit-browser` and
+`test:checkpoints-browser` passed. The Drive commit scenario was extended to
+verify/decrypt the signed deletion packet and assert its persistent tombstone;
+it is rerun after that assertion. Existing checkpoint UI recovery and rekey remain
+functional. All data is disposable. No Google/hardware/release acceptance.
+The payload changes neither AES-GCM nor its AAD; nonce budget and distributed
+lifecycle remain subject to independent review. [Contract](VAULT_PAYLOAD.md).
+
+Also rerun and passed in this tombstone block: general browser/virtual PRF,
+Settings browser, two-profile emulated Sync and runtime packaging. Regenerated
+screenshots were discarded because this block has no UI changes.

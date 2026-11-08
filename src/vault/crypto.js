@@ -1,5 +1,6 @@
 import { base64ToBuffer, bufferToBase64 } from '../encoding.js';
 import { validateImportData, validateVaultEntries } from '../validation.js';
+import { createPayload, validatePayload, advancePayload } from './payload.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
@@ -67,7 +68,7 @@ export async function createRecord(entries, passphrase, identity = {}) {
   };
   const master = await deriveMasterKey(passphrase, decodeBytes(record.kdf.salt, 16));
   record.wrappedKey = await seal(bytes, master, keyContext(record));
-  record.data = await seal({ entries }, await aesKey(bytes), dataContext(record));
+  record.data = await seal(createPayload(entries, identity.history), await aesKey(bytes), dataContext(record));
   return { record, bytes };
 }
 
@@ -81,30 +82,33 @@ export async function decryptRecord(record, passphrase) {
   const master = await deriveMasterKey(passphrase, decodeBytes(record.kdf.salt, 16), record.kdf.iterations);
   const bytes = new Uint8Array(await open(record.wrappedKey, master, keyContext(record)));
   if (bytes.length !== 32) throw new Error('Invalid vault key.');
-  return { entries: await decryptWithKey(record, bytes), bytes };
+  return { ...await decryptPayloadWithKey(record, bytes), bytes };
 }
 
 export async function decryptWithKey(record, bytes, { requireIdentity = false } = {}) {
-  validateRecord(record);
-  const payload = JSON.parse(decoder.decode(await open(record.data, await aesKey(bytes), dataContext(record))));
-  // Import defaults are useful for backups, but cannot establish merge causality.
-  if (requireIdentity && (!Array.isArray(payload?.entries) || payload.entries.some(entry => !entry?.id || typeof entry.createdAt !== 'string' || typeof entry.updatedAt !== 'string'))) throw new Error('Merge needs complete authenticated entry identities and dates.');
-  return validateImportData(payload).entries;
+  return (await decryptPayloadWithKey(record, bytes, { requireIdentity })).entries;
 }
 
-export async function encryptEntries(previous, entries, bytes, parents = [previous.revision, ...previous.parents]) {
+export async function decryptPayloadWithKey(record, bytes, { requireIdentity = false } = {}) {
+  validateRecord(record);
+  const payload = JSON.parse(decoder.decode(await open(record.data, await aesKey(bytes), dataContext(record))));
+  return validatePayload(payload, { requireIdentity });
+}
+
+export async function encryptEntries(previous, entries, bytes, parents = [previous.revision, ...previous.parents], options = {}) {
   entries = validateVaultEntries(entries);
   parents = [...new Set(parents)].slice(0, 160);
   const record = { ...previous, revision: crypto.randomUUID(), parents: [...new Set(parents)], updatedAt: new Date().toISOString() };
-  record.data = await seal({ entries }, await aesKey(bytes), dataContext(record));
+  const payload = advancePayload(await decryptPayloadWithKey(previous, bytes), entries, record.revision, options);
+  record.data = await seal(payload, await aesKey(bytes), dataContext(record));
   return record;
 }
 
 // Historical contents share the active protection, retaining their content ID/date.
-export async function protectCheckpoint(previous, entries, active, bytes) {
+export async function protectCheckpoint(previous, entries, active, bytes, history) {
   entries = validateVaultEntries(entries);
   const record = { ...active, revision: previous.revision || crypto.randomUUID(), parents: [], updatedAt: previous.updatedAt };
-  record.data = await seal({ entries }, await aesKey(bytes), dataContext(record));
+  record.data = await seal(createPayload(entries, history), await aesKey(bytes), dataContext(record));
   return record;
 }
 

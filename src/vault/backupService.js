@@ -65,7 +65,7 @@ export function commitBackup({ data, backupPassword, token, newMasterPassword })
         return { count: 0 };
       }
       await assertCurrent(current);
-      const next = await encryptEntries(current, plan.entries, state.bytes);
+      const next = await encryptEntries(current, plan.entries, state.bytes, undefined, { allowRestore: true });
       session.assertGeneration(epoch);
       await commitRecord(next, current.revision);
       await session.activate(next, plan.entries, state.bytes, epoch);

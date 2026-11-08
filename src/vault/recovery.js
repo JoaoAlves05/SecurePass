@@ -37,8 +37,8 @@ export function restoreExternalRecord(record, passphrase, expectedRevision) {
     if (expectedRevision !== undefined && recordRevision(current) !== expectedRevision) throw new Error('Vault changed. Review the restore again.');
     const active = current ? await session.current(current) : null;
     const next = active
-      ? { record: await encryptEntries(active.record, data.entries, active.bytes), bytes: active.bytes }
-      : await createRecord(data.entries, passphrase, { vaultId: record.vaultId });
+      ? { record: await encryptEntries(active.record, data.entries, active.bytes, undefined, { allowRestore: true }), bytes: active.bytes }
+      : await createRecord(data.entries, passphrase, { vaultId: record.vaultId, history: data });
     await commitLocalRecovery(next, data.entries, current, epoch);
   });
 }
