@@ -41,3 +41,18 @@ Prepared signed packets also carry the expected authorization hash. The atomic c
 `googleConnection.js` acquires OAuth tokens only via Chrome Identity. Explicit connection can prompt; inspection/runtime acquisition is noninteractive. `about.get` identifies the token's Drive account by permission ID before bound file access, preventing a cached token from silently switching accounts. Durable connection generations invalidate old OAuth completions. Disconnect suspends the outbox and forgets extension-local cached tokens; it does not claim global OAuth revocation or remote deletion.
 
 The management UI exposes connection, complete folder enumeration and disconnect, never tokens, upload URIs, signing keys or automatic vault adoption. Website/auth/selector contexts cannot call these routes. An empty list is shown only after successful complete enumeration, and counts refer to app files, not authenticated vaults. Google compatibility still requires user authorization with the real supplied client ID; automated tests emulate Identity/Drive responses. See [setup](GOOGLE_CLOUD_SETUP.md).
+
+
+## Internal authenticated-history retrieval — 2026-11-08
+
+`vault/driveMerge.js` now composes `list`/`download` with signed verification and
+common-base planning. It retrieves selected revisions and their authenticated
+ancestors, checks every listed copy for those identities, accepts unpublished
+local packets, enforces 256 packets/32 MiB UTF-8 including duplicates and compares
+the complete bound-vault inventory after downloads. Every asynchronous boundary
+checks the caller's live context and cancellation. Incomplete discovery, missing
+ancestors, contradictory packets, changed inventory or invalid trust aborts;
+no vault/outbox/remote mutation occurs. The reader still owns pagination, streaming
+limits, account checks and network errors. A final listing is a race check, not
+proof of provider freshness or a distributed transaction. This path has no public
+route and does not activate synchronization. [Scope and evidence](issues/AUTHENTICATED_DRIVE_HISTORY.md).

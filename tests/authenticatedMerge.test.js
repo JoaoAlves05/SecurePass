@@ -1,25 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
-import { createRecord, encryptEntries, seal } from '../src/vault/crypto.js';
-import { generateSigningKey, createAuthorization, verifyAuthorizationChain, signingKeyFingerprint, createSignedRevision } from '../src/sync/signedProtocol.js';
+import { encryptEntries, seal } from '../src/vault/crypto.js';
+import { createAuthorization, verifyAuthorizationChain } from '../src/sync/signedProtocol.js';
 import { planAuthenticatedMerge } from '../src/vault/authenticatedMerge.js';
 import { resolveThreeWayMerge } from '../src/vault/threeWayMerge.js';
+import { entry, fixture } from './helpers/signedHistory.js';
 globalThis.crypto = webcrypto;
-const entry = (id, password = 'fictional') => ({ id, site: 'https://example.com', username: id, password, notes: '', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' });
-async function fixture() {
-  const { record: root, bytes } = await createRecord([entry('a'), entry('b')], 'Fictional history master 123!');
-  const signer = await generateSigningKey();
-  const genesis = await createAuthorization({ kind: 'securepass-authorization', version: 1, vaultId: root.vaultId, keyEpoch: root.keyEpoch, revision: 'auth', previous: null, adminKey: signer.publicKey, devices: [{ id: 'writer', publicKey: signer.publicKey }] }, signer.privateKey);
-  const trust = { vaultId: root.vaultId, rootFingerprint: await signingKeyFingerprint(signer.publicKey) };
-  const initial = await verifyAuthorizationChain([genesis], trust);
-  const authorization = await verifyAuthorizationChain([genesis], { ...trust, expectedHead: initial.hash });
-  const packet = async record => ({ body: await createSignedRevision(record, 'writer', signer.privateKey, authorization), publication: { vaultId: record.vaultId, revisionId: record.revision } });
-  const left = await encryptEntries(root, [entry('a', 'local secret'), entry('b')], bytes);
-  const right = await encryptEntries(root, [entry('a'), entry('b', 'remote secret')], bytes);
-  const packets = await Promise.all([root, left, right].map(packet));
-  return { root, bytes, signer, genesis, trust, packet, left, right, packets, options: { packets, local: left.revision, remote: right.revision, authorization, bytes, assertCurrent: () => {} } };
-}
 test('signed history selects the nearest base, decrypts and merges independent edits without preview secrets', async () => {
   const f = await fixture();
   const p = await planAuthenticatedMerge(f.options);
@@ -76,7 +63,7 @@ test('tampered signatures, wrong publication identity, forged authorization and 
 });
 test('caller mutation during verification cannot replace packets or content key', async () => {
   const f = await fixture();
-  const options = { ...f.options, packets: structuredClone(f.packets), bytes: f.bytes.slice() };
+  const options = { ...f.options, packets: structuredClone(f.packets), bytes: Buffer.from(f.bytes) };
   const pending = planAuthenticatedMerge(options);
   options.packets[1].body = 'forged'; options.packets[0].publication.revisionId = 'forged'; options.bytes.fill(0);
   const p = await pending;

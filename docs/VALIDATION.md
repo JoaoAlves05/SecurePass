@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **237 Node tests, 134 checked modules and the extended Chromium three-way/authenticated-history scenario passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **244 Node tests, 137 checked modules and the extended Chromium three-way/authenticated-history/Drive retrieval scenario passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -284,3 +284,24 @@ Regressões adicionais repetidas e aprovadas nesta execução:
 (dois perfis com transporte emulado). `npm run package` gerou o ZIP runtime.
 Os screenshots regenerados foram descartados porque este bloco não altera a UI;
 `git diff --check` aprovado. Não houve conta Google ou autenticador físico.
+
+
+## Continuação — recolha de história Drive, 08/11/2026
+
+Segundo bloco, sobre `7d47420`: `npm test` **244/244 aprovados**, check de
+**137 módulos**, `test:three-way-browser` ampliado e `npm run package` aprovados.
+Sete regressões em `driveMerge.test.js` cobrem procura recursiva, cópias assinadas
+repetidas, ramo local não publicado, antecessores ausentes, metadados falsos,
+equivocação, paginação real do leitor com fornecedor emulado, erros 404,
+alteração de inventário, ordenação, limites, captura de inputs, sessão e cancelamento.
+A suite dirigida foi repetida e aprovada após ampliar as verificações de abort
+durante download, bloqueio na reenumeração, metadados inválidos e vínculo errado.
+O Chromium executa listagem → três downloads → verificação/ancestral/decifragem →
+reenumeração → decisão do merge, com WebCrypto e transporte injetado.
+
+O helper partilhado `tests/helpers/signedHistory.js` fornece apenas cofres/chaves
+fictícios para as duas suites. Este bloco não alterou UI nem os fluxos de produção;
+as suites gerais repetidas no primeiro bloco mantêm essa evidência. A recolha é
+interna e de leitura; não aplica resultados, não estabelece frescura contra
+rollback do fornecedor e não fecha lifecycle/tombstones/rebase/release. Critérios
+em [AUTHENTICATED_DRIVE_HISTORY.md](issues/AUTHENTICATED_DRIVE_HISTORY.md).

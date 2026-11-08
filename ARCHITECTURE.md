@@ -25,6 +25,7 @@ The [2026-10-26 backup/Advanced review](docs/REVIEW_BACKUP_ADVANCED.md) adds ide
 | `src/vault/session.js` | Restricted volatile data key, deadline, restoration after worker suspension, immediate generation revocation |
 | `src/vault/queue.js` | Serial operations and a Web Lock across extension contexts |
 | `src/vault/repository.js` | Local-first normal commits, local-preferred reads, internal mutation signing and transactional publication references |
+| `src/vault/driveMerge.js` | Internal bounded read-only Drive history retrieval and inventory recheck before authenticated merge planning |
 | `src/vault/authenticatedMerge.js` | Internal signed-history verification, unique common-base selection and guarded decryption before planning; same authorization/epoch only |
 | `src/vault/threeWayMerge.js` | Internal common-base merge planning, opaque revision-bound reviews and deterministic conflict copies; no production integration |
 | `src/vault/sync.js` | Immutable chunks/manifests, integrity checking and divergent heads |
@@ -126,3 +127,14 @@ live session, account binding, authorization and heads. It has no storage,
 transport, handler or UI effects. Cross-authorization history, persistent
 tombstones, checkpoint retention and production integration remain pending.
 See [scope and conservative failure behavior](docs/issues/THREE_WAY_MERGE.md).
+
+
+`vault/driveMerge.js` composes the bounded Drive reader with this adapter. It
+captures the binding/key/local packets, downloads selected revisions and their
+signed ancestors, verifies all remote copies for those identities, includes
+unpublished local packets, and checks the vault inventory again before planning.
+Foreign vaults and unselected branches are not incorporated. Missing/contradicting
+history, cancellation, changed context or changed inventory aborts preparation.
+It shares the adapter's 256-packet/32-MiB aggregate bounds, including duplicates.
+No handler/UI or local/remote write is added; listing cannot establish provider
+freshness or complete convergence. [Retrieval contract](docs/issues/AUTHENTICATED_DRIVE_HISTORY.md).

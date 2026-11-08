@@ -6,7 +6,7 @@ Uma caixa marcada exige implementação e evidência indicada. Caixas abertas in
 
 ## Estado consolidado
 
-Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável) e `82933d8` (planeador de três vias). Última validação de código registada (08/11): **237 testes Node, check de 134 módulos e cenário Chromium de três vias/ancestral autenticado aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
+Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias) e `7d47420` (ancestral autenticado interno). Última validação de código registada (08/11): **244 testes Node, check de 137 módulos e cenário Chromium de três vias/ancestral/recolha Drive autenticados aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
@@ -44,6 +44,7 @@ Branch de implementação: `feature/three-way-sync-merge`, integrada em `main` p
 - [x] Manter ambas cria ID determinístico e proveniência separada, sem alterar notas; replay/lados invertidos e colisões de IDs têm regressões.
 - [x] Permutações de três escritores com a mesma base testadas; identidade UTF-8 da cópia comparada entre Node e Chromium.
 - [x] Adaptador interno de ancestral comum autenticado (08/11): verifica assinaturas, DAG completo e base única antes de decifrar/planear; limites e guardas de sessão. Evidência desta execução em VALIDATION.md.
+- [x] Recolha interna Drive de antecessores assinados (08/11): paginação pelo leitor limitado, cópias duplicadas verificadas, pacotes locais pendentes, reenumeração e cancelamento; sem efeitos persistentes. [Contrato](issues/AUTHENTICATED_DRIVE_HISTORY.md).
 - [ ] Integrar descoberta/ancestral autenticado no produto, tombstones persistidos/assinados, resolução administrativa e UI. O planeador não altera o merge legacy nem ativa escrita Drive; os SC completos continuam abertos. [Issue](issues/THREE_WAY_MERGE.md).
 
 ## Baseline histórica — execução inicial

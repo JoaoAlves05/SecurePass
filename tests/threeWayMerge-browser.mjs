@@ -29,6 +29,8 @@ try {
     const { createRecord, encryptEntries } = await import('../src/vault/crypto.js');
     const protocol = await import('../src/sync/signedProtocol.js');
     const { planAuthenticatedMerge } = await import('../src/vault/authenticatedMerge.js');
+    const { planDriveMerge } = await import('../src/vault/driveMerge.js');
+    const { createDriveReader } = await import('../src/sync/driveTransport.js');
     const { resolveThreeWayMerge } = await import('../src/vault/threeWayMerge.js');
     const entry = password => ({ id: 'credential', site: 'https://example.com', username: 'fictional', password, notes: '', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' });
     const { record, bytes } = await createRecord([entry('original')], 'Fictional browser history master 123!');
@@ -44,15 +46,26 @@ try {
     const options = { packets, local: left.revision, remote: right.revision, authorization, bytes, assertCurrent: () => active };
     const p = await planAuthenticatedMerge(options);
     const deleted = await resolveThreeWayMerge(p, { credential: 'local' }, p.identity);
+    let downloads = 0; let listings = 0;
+    const files = packets.map((packet, i) => ({ id: `file-${i}`, appProperties: { ...packet.publication } }));
+    const reader = createDriveReader({ getToken: async () => 'fictional-token', assertBinding: async () => {}, fetchImpl: async url => {
+      if (url.includes('alt=media')) {
+        downloads++;
+        return new Response(packets[Number(new URL(url).pathname.split('/').pop().slice(5))].body);
+      }
+      listings++; return Response.json({ files });
+    } });
+    const drivePlan = await planDriveMerge({ ...options, reader, binding: { accountId: 'fictional-account', vaultId: record.vaultId, generation: 'one' } });
+    const driveResult = await resolveThreeWayMerge(drivePlan, { credential: 'remote' }, drivePlan.identity);
     let incomplete = false; let tampered = false; let locked = false;
     try { await planAuthenticatedMerge({ ...options, packets: packets.slice(1) }); } catch { incomplete = true; }
     const bad = JSON.parse(packets[0].body); bad.payload.record.parents = ['forged'];
     try { await planAuthenticatedMerge({ ...options, packets: [{ ...packets[0], body: JSON.stringify(bad) }, ...packets.slice(1)] }); } catch { tampered = true; }
     active = false;
     try { await resolveThreeWayMerge(p, { credential: 'remote' }, p.identity); } catch { locked = true; }
-    return { base: p.identity.base === record.revision, conflict: p.conflicts[0].type, deleted: deleted.deletedIds, previewSecret: JSON.stringify(p).includes('changed secret'), incomplete, tampered, locked };
+    return { base: p.identity.base === record.revision, conflict: p.conflicts[0].type, deleted: deleted.deletedIds, previewSecret: JSON.stringify(p).includes('changed secret'), incomplete, tampered, locked, drive: drivePlan.identity.base === record.revision && driveResult.entries[0].password === 'changed secret', downloads, listings };
   });
-  assert.deepEqual(authenticated, { base: true, conflict: 'delete-edit', deleted: ['credential'], previewSecret: false, incomplete: true, tampered: true, locked: true });
+  assert.deepEqual(authenticated, { base: true, conflict: 'delete-edit', deleted: ['credential'], previewSecret: false, incomplete: true, tampered: true, locked: true, drive: true, downloads: 3, listings: 2 });
   console.log('Chromium authenticated history passed: signed ancestry, common base, decryption, deletion conflict, tampering, incomplete history and lock guards.');
   console.log('Chromium internal three-way merge passed: Node-compatible UTF-8 copy identity, unchanged maximal notes, replay, secret-free preview and discard. No transport or production merge activated.');
 } finally { if (context) await context.close(); await rm(profile, { recursive: true, force: true }); }

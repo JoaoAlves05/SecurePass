@@ -2,8 +2,8 @@ import { verifySignedPublication } from '../sync/signedProtocol.js';
 import { decryptWithKey } from './crypto.js';
 import { planThreeWayMerge } from './threeWayMerge.js';
 
-const MAX_HISTORY_RECORDS = 256;
-const MAX_HISTORY_BYTES = 32 * 1024 * 1024;
+export const MAX_HISTORY_RECORDS = 256;
+export const MAX_HISTORY_BYTES = 32 * 1024 * 1024;
 const encoder = new TextEncoder();
 const validId = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value);
 
@@ -54,7 +54,7 @@ export async function planAuthenticatedMerge({ packets, local, remote, authoriza
     if (size > MAX_HISTORY_BYTES) throw new Error('Authenticated history exceeds byte limit.');
     return { body: packet.body, publication: { vaultId: packet.publication?.vaultId, revisionId: packet.publication?.revisionId } };
   });
-  const key = bytes.slice();
+  const key = new Uint8Array(bytes);
   try {
     const records = new Map();
     for (const packet of history) {

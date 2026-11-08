@@ -41,3 +41,9 @@ remota por si só e não está ligado a handlers/UI. Histórias entre estados
 administrativos/épocas, retenção/checkpoints autenticados, tombstones persistidos,
 rebase e convergência distribuída permanecem por implementar. A recusa de
 história antiga/incompleta preserva os ramos; não equivale a apagá-los ou resolvê-los.
+
+
+O segundo bloco de 08/11 acrescenta `vault/driveMerge.js` para recolher esta
+história pelo leitor Drive e reenumerar antes do preview, sem efeitos de escrita.
+Ver [contrato e limites](AUTHENTICATED_DRIVE_HISTORY.md). A integração na UI e a
+aplicação/persistência do resultado continuam pendentes.
