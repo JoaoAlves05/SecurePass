@@ -9,6 +9,7 @@ const { validateImportData, MAX_VAULT_BYTES } = await import('../src/validation.
 const { readLocalVaultRecordRaw, readRecoveryRecords, writeLocalVaultRecordRaw } = await import('../src/utils/storage.js');
 const { fixture } = await import('./helpers/signedHistory.js');
 const { planAuthenticatedMerge } = await import('../src/vault/authenticatedMerge.js');
+const { resolveThreeWayPayload } = await import('../src/vault/threeWayMerge.js');
 const PASS = 'Fictional history preservation master 123!';
 const NEXT = 'Fictional replacement history master 456!';
 const entry = id => ({ id, site: 'https://example.com', username: id, password: 'fictional password', notes: '', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' });
@@ -96,7 +97,13 @@ test('a signed tombstone prevents a stale entry from becoming a new credential a
     record.data = await crypt.seal(payload, key, JSON.stringify({ version: 2, vaultId: record.vaultId, revision: record.revision, parents: record.parents, keyEpoch: record.keyEpoch }));
   }
   const packets = await Promise.all([base, left, right].map(f.packet));
-  await assert.rejects(planAuthenticatedMerge({ ...f.options, packets, local: left.revision, remote: right.revision }), /Unresolved deletion history/);
+  const plan = await planAuthenticatedMerge({ ...f.options, packets, local: left.revision, remote: right.revision });
+  assert.deepEqual(plan.conflicts, [{ id: 'a', type: 'delete-edit' }]);
+  await assert.rejects(resolveThreeWayPayload(plan, {}, plan.identity, 'merged'), /every conflict/);
+  const removed = await resolveThreeWayPayload(plan, { a: 'local' }, plan.identity, 'merged');
+  assert.deepEqual(removed.tombstones, [{ id: 'a', revision: 'observed-deletion' }]);
+  const restored = await resolveThreeWayPayload(plan, { a: 'remote' }, plan.identity, 'merged');
+  assert.deepEqual(restored.provenance, [{ id: 'a', deletedIn: 'observed-deletion', restoredIn: 'merged' }]);
 });
 test('deletion-history overflow aborts the live mutation without truncation or checkpoint changes', async () => {
   const tombstones = Array.from({ length: MAX_HISTORY_ITEMS }, (_, i) => ({ id: `deleted-${i}`, revision: 'deleted' }));

@@ -6,6 +6,13 @@ export const MAX_HISTORY_RECORDS = 256;
 export const MAX_HISTORY_BYTES = 32 * 1024 * 1024;
 const encoder = new TextEncoder();
 const validId = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value);
+const authenticatedPlans = new WeakMap();
+
+export function authenticatedMergeContext(plan) {
+  const context = authenticatedPlans.get(plan);
+  if (!context) throw new Error('An authenticated merge review is required.');
+  return context;
+}
 
 function checkCurrent(guard) {
   const result = guard();
@@ -41,7 +48,7 @@ function commonBase(records, local, remote) {
 
 // Internal same-authorization/same-epoch adapter. No storage or transport effects.
 // The caller pins the current authorization/binding and session in assertCurrent.
-export async function planAuthenticatedMerge({ packets, local, remote, authorization, bytes, assertCurrent }) {
+export async function planAuthenticatedMerge({ packets, local, remote, authorization, bytes, assertCurrent, binding }) {
   if (typeof assertCurrent !== 'function') throw new Error('A live authorization/session/revision guard is required.');
   checkCurrent(assertCurrent);
   if (!validId(local) || !validId(remote) || !Array.isArray(packets) || !packets.length || packets.length > MAX_HISTORY_RECORDS) throw new Error('A bounded authenticated history and exact head identities are required.');
@@ -54,6 +61,7 @@ export async function planAuthenticatedMerge({ packets, local, remote, authoriza
     if (size > MAX_HISTORY_BYTES) throw new Error('Authenticated history exceeds byte limit.');
     return { body: packet.body, publication: { vaultId: packet.publication?.vaultId, revisionId: packet.publication?.revisionId } };
   });
+  const pinnedBinding = binding ? Object.freeze({ accountId: binding.accountId, vaultId: binding.vaultId, generation: binding.generation }) : null;
   const key = new Uint8Array(bytes);
   try {
     const records = new Map();
@@ -70,16 +78,11 @@ export async function planAuthenticatedMerge({ packets, local, remote, authoriza
       snapshots.push(await decryptPayloadWithKey(records.get(id), key, { requireIdentity: true }));
       checkCurrent(assertCurrent);
     }
-    // A compacted base may no longer contain an old ID. Its absence alone must
-    // never turn a concurrent stale copy into a new credential.
-    const baseIds = new Set(snapshots[0].entries.map(entry => entry.id));
-    for (const [left, right] of [[snapshots[1], snapshots[2]], [snapshots[2], snapshots[1]]]) {
-      const live = new Set(right.entries.map(entry => entry.id));
-      const baseDeleted = new Map(snapshots[0].tombstones.map(item => [item.id, item.revision]));
-      if (left.tombstones.some(item => live.has(item.id) && !baseIds.has(item.id) && baseDeleted.get(item.id) !== item.revision)) throw new Error('Unresolved deletion history. Preserve branches and restore the entry explicitly.');
-    }
     const record = records.get(base);
-    return planThreeWayMerge({ base: snapshots[0].entries, local: snapshots[1].entries, remote: snapshots[2].entries, identity: { vaultId: record.vaultId, keyEpoch: record.keyEpoch, base, local, remote }, assertCurrent });
+    if (pinnedBinding && (pinnedBinding.vaultId !== record.vaultId || !['accountId', 'generation'].every(key => typeof pinnedBinding[key] === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(pinnedBinding[key])))) throw new Error('Merge binding mismatch.');
+    const plan = planThreeWayMerge({ base: snapshots[0].entries, local: snapshots[1].entries, remote: snapshots[2].entries, identity: { vaultId: record.vaultId, keyEpoch: record.keyEpoch, base, local, remote }, assertCurrent, history: snapshots });
+    authenticatedPlans.set(plan, Object.freeze({ binding: pinnedBinding, authorization: authorization.hash }));
+    return plan;
   } finally {
     key.fill(0);
   }

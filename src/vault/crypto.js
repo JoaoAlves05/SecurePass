@@ -104,6 +104,17 @@ export async function encryptEntries(previous, entries, bytes, parents = [previo
   return record;
 }
 
+// Callers obtain metadata through a revision-bound authenticated merge review.
+export async function encryptMergedPayload(previous, payload, bytes, parents, revision) {
+  await decryptPayloadWithKey(previous, bytes);
+  payload = validatePayload(payload);
+  const record = { ...previous, revision, parents: [...new Set(parents)].sort(), updatedAt: new Date().toISOString() };
+  if (record.parents.length < 1 || record.parents.length > 2 || !record.parents.includes(previous.revision) || record.parents.includes(revision)) throw new Error('Invalid selected merge ancestry.');
+  validateRecord(record);
+  record.data = await seal(payload, await aesKey(bytes), dataContext(record));
+  return record;
+}
+
 // Historical contents share the active protection, retaining their content ID/date.
 export async function protectCheckpoint(previous, entries, active, bytes, history) {
   entries = validateVaultEntries(entries);

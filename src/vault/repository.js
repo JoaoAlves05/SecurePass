@@ -3,6 +3,7 @@ import { loadSettings } from '../settings.js';
 import { syncHeads, publishGeneration, inspectSync, publicationCapacity } from './sync.js';
 import { prepareMutationPublication } from '../sync/mutationPublication.js';
 import { publicationStore } from '../sync/publicationStore.js';
+import { sameBinding } from '../sync/publicationModel.js';
 export async function loadRecord() {
   const local = await readLocalVaultRecordRaw();
   if (local) return local;
@@ -28,6 +29,10 @@ export async function publishLocalRecord(record) {
 export async function commitRecord(record, expected, options = {}) {
   const enabled = (await loadSettings()).useSync;
   const prepared = options.drivePublication ? null : await prepareMutationPublication(record, expected);
+  if (options.requireDriveContext) {
+    const packet = options.drivePublication || prepared?.packet;
+    if (!packet || !sameBinding(packet.binding, options.requireDriveContext.binding) || packet.authorization !== options.requireDriveContext.authorization) throw new Error('Drive merge binding or authorization changed before commit. Review again.');
+  }
   await writeLocalVaultRecordRaw(record, expected, {
     ...options, pendingSync: enabled,
     ...(prepared ? { drivePublication: prepared.packet, expectedDriveBinding: prepared.binding, validateCommit: prepared.assertSession } : {})

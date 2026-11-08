@@ -25,11 +25,18 @@ export function validatePayload(value, { requireIdentity = false } = {}) {
   }).sort((a, b) => compare(a.id, b.id));
   const seen = new Set();
   const provenance = value.provenance.map(item => {
-    if (!exact(item, ['id', 'deletedIn', 'restoredIn']) || !revision(item.deletedIn) || !revision(item.restoredIn)) throw new Error('Invalid restoration history.');
-    validateString(item.id, 64, 'restored credential ID', true);
-    const copy = { id: item.id, deletedIn: item.deletedIn, restoredIn: item.restoredIn };
+    let copy;
+    if (exact(item, ['id', 'originalId', 'revisions'])) {
+      validateString(item.originalId, 64, 'original credential ID', true);
+      if (!Array.isArray(item.revisions) || item.revisions.length !== 2 || !item.revisions.every(revision) || item.revisions[0] >= item.revisions[1]) throw new Error('Invalid conflict-copy history.');
+      copy = { id: item.id, originalId: item.originalId, revisions: [...item.revisions] };
+    } else {
+      if (!exact(item, ['id', 'deletedIn', 'restoredIn']) || !revision(item.deletedIn) || !revision(item.restoredIn)) throw new Error('Invalid restoration history.');
+      copy = { id: item.id, deletedIn: item.deletedIn, restoredIn: item.restoredIn };
+    }
+    validateString(item.id, 64, 'history credential ID', true);
     const key = JSON.stringify(copy);
-    if (seen.has(key)) throw new Error('Duplicate restoration history.');
+    if (seen.has(key)) throw new Error('Duplicate provenance history.');
     seen.add(key); return copy;
   }).sort((a, b) => compare(JSON.stringify(a), JSON.stringify(b)));
   const payload = { kind: KIND, version: 1, entries, tombstones, provenance };
@@ -58,4 +65,29 @@ export function advancePayload(previous, entries, nextRevision, { allowRestore =
     tombstones.delete(item.id);
   }
   return createPayload(entries, { tombstones: [...tombstones.values()], provenance });
+}
+
+export function combinePayloadHistory(snapshots, result, nextRevision) {
+  if (!revision(nextRevision)) throw new Error('Invalid merged revision.');
+  const [base, local, remote] = snapshots.map(value => validatePayload(value));
+  const live = new Set(result.entries.map(entry => entry.id));
+  const deletions = new Map();
+  for (const item of [...base.tombstones, ...local.tombstones, ...remote.tombstones]) {
+    if (!deletions.has(item.id)) deletions.set(item.id, new Set());
+    deletions.get(item.id).add(item.revision);
+  }
+  for (const id of result.deletedIds) if (!deletions.has(id)) deletions.set(id, new Set([nextRevision]));
+  const provenance = [...base.provenance, ...local.provenance, ...remote.provenance, ...result.provenance];
+  const restored = new Set(provenance.filter(item => item.deletedIn).map(item => JSON.stringify([item.id, item.deletedIn])));
+  const tombstones = [];
+  for (const [id, revisions] of deletions) {
+    if (live.has(id)) {
+      for (const deletedIn of revisions) {
+        const key = JSON.stringify([id, deletedIn]);
+        if (!restored.has(key)) { provenance.push({ id, deletedIn, restoredIn: nextRevision }); restored.add(key); }
+      }
+    } else tombstones.push({ id, revision: revisions.size === 1 ? [...revisions][0] : nextRevision });
+  }
+  const unique = new Map(provenance.map(item => [JSON.stringify(item), item]));
+  return createPayload(result.entries, { tombstones, provenance: [...unique.values()] });
 }

@@ -77,7 +77,7 @@ export async function planDriveMerge({ reader, binding, localPackets = [], local
     for (const id of [...records.keys(), local, remote]) await visit(id);
     const after = inventory(await reader.list(pinned, { signal })); guard();
     if (inventoryKey(files) !== inventoryKey(after)) throw new Error('Drive history changed. Review again.');
-    return await planAuthenticatedMerge({ packets, local, remote, authorization, bytes: key, assertCurrent: guard });
+    return await planAuthenticatedMerge({ packets, local, remote, authorization, bytes: key, assertCurrent: guard, binding: pinned });
   } finally {
     key.fill(0);
   }

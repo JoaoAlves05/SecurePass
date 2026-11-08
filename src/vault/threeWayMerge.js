@@ -1,4 +1,5 @@
 import { validateVaultEntries } from '../validation.js';
+import { createPayload, combinePayloadHistory } from './payload.js';
 
 const plans = new WeakMap();
 const REVIEW_MS = 2 * 60 * 1000;
@@ -30,21 +31,35 @@ function checkCurrent(guard) {
 // The application must verify/decrypt the three snapshots and common ancestry
 // before calling. This planner neither authenticates inputs nor trusts clocks.
 // No handler or production Drive route currently exposes it.
-export function planThreeWayMerge({ base, local, remote, identity, assertCurrent }) {
+export function planThreeWayMerge({ base, local, remote, identity, assertCurrent, history }) {
   if (typeof assertCurrent !== 'function') throw new Error('A live session/revision guard is required.');
   checkCurrent(assertCurrent);
   const pinned = revisions(identity);
+  if (history !== undefined && (!Array.isArray(history) || history.length !== 3)) throw new Error('Three complete merge histories are required.');
   const before = snapshot(base); const left = snapshot(local); const right = snapshot(remote);
+  const histories = [before, left, right].map((map, index) => createPayload([...map.values()], history?.[index]));
+  const tombstones = histories.map(payload => new Map(payload.tombstones.map(item => [item.id, item.revision])));
+  const restorations = histories.map(payload => new Set(payload.provenance.filter(item => item.deletedIn).map(item => JSON.stringify([item.id, item.deletedIn]))));
   const snapshots = [[pinned.base, before], [pinned.local, left], [pinned.remote, right]];
   const serialized = map => JSON.stringify([...map.values()].sort((a, b) => compare(a.id, b.id)).map(canonical));
   for (let a = 0; a < snapshots.length; a++) for (let b = a + 1; b < snapshots.length; b++) {
-    if (snapshots[a][0] === snapshots[b][0] && serialized(snapshots[a][1]) !== serialized(snapshots[b][1])) throw new Error('Same revision has inconsistent contents.');
+    const metadata = payload => JSON.stringify([payload.tombstones, payload.provenance]);
+    if (snapshots[a][0] === snapshots[b][0] && (serialized(snapshots[a][1]) !== serialized(snapshots[b][1]) || metadata(histories[a]) !== metadata(histories[b]))) throw new Error('Same revision has inconsistent contents.');
   }
   const entries = []; const deleted = []; const conflicts = [];
   const ids = [...new Set([...before.keys(), ...left.keys(), ...right.keys()])].sort(compare);
   for (const id of ids) {
     const original = before.get(id); const a = left.get(id); const b = right.get(id);
     let selected;
+    const unobservedDeletion = (entry, absent, deleted, surviving) => {
+      const revision = tombstones[deleted].get(id) || tombstones[0].get(id);
+      if (!entry || absent || original || !revision) return false;
+      return tombstones[0].get(id) !== revision || !restorations[surviving].has(JSON.stringify([id, revision]));
+    };
+    if (unobservedDeletion(a, b, 2, 1) || unobservedDeletion(b, a, 1, 2)) {
+      conflicts.push({ id, type: 'delete-edit', local: a, remote: b });
+      continue;
+    }
     if (equal(a, b)) selected = representative(a, b);
     else if (equal(a, original)) selected = b;
     else if (equal(b, original)) selected = a;
@@ -64,8 +79,19 @@ export function planThreeWayMerge({ base, local, remote, identity, assertCurrent
     expiresAt: createdAt + REVIEW_MS,
     conflicts: Object.freeze(conflicts.map(({ id, type }) => Object.freeze({ id, type })))
   });
-  plans.set(plan, { identity: pinned, entries, deleted, conflicts, assertCurrent, ids: new Set(ids), createdAt });
+  const reservedIds = new Set([...ids, ...histories.flatMap(payload => payload.tombstones.map(item => item.id))]);
+  plans.set(plan, { identity: pinned, entries, deleted, conflicts, assertCurrent, ids: reservedIds, createdAt, histories });
   return plan;
+}
+
+export async function resolveThreeWayPayload(plan, decisions, currentIdentity, revision) {
+  const result = await resolveThreeWayMerge(plan, decisions, currentIdentity);
+  const state = plans.get(plan);
+  if (!state) throw new Error('Merge review expired or was discarded.');
+  const payload = combinePayloadHistory(state.histories, result, revision);
+  checkCurrent(state.assertCurrent);
+  if (Date.now() < state.createdAt || Date.now() >= plan.expiresAt) throw new Error('Merge review expired. Review again.');
+  return payload;
 }
 
 export function discardThreeWayMerge(plan) { plans.delete(plan); }

@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **251 Node tests, 139 checked modules and Chromium three-way/authenticated-history, Drive atomic-commit and checkpoint scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **257 Node tests, 142 checked modules and Chromium authenticated-merge commit, three-way/history and Drive atomic-commit scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -327,3 +327,23 @@ lifecycle remain subject to independent review. [Contract](VAULT_PAYLOAD.md).
 Also rerun and passed in this tombstone block: general browser/virtual PRF,
 Settings browser, two-profile emulated Sync and runtime packaging. Regenerated
 screenshots were discarded because this block has no UI changes.
+
+
+## Authenticated merge persistence — 2026-11-08
+
+`npm test`: **257/257 passed**; `npm run check`: **142 modules passed**.
+Six service regressions cover signed atomic commit with persistent deletion/copy
+metadata, selected parents/unselected-branch preservation, unlock round-trip,
+replay/forged reviews, missing decisions, stale revision/binding/authorization/lock,
+binding and authorization changes during encryption, transaction rollback/retry,
+combined history capacity, observed restores, omitted tombstones and copy-ID
+collision against an already-deleted identity. Existing tombstone regression now
+asserts explicit conflict resolution and persisted restore provenance.
+
+New `npm run test:merge-commit-browser` passed in real Chromium WebCrypto and
+IndexedDB: signed history → preview → keep-both → forced atomic abort → retry →
+verified signed packet with tombstone/copy provenance, exact notes, selected
+parents, checkpoint and replay rejection. Existing `test:three-way-browser` and
+`test:drive-commit-browser` passed; packaging passed. No cloud write or public
+route is activated. The prior block's general/settings/PRF/Sync/checkpoint UI
+results retain their own evidence; this block does not rerun those UI suites.

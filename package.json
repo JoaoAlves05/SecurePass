@@ -21,7 +21,8 @@
     "configure:google": "node scripts/configureGoogle.mjs",
     "test:google-config-browser": "node tests/googleConfiguration-browser.mjs",
     "test:package-browser": "node tests/package-browser.mjs",
-    "test:three-way-browser": "node tests/threeWayMerge-browser.mjs"
+    "test:three-way-browser": "node tests/threeWayMerge-browser.mjs",
+    "test:merge-commit-browser": "node tests/mergeService-browser.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.4",

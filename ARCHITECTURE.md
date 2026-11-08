@@ -25,6 +25,7 @@ The [2026-10-26 backup/Advanced review](docs/REVIEW_BACKUP_ADVANCED.md) adds ide
 | `src/vault/session.js` | Restricted volatile data key, deadline, restoration after worker suspension, immediate generation revocation |
 | `src/vault/queue.js` | Serial operations and a Web Lock across extension contexts |
 | `src/vault/repository.js` | Local-first normal commits, local-preferred reads, internal mutation signing and transactional publication references |
+| `src/vault/mergeService.js` | Internal authenticated Drive merge application with fixed trust/binding, revision CAS and atomic signed vault/checkpoint/outbox commit |
 | `src/vault/payload.js` | Versioned encrypted content, persistent tombstones, explicit restoration provenance and aggregate history capacity |
 | `src/vault/driveMerge.js` | Internal bounded read-only Drive history retrieval and inventory recheck before authenticated merge planning |
 | `src/vault/authenticatedMerge.js` | Internal signed-history verification, unique common-base selection and guarded decryption before planning; same authorization/epoch only |
@@ -125,8 +126,8 @@ selects a unique nearest common ancestor. It decrypts the three snapshots with
 complete entry identities/dates required before import defaults, then delegates
 to the revision-bound opaque planner. Its synchronous caller guard must pin the
 live session, account binding, authorization and heads. It has no storage,
-transport, handler or UI effects. Cross-authorization history, merge-result tombstone persistence, checkpoint
-retention and production integration remain pending.
+transport, handler or UI effects. Cross-authorization history, checkpoint retention, public management routes/UI and production integration
+remain pending. Internal merge-result metadata persistence is implemented below.
 See [scope and conservative failure behavior](docs/issues/THREE_WAY_MERGE.md).
 
 
@@ -152,3 +153,19 @@ rotation and checkpoint re-protection preserve metadata. Capacity includes histo
 and never silently truncates it. Older clients reject the new plaintext kind.
 The signed wrapper covers this ciphertext; production Drive remains gated.
 See [format, migration and remaining merge scope](docs/VAULT_PAYLOAD.md).
+
+
+## Authenticated merge commit — 2026-11-08
+
+`mergeService.js` accepts only authenticated in-memory reviews, requires the
+reviewed Drive binding, enrolled writer and persisted authorization, and resolves
+under the vault operation lock. The planner carries private snapshot histories,
+requires explicit tombstone-versus-entry choices even with an empty base, reserves
+historically deleted IDs against generated-copy collisions and enforces full
+metadata capacity. `resolveThreeWayPayload` combines encrypted tombstones,
+restoration provenance and deterministic copy provenance. `encryptMergedPayload`
+uses only the two selected heads as parents. Repository context requirements
+prevent preparation under a newer binding/authorization from silently rebinding
+an older review. Commit atomically stores live state/checkpoint/signed outbox;
+success consumes the review, rollback preserves it for a guarded retry. No
+management handler/UI or production Drive activation is added in this block.

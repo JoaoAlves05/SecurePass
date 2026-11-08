@@ -18,7 +18,9 @@ capacidade aborta antes do commit; não há truncagem ou GC implícito.
 tombstones; edições preservam-nos. Reintroduzir um ID eliminado numa mutação normal
 é recusado. Recuperação local, restauro de checkpoint, seleção de cópia para
 restauro e importação revista permitem restauro explícito, removem o tombstone
-ativo e acrescentam `{id,deletedIn,restoredIn}`. Eliminações posteriores deixam um
+ativo e acrescentam `{id,deletedIn,restoredIn}`. Cópias de conflito usam
+`{id,originalId,revisions:[local,remote]}`, com revisões ordenadas e diferentes;
+a proveniência fica separada das notas e é preservada em mutações/rotação. Eliminações posteriores deixam um
 novo tombstone e preservam a proveniência anterior. O merge legacy não recebe
 permissão para ressuscitar IDs eliminados.
 
@@ -29,10 +31,11 @@ do snapshot cifrado; importar conteúdo num destino existente preserva a histór
 do destino. Backups portáteis de entradas não são checkpoints de causalidade.
 
 Tombstones e proveniência nunca ficam em campos em claro do envelope ou da fila.
-O wrapper assinado cobre o ciphertext completo. O adaptador de merge recusa uma
-entrada concorrente contra tombstone sem base que demonstre um restauro observado;
-a integração de todas as decisões/história no resultado persistido fica para o
-bloco seguinte. Não há novos handlers, permissões ou escrita Drive de produção.
+O wrapper assinado cobre o ciphertext completo. O planeador exige decisão explícita para
+entrada concorrente contra tombstone sem base que demonstre restauro observado.
+O serviço interno de commit combina história dos três snapshots, conserva
+tombstones conhecidos na base mesmo se omitidos pelos heads, preserva cópias e
+regista restauros. IDs tombstonados ficam reservados contra colisões de cópias. Não há novos handlers, permissões ou escrita Drive de produção.
 
 Evidência: sete regressões em `tests/tombstones.test.js`, incluindo rollback por
 capacidade, migração, adulteração de contexto, ciclo delete/restore/delete e rotação
