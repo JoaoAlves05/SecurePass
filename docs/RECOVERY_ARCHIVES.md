@@ -33,10 +33,16 @@ recovery publication-suppression markers can be written.
 Memory is bounded by a read window plus the current individual record's encoded,
 parsed and validation representations, rather than the aggregate archive size.
 Selected-record decryption still allocates its bounded ciphertext/plaintext.
-This is not a constant-heap claim, a compressed format or a batch export feature.
+This is not a constant-heap claim or a compressed format. The separate guided
+batch export uses `vault/recoveryExport.js`: up to 100 metadata-only choices,
+source/digest revalidation, and one individually importable file of at most
+16 MiB per confirmed download request. Invalid versions are identified before
+starting. Cancel stops between files; lock/pagehide suppress late preparation
+results. Requested downloads are distinguished from confirmed disk completion.
 
 Reproduce with `npm test`, `npm run check` and
-`npm run test:recovery-archive-browser`. The browser scenario uses disposable
+`npm run test:recovery-archive-browser` and
+`npm run test:recovery-export-browser`. The browser scenario uses disposable
 credentials and temporary profiles; it includes >16-MiB encrypted history and an
 exactly 256-MiB on-disk archive. See [validation evidence](VALIDATION.md) and
 [remaining checklist](IMPLEMENTATION_CHECKLIST.md).

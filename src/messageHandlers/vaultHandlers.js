@@ -5,6 +5,7 @@ import { restoreExternalRecord, wipeDevice } from '../vault/recovery.js';
 import { readRecoveryRecords, getStorage, snapshotId } from '../utils/storage.js';
 
 import { previewBackup, commitBackup } from '../vault/backupService.js';
+import { recoveryExportInventory, exportRecoverySnapshot } from '../vault/recoveryExport.js';
 import { masterAuthorizationOwner, cancelMasterAuthorization } from '../vault/masterAuthorization.js';
 import { withVaultLock } from '../vault/queue.js';
 import { checkpointStatus, unlockCheckpoint, previewCheckpoint, recoverCheckpoint, removeCheckpoints, clearCheckpointPreviews } from '../vault/checkpoints.js';
@@ -42,15 +43,8 @@ export const vaultHandlers = new Map([
   }],
   ['PREVIEW_BACKUP', async m => previewBackup(m.data, m.backupPassword, m.strategy)],
   ['COMMIT_BACKUP', commitBackup],
-  ['EXPORT_RECOVERY_SNAPSHOT', async m => {
-    if (m.source !== undefined && !['Local', 'Archived Sync'].includes(m.source)) throw new Error('Invalid recovery source.');
-    const records = m.source === 'Archived Sync'
-      ? ((await getStorage('local', 'syncRecovery')).syncRecovery || [])
-      : m.source === 'Local' ? await readRecoveryRecords()
-        : [...await readRecoveryRecords(), ...((await getStorage('local', 'syncRecovery')).syncRecovery || [])];
-    for (const record of records) if (await snapshotId(record) === m.id) return { data: { kind: 'securepass-encrypted-recovery', version: 1, snapshots: [record], sync: [] } };
-    throw new Error('Snapshot no longer available. Refresh the history.');
-  }],
+  ['PREVIEW_RECOVERY_EXPORT', recoveryExportInventory],
+  ['EXPORT_RECOVERY_SNAPSHOT', exportRecoverySnapshot],
   ['IMPORT_VAULT', async m => {
     const state = await vault.requireVault();
     let source = m.data;

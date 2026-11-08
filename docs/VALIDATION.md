@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **275 Node tests, 151 checked modules and Chromium large-recovery-archive and general/virtual-PRF scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **280 Node tests, 155 checked modules and Chromium guided recovery-export and Settings scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -411,3 +411,36 @@ PRF browser suite and runtime packaging passed after the final recovery changes.
 No screenshots/layout changes are introduced by this block. Batch export,
 full capacity/retention acceptance, Drive migration, real Google/physical hardware
 and independent protocol review remain open. [Reader contract](RECOVERY_ARCHIVES.md).
+
+
+## Guided recovery export batches — 2026-11-08
+
+`npm test`: **280/280 passed**; `npm run check`: **155 modules passed**.
+Five regressions cover source-scoped metadata-only inventories, independent
+single-file decryption, same-ID replacement/removal after preview, invalid and
+oversized outputs, duplicate IDs/count limits and management-only routes.
+
+`npm run test:recovery-export-browser` passed real Chromium routes and three
+actual browser download events. Each saved file was read from the browser's
+download path, reimported through the bounded archive reader and independently
+decrypted. An archived copy sharing a local logical ID remains separately
+exportable. Initial/mid-batch cancellation, digest failure before requesting a
+download and a lock while export preparation is pending are covered. The lock
+scenario waits for the delayed background callback before asserting no late
+download. Invalid-envelope diagnostics use an export-specific accessible list
+name. Keyboard, focus return, no horizontal overflow and active Cancel colors
+are checked at 320×560 and 1100×850 in light/dark. Five captures are under
+`screenshots/recovery-export/`; theme transitions are disabled for stable captures.
+
+The UI deliberately requests a separate download for every confirmed file,
+showing the number requested and allowing stop/retry. It cannot attest that the
+user kept a file on disk; browser fixture downloads establish the tested path,
+not completion for every future request. Only one selected file is returned to
+the popup at a time. History remains bounded to 100 entries for a batch; this is
+not a heap-profile guarantee for arbitrary corrupt storage. The old aggregate
+export handler remains a compatibility surface, separate from the new bounded
+per-file UI. Full SD07/SD18/SD19 reconciliation remains open.
+
+`npm run test:settings-browser` and packaging passed. SC40 is recorded complete
+within these explicit reader/batch limits. Real Google, physical PRF, independent
+security review and the other open SC/AF cases remain unaccepted.

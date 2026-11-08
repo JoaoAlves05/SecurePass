@@ -24,7 +24,8 @@
     "test:three-way-browser": "node tests/threeWayMerge-browser.mjs",
     "test:merge-commit-browser": "node tests/mergeService-browser.mjs",
     "test:drive-review-browser": "node tests/driveReview-browser.mjs",
-    "test:recovery-archive-browser": "node tests/recoveryArchive-browser.mjs"
+    "test:recovery-archive-browser": "node tests/recoveryArchive-browser.mjs",
+    "test:recovery-export-browser": "node tests/recoveryExport-browser.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.4",

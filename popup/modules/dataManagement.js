@@ -5,6 +5,7 @@ import { showToast } from './toast.js';
 import { readImportFile } from '../../src/recoveryArchive.js';
 import { requestOperation } from './operationDialog.js';
 import { checked, runManagement } from './management.js';
+import { attachRecoveryExport } from './recoveryExport.js';
 export function downloadJSON(data, name) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
   const anchor = document.createElement('a'); anchor.href = url; anchor.download = name; anchor.click();
@@ -69,6 +70,7 @@ async function importFile(input) {
 }
 export function attachDataListeners() {
   attachCheckpointListeners();
+  attachRecoveryExport(downloadJSON);
   const $ = id => document.getElementById(id); const file = $('importVaultFile');
   $('exportVault').addEventListener('click', () => runManagement(async () => {
     if (!await ensureVaultAccessible('Unlock your vault to export a backup.')) return;

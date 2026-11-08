@@ -7,7 +7,7 @@ export function cancelOperation() {
   document.getElementById('operationFields').replaceChildren();
   pending.dialog.close(); pending.resolve(null);
 }
-export function requestOperation({ title, description, fields = [], details = [], changes = [], layout, notice, confirmLabel = 'Continue', busyLabel = 'Working…', failureMessage, danger = false, submit }) {
+export function requestOperation({ title, description, fields = [], details = [], changes = [], changesLabel = 'Checkpoint differences', layout, notice, confirmLabel = 'Continue', busyLabel = 'Working…', failureMessage, danger = false, submit }) {
   if (active) return Promise.reject(new Error('Finish or cancel the current operation first.'));
   const dialog = document.getElementById('operationDialog');
   dialog.classList.toggle('checkpoint-operation', layout === 'checkpoint');
@@ -28,7 +28,7 @@ export function requestOperation({ title, description, fields = [], details = []
   const error = document.getElementById('operationError'); error.textContent = ''; error.hidden = true;
   body.replaceChildren();
   if (changes.length) {
-    const list = document.createElement('ul'); list.className = 'checkpoint-review-changes'; list.setAttribute('aria-label', 'Checkpoint differences');
+    const list = document.createElement('ul'); list.className = 'checkpoint-review-changes'; list.setAttribute('aria-label', changesLabel);
     for (const change of changes) {
       const item = document.createElement('li'); const title = document.createElement('strong'); const text = document.createElement('span');
       title.textContent = change.title; text.textContent = change.text; item.append(title, text); list.append(item);
