@@ -84,9 +84,11 @@ export async function decryptRecord(record, passphrase) {
   return { entries: await decryptWithKey(record, bytes), bytes };
 }
 
-export async function decryptWithKey(record, bytes) {
+export async function decryptWithKey(record, bytes, { requireIdentity = false } = {}) {
   validateRecord(record);
   const payload = JSON.parse(decoder.decode(await open(record.data, await aesKey(bytes), dataContext(record))));
+  // Import defaults are useful for backups, but cannot establish merge causality.
+  if (requireIdentity && (!Array.isArray(payload?.entries) || payload.entries.some(entry => !entry?.id || typeof entry.createdAt !== 'string' || typeof entry.updatedAt !== 'string'))) throw new Error('Merge needs complete authenticated entry identities and dates.');
   return validateImportData(payload).entries;
 }
 

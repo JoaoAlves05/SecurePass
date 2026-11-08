@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current code baseline: `82933d8`, integrated in `main`. Latest executed results: **227 Node tests, 132 checked modules and the dedicated Chromium three-way scenario passed**. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **237 Node tests, 134 checked modules and the extended Chromium three-way/authenticated-history scenario passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -10,7 +10,7 @@ Current code baseline: `82933d8`, integrated in `main`. Latest executed results:
 
 Keep-both uses a deterministic SHA-256 copy ID and separate provenance, preserving maximal notes. Reversed sides and replay produce the same result; collisions with existing entries, pending conflicts or other generated copies fail before any commit. The complete result is validated against entry/byte limits. Twelve focused regressions cover these behaviors and six delivery permutations of independent writers sharing the same base. `npm run test:three-way-browser` passed in Chromium, including a Node-computed UTF-8 copy-ID comparison, full-length notes, replay, secret-free preview and discard. Final full run: **227 Node tests passed; 132 JavaScript modules checked; whitespace check passed.** No browser transport or production merge was activated.
 
-This is not authenticated tombstone persistence or complete distributed convergence. Selecting/verifying common ancestry, persistent provenance/tombstones, stale-device rebase, signed-format integration and resolution UI remain pending. The existing additive legacy merge is unchanged. [Issue and boundaries](issues/THREE_WAY_MERGE.md).
+This is not authenticated tombstone persistence or complete distributed convergence. The 2026-11-08 continuation below adds internal common-ancestor verification for one authorization/epoch. Production ancestry integration, persistent provenance/tombstones, stale-device rebase and resolution UI remain pending. The existing additive legacy merge is unchanged. [Issue and boundaries](issues/THREE_WAY_MERGE.md).
 
 ## Drive integration, resumable uploads and anchored search — 2026-11-06
 
@@ -259,3 +259,28 @@ These checks cannot be substituted by the virtual authenticator or emulated tran
 6. Keep an encrypted backup before upgrading an old installation. Verify migration, export/import into a fresh profile, restoring a historical snapshot and explicit local device erasure.
 
 Passing automated checks means the implementation's tested boundaries and regressions work; it does not constitute an independent security certification or physical-device compatibility claim.
+
+## Continuação — ancestral comum autenticado, 08/11/2026
+
+Execução desta sessão: `npm test` **237/237 aprovados**, `npm run check`
+**134 módulos aprovados** e `npm run test:three-way-browser` aprovado em Chromium.
+Os dez testes novos em `authenticatedMerge.test.js` cobrem ancestral mais próximo,
+fast-forward/mesma revisão, eliminação versus edição, história incompleta e heads
+ausentes, raízes desconexas, ciclos, equivocações, bases múltiplas, repetição e
+ordem de downloads, adulteração/identidade/autoridade/chave inválidas, mudança de
+inputs durante verificação, bloqueio, limites UTF-8 e ausência de IDs/datas no
+plaintext. O cenário Chromium verifica assinatura → ancestral → decifragem →
+preview → decisão explícita, recusa adulteração/história incompleta e invalida o
+preview ao bloquear. O cenário existente de cópias UTF-8 continua aprovado.
+
+O adaptador é interno, limitado à mesma autorização e época, sem efeitos de
+storage/Drive. O chamador tem de fixar a autorização atual, vínculo e heads na
+guarda de contexto. Não fecha SC22–SC25/SC34–SC35 completos, nem valida transporte
+Google, tombstones persistidos, UI, lifecycle, rebase ou aceitação de release.
+
+Regressões adicionais repetidas e aprovadas nesta execução:
+`test:browser` (incluindo PRF virtual), `test:settings-browser`,
+`test:signed-protocol-browser`, `test:drive-commit-browser` e `test:sync-browser`
+(dois perfis com transporte emulado). `npm run package` gerou o ZIP runtime.
+Os screenshots regenerados foram descartados porque este bloco não altera a UI;
+`git diff --check` aprovado. Não houve conta Google ou autenticador físico.

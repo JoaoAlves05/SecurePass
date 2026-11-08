@@ -312,10 +312,10 @@
     "semantic_hash": "7f91f5c8c13ffac3ab11d6c9f41ab46d"
   },
   "src/vault/crypto.js": {
-    "mtime": 1793051672.769238,
-    "seen": 1793056215.4443772,
-    "ast_hash": "795765d08941d99067266dce8dba6143",
-    "semantic_hash": "795765d08941d99067266dce8dba6143"
+    "mtime": 1794145110.2775009,
+    "seen": 1794145159.9202712,
+    "ast_hash": "3be67e047d66a9949ffb609ec617144e",
+    "semantic_hash": ""
   },
   "src/vault/queue.js": {
     "mtime": 1792896779.6823595,
@@ -408,10 +408,10 @@
     "semantic_hash": "596b636dbb30b786b39621e7a2791b45"
   },
   "ARCHITECTURE.md": {
-    "mtime": 1793936861.846373,
-    "seen": 1794093023.1795356,
-    "ast_hash": "8ac6e75dfea0ec9906533e938caba89e",
-    "semantic_hash": "8ac6e75dfea0ec9906533e938caba89e"
+    "mtime": 1794145278.327039,
+    "seen": 1794145379.007212,
+    "ast_hash": "",
+    "semantic_hash": "317e9894e576d53806cbd1dc1c8e4a48"
   },
   "README.md": {
     "mtime": 1793937151.5850868,
@@ -444,10 +444,10 @@
     "semantic_hash": "52fa42d087caf2bf7c6e47c007eb087f"
   },
   "docs/VALIDATION.md": {
-    "mtime": 1794092948.1881297,
-    "seen": 1794093023.179568,
-    "ast_hash": "105b0bb5cc831aa4c325e1483854f4d2",
-    "semantic_hash": "105b0bb5cc831aa4c325e1483854f4d2"
+    "mtime": 1794145278.3263907,
+    "seen": 1794145379.0072267,
+    "ast_hash": "",
+    "semantic_hash": "6eb06252e1eba346b21290cb541614cf"
   },
   "offscreen.html": {
     "mtime": 1775164609.297193,
@@ -1242,10 +1242,10 @@
     "semantic_hash": "3476c1ec93a151dc8ef99445b085a165"
   },
   "docs/IMPLEMENTATION_CHECKLIST.md": {
-    "mtime": 1794092948.1760497,
-    "seen": 1794093023.1795542,
-    "ast_hash": "f41f9546e2fac9c3ffd3707b5b2cc9e5",
-    "semantic_hash": "f41f9546e2fac9c3ffd3707b5b2cc9e5"
+    "mtime": 1794145278.3276863,
+    "seen": 1794145379.0072215,
+    "ast_hash": "",
+    "semantic_hash": "c821951389e5ef6f03db439584cabc3c"
   },
   "src/sync/driveTransport.js": {
     "mtime": 1793936060.1213636,
@@ -1548,9 +1548,9 @@
     "semantic_hash": ""
   },
   "tests/threeWayMerge-browser.mjs": {
-    "mtime": 1793936581.7088952,
-    "seen": 1793936586.2390566,
-    "ast_hash": "d0fdea124e4f1afc7aa6bb9fce1fbf8b",
+    "mtime": 1794145092.1268253,
+    "seen": 1794145159.9204373,
+    "ast_hash": "619f8db64240f7934a1133a4f314dcb3",
     "semantic_hash": ""
   },
   "tests/threeWayMerge.test.js": {
@@ -1560,9 +1560,21 @@
     "semantic_hash": ""
   },
   "docs/issues/THREE_WAY_MERGE.md": {
-    "mtime": 1793936994.7293804,
-    "seen": 1794093023.1795762,
-    "ast_hash": "dec862a35443b43c1b5b408e0efa0c74",
-    "semantic_hash": "dec862a35443b43c1b5b408e0efa0c74"
+    "mtime": 1794145184.8130088,
+    "seen": 1794145379.00723,
+    "ast_hash": "",
+    "semantic_hash": "e1fac71d50f9215d21e982012d56ee52"
+  },
+  "src/vault/authenticatedMerge.js": {
+    "mtime": 1794145110.2775009,
+    "seen": 1794145159.9202604,
+    "ast_hash": "71e0f1425673d99a84113b1ad021c7cb",
+    "semantic_hash": ""
+  },
+  "tests/authenticatedMerge.test.js": {
+    "mtime": 1794145110.2775009,
+    "seen": 1794145159.9203064,
+    "ast_hash": "c4787d55e9ebc6d852113fbe97dbfb47",
+    "semantic_hash": ""
   }
 }

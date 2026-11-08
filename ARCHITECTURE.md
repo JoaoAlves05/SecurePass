@@ -25,6 +25,7 @@ The [2026-10-26 backup/Advanced review](docs/REVIEW_BACKUP_ADVANCED.md) adds ide
 | `src/vault/session.js` | Restricted volatile data key, deadline, restoration after worker suspension, immediate generation revocation |
 | `src/vault/queue.js` | Serial operations and a Web Lock across extension contexts |
 | `src/vault/repository.js` | Local-first normal commits, local-preferred reads, internal mutation signing and transactional publication references |
+| `src/vault/authenticatedMerge.js` | Internal signed-history verification, unique common-base selection and guarded decryption before planning; same authorization/epoch only |
 | `src/vault/threeWayMerge.js` | Internal common-base merge planning, opaque revision-bound reviews and deterministic conflict copies; no production integration |
 | `src/vault/sync.js` | Immutable chunks/manifests, integrity checking and divergent heads |
 | `src/vault/syncService.js` | Enable/disable, archive, resolve, merge, retry and compact |
@@ -62,7 +63,7 @@ First remote adoption requires its master password. Selected-version restore wri
 
 Compaction traverses published ancestry and preserves active v2/unversioned copies and unreferenced uploads. Abandoned-upload cleanup, checkpoint-based history retirement and guaranteed capacity for two complete versions remain open. Local recovery uses a durable publication-suppression marker before its local write; a partial operation remains safe from accidental publication, but full cross-store recovery is still an acceptance gap. Production Drive publication remains blocked pending protocol review, device lifecycle and acceptance; public client configuration has already been supplied.
 
-`vault/threeWayMerge.js` is a separate internal planner over already-authenticated snapshots and an explicit common base. It combines independent changes and requires decisions for edit/edit or delete/edit conflicts, preserving notes through stable copy IDs and separate provenance. Opaque reviews expire, bind all revisions/vault/epoch and invoke a live synchronous guard before returning contents. Proposed deleted IDs are not persistent authenticated tombstones. Common-ancestor verification, stale-device rebase and resolution UI remain required; the legacy additive merge is unchanged. See [scope and evidence](docs/issues/THREE_WAY_MERGE.md).
+`vault/threeWayMerge.js` is a separate internal planner over already-authenticated snapshots and an explicit common base. It combines independent changes and requires decisions for edit/edit or delete/edit conflicts, preserving notes through stable copy IDs and separate provenance. Opaque reviews expire, bind all revisions/vault/epoch and invoke a live synchronous guard before returning contents. Proposed deleted IDs are not persistent authenticated tombstones. The internal `authenticatedMerge.js` adapter now verifies common ancestry within one authorization/epoch; production integration, stale-device rebase and resolution UI remain required; the legacy additive merge is unchanged. See [scope and evidence](docs/issues/THREE_WAY_MERGE.md).
 
 ## Settings and data-management contracts
 
@@ -112,3 +113,16 @@ The fill selector uses a compact extension-owned window, starts configured biome
 ## Anchored account selector — 2026-11-05
 
 The normal field-key flow renders `selector/selector.html` as an extension-origin frame after unlock. This frame has only selection-details/fill/cancel/layout/public-settings capabilities; metadata is not sent to the content script. Request ownership binds the source tab/document/field and the selector document. Master input and WebAuthn remain in the non-web-accessible auth window, which can hand ownership to the selector. Explicit native fallback supports CSP-blocked embedding and manual login creation. Only the selector HTML is newly web accessible; the global frame-ancestors directive now permits self/http/https ancestors for it, while auth/management remain outside web-accessible resources. See [security boundaries and acceptance limits](docs/ANCHORED_SELECTOR.md).
+
+
+## Authenticated merge adapter — 2026-11-08
+
+`vault/authenticatedMerge.js` verifies a bounded complete history of signed
+revisions under one verified authorization/epoch, rejects equivocation/cycles and
+selects a unique nearest common ancestor. It decrypts the three snapshots with
+complete entry identities/dates required before import defaults, then delegates
+to the revision-bound opaque planner. Its synchronous caller guard must pin the
+live session, account binding, authorization and heads. It has no storage,
+transport, handler or UI effects. Cross-authorization history, persistent
+tombstones, checkpoint retention and production integration remain pending.
+See [scope and conservative failure behavior](docs/issues/THREE_WAY_MERGE.md).

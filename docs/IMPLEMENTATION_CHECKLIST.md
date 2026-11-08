@@ -1,19 +1,19 @@
 # Checklist de implementação e aceitação
 
-Atualizada em 07/11/2026. Fonte: [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md), versão 3. Release ainda não aceite.
+Atualizada em 08/11/2026. Fonte: [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md), versão 3. Release ainda não aceite.
 
 Uma caixa marcada exige implementação e evidência indicada. Caixas abertas incluem trabalho parcial e aceitação ainda não demonstrada. Os incrementos existentes estão descritos em [SETTINGS_UX_IMPLEMENTATION.md](SETTINGS_UX_IMPLEMENTATION.md); resultados históricos em [VALIDATION.md](VALIDATION.md) não equivalem a testes desta execução.
 
 ## Estado consolidado
 
-Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável) e `82933d8` (planeador de três vias). Última validação de código registada: **227 testes Node, check de 132 módulos e cenário Chromium de três vias aprovados**. Esta reconciliação documental não repete testes de execução.
+Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável) e `82933d8` (planeador de três vias). Última validação de código registada (08/11): **237 testes Node, check de 134 módulos e cenário Chromium de três vias/ancestral autenticado aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
 | Login junto ao campo | Autenticação protegida, pesquisa, duas contas por página, preenchimento direto e fallback | Matriz completa AF08/AF10–AF12, sites/SSO, acessibilidade e hardware |
 | Ligação Google | Client ID recebido, cópia estável gerada, OAuth/inspeção de leitura e disconnect | Autorizar no Chrome real e registar acesso/enumeração com a conta de teste |
 | Publicação Drive | Assinaturas internas, cofre/checkpoint/fila atómicos, runtime com condição de release e uploads retomáveis | Revisão independente, inscrição/gestão de chaves e ativação de produção |
-| Merge de três vias | Planeador interno, decisões vinculadas, eliminação versus edição e cópias estáveis | Ancestral comum autenticado, tombstones persistidos, rebase e UI; convergência distribuída completa |
+| Merge de três vias | Planeador interno, decisões vinculadas, eliminação versus edição e cópias estáveis | Integrar ancestral autenticado interno no produto, tombstones persistidos, rebase e UI; convergência distribuída completa |
 | Dados e migração | Correções locais/legacy e regressões documentadas por incremento | Arquivos grandes, retenção/GC, todas as fronteiras de falha e migração Drive |
 | Aceitação | SC01/SC02 e AF03/AF09 fechados nos limites documentados | 56 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
 
@@ -43,7 +43,8 @@ Branch de implementação: `feature/three-way-sync-merge`, integrada em `main` p
 - [x] Preview opaco sem passwords, decisões completas vinculadas às revisões/época/cofre, prazo de dois minutos, rejeição após bloqueio/descarte e limites do resultado completo.
 - [x] Manter ambas cria ID determinístico e proveniência separada, sem alterar notas; replay/lados invertidos e colisões de IDs têm regressões.
 - [x] Permutações de três escritores com a mesma base testadas; identidade UTF-8 da cópia comparada entre Node e Chromium.
-- [ ] Integrar ancestral comum autenticado, tombstones persistidos/assinados, resolução administrativa e UI. O planeador não altera o merge legacy nem ativa escrita Drive; os SC completos continuam abertos. [Issue](issues/THREE_WAY_MERGE.md).
+- [x] Adaptador interno de ancestral comum autenticado (08/11): verifica assinaturas, DAG completo e base única antes de decifrar/planear; limites e guardas de sessão. Evidência desta execução em VALIDATION.md.
+- [ ] Integrar descoberta/ancestral autenticado no produto, tombstones persistidos/assinados, resolução administrativa e UI. O planeador não altera o merge legacy nem ativa escrita Drive; os SC completos continuam abertos. [Issue](issues/THREE_WAY_MERGE.md).
 
 ## Baseline histórica — execução inicial
 
@@ -286,7 +287,7 @@ Cada SD deve ser reconciliado com as correções posteriores, testes persistente
 
 1. Rever formato, serialização, nonces e bootstrap antes de habilitar escrita Drive; concluir inscrição/revogação/rotação, gestão de chaves e kit.
 2. Executar autorização/inspeção Google real em paralelo com a implementação restante; integrar descoberta/seleção de cofre e vínculos no produto.
-3. Ligar o planeador de três vias ao ancestral comum autenticado, tombstones/proveniência persistidos, rebase e UI; validar convergência de histórias completas.
+3. Integrar no produto o adaptador interno de ancestral autenticado/planeador de três vias, tombstones/proveniência persistidos, rebase e UI; validar convergência de histórias completas.
 4. Fechar fronteiras de falha, persistência/recuperação, quotas/GC, retenção e arquivos legacy grandes.
 5. Implementar e validar migração retomável, coexistência com clientes antigos e downgrade.
 6. Executar aceitação Google/hardware/sites/acessibilidade e revisão independente; reconciliar cada SD/SC/AF com evidência antes de fechar a release.
