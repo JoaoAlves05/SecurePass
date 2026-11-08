@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **257 Node tests, 142 checked modules and Chromium authenticated-merge commit, three-way/history and Drive atomic-commit scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **266 Node tests, 148 checked modules and Chromium protected Drive review, Settings and authenticated-merge commit scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -347,3 +347,38 @@ parents, checkpoint and replay rejection. Existing `test:three-way-browser` and
 `test:drive-commit-browser` passed; packaging passed. No cloud write or public
 route is activated. The prior block's general/settings/PRF/Sync/checkpoint UI
 results retain their own evidence; this block does not rerun those UI suites.
+
+
+## Protected Drive review UI and routes — 2026-11-08
+
+`npm test`: **266/266 passed**; `npm run check`: **148 modules passed**.
+Eight review-service regressions cover owned metadata-only responses and one-shot
+commit, cancellation during I/O, unpublished local heads, cancellation during
+encryption checked at commit, quarantine of invalid/cyclic copies, bounded review
+count/expiry/clock rollback, lock/account/replacement invalidation and forbidden
+content/auth/selector routes. The cancellation regression proves ordinary vault
+operations remain responsive while network preparation is pending. One additional
+Google regression prevents a cancelled noninteractive token result from starting
+late account/file reads.
+
+`test:drive-review-browser` passed actual UI and background routes with an
+internally enrolled fixture and emulated provider: cancel during fetch, owner
+isolation across documents, required decisions, keyboard Tab, light/dark at
+320×560 popup and 1200×900 tab, no horizontal overflow, 18 conflicts with eight
+rows/page, search/page choice persistence, explicit matching-unresolved bulk,
+signed atomic save, unpublished subsequent local heads and lock privacy. It also
+asserts provider GETs only and no persisted OAuth token. Its fixture is statically
+imported only into a disposable configured copy; no test hook ships in the ZIP.
+
+`test:settings-browser`, `test:merge-commit-browser` and packaging passed.
+Nine new screenshots in `screenshots/drive-review/` cover top/action scroll states
+and the many-conflict journey. The Impeccable fresh visual reviewer returned
+`ship` with no material fixes for this scoped extension; this is UI evidence,
+not independent protocol/security acceptance. Existing unrelated global detector
+findings remain unchanged. [Design record](DRIVE_REVIEW_DESIGN.md).
+
+Public device enrollment, first/second-device adoption, administrative lifecycle,
+cross-authorization/epoch history/rebase, distributed retention, migration and
+production delivery remain open. Real Google, physical PRF and independent
+security review still require external evidence. New UI availability does not
+create a public way to activate writing.

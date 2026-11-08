@@ -494,6 +494,33 @@
                   <button id="inspectGoogle" class="secondary compact-btn" type="button" hidden>Check app folder</button>
                   <button id="disconnectGoogle" class="secondary compact-btn" type="button" hidden>Disconnect</button>
                 </div>
+                <div id="driveMergeTools" hidden>
+                  <button id="inspectDriveCopies" class="secondary" type="button">Review Drive copies</button>
+                  <section id="driveReviewPanel" class="drive-review-panel" aria-labelledby="driveReviewTitle" hidden>
+                    <h5 id="driveReviewTitle" tabindex="-1">Review Drive changes</h5>
+                    <p id="driveReviewMessage" class="settings-info" role="status" aria-live="polite"></p>
+                    <div id="driveCopySelection" class="drive-copy-selection" hidden>
+                      <label for="driveCopies">Verified copy</label>
+                      <select id="driveCopies"></select>
+                      <button id="compareDriveCopy" class="secondary" type="button">Compare selected copy</button>
+                    </div>
+                    <form id="driveReviewForm" hidden>
+                      <p id="driveReviewSummary" class="settings-info"></p>
+                      <div id="driveConflictTools" class="drive-conflict-tools" hidden>
+                        <label for="driveConflictSearch">Find a conflict</label>
+                        <input id="driveConflictSearch" type="search" placeholder="Search site or username" maxlength="255" />
+                        <label for="driveBulkChoice">Choose for matching unresolved conflicts</label>
+                        <select id="driveBulkChoice"><option value="">Choose a policy…</option><option value="both">Keep both where two versions exist</option><option value="local">Use this device, including its deletions</option><option value="remote">Use Drive, including its deletions</option></select>
+                        <button id="driveBulkApply" class="secondary" type="button" disabled>Apply choice</button>
+                        <div class="drive-conflict-navigation"><button id="driveConflictPrevious" class="secondary" type="button">Previous</button><p id="driveConflictRange" class="settings-info" role="status"></p><button id="driveConflictNext" class="secondary" type="button">Next</button></div>
+                      </div>
+                      <div id="driveConflicts"></div>
+                      <p class="settings-info">Saving combines these versions on this device and queues the result for Drive. Sending is currently paused.</p>
+                      <button id="commitDriveReview" class="primary" type="submit">Save combined vault</button>
+                    </form>
+                    <button id="cancelDriveReview" class="secondary" type="button">Cancel review</button>
+                  </section>
+                </div>
               </div>
               <div class="settings-group-heading"><h4>Chrome Sync</h4><p class="row-sub">Make encrypted vault copies available through Chrome. Restoring or combining copies on another device is manual.</p></div>
               <div class="card legacy-card">

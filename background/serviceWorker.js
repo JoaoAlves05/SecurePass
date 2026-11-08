@@ -14,6 +14,7 @@ import { clearCheckpointPreviews } from '../src/vault/checkpoints.js';
 import { withVaultLock } from '../src/vault/queue.js';
 import { driveHandlers } from '../src/messageHandlers/driveHandlers.js';
 import { driveRuntime } from '../src/sync/driveRuntime.js';
+import { driveReview } from '../src/vault/driveReview.js';
 
 const handlers = new Map([...vaultHandlers, ...biometricHandlers, ...utilHandlers, ...driveHandlers]);
 // Set access levels before processing even the first request after a worker restart.
@@ -48,6 +49,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
 });
 
 onVaultLock(() => {
+  driveReview.clear();
   const cleanup = Promise.all([removeStorage('session', 'backupPreview'), clearCheckpointPreviews(), cancelMasterAuthorization(), clearRequests(), cancelCeremonies(), clearCandidates()]);
   chrome.runtime.sendMessage({ type: 'VAULT_LOCKED' }).catch(() => {});
   chrome.tabs.query({}).then(tabs => Promise.allSettled(tabs.map(tab => chrome.tabs.sendMessage(tab.id, { type: 'VAULT_LOCKED' })))).catch(() => {});

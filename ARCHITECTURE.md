@@ -25,6 +25,7 @@ The [2026-10-26 backup/Advanced review](docs/REVIEW_BACKUP_ADVANCED.md) adds ide
 | `src/vault/session.js` | Restricted volatile data key, deadline, restoration after worker suspension, immediate generation revocation |
 | `src/vault/queue.js` | Serial operations and a Web Lock across extension contexts |
 | `src/vault/repository.js` | Local-first normal commits, local-preferred reads, internal mutation signing and transactional publication references |
+| `src/vault/driveReview.js` | Management-only signed-copy inspection and document-owned cancellable review capabilities; no network I/O under the vault lock |
 | `src/vault/mergeService.js` | Internal authenticated Drive merge application with fixed trust/binding, revision CAS and atomic signed vault/checkpoint/outbox commit |
 | `src/vault/payload.js` | Versioned encrypted content, persistent tombstones, explicit restoration provenance and aggregate history capacity |
 | `src/vault/driveMerge.js` | Internal bounded read-only Drive history retrieval and inventory recheck before authenticated merge planning |
@@ -169,3 +170,28 @@ prevent preparation under a newer binding/authorization from silently rebinding
 an older review. Commit atomically stores live state/checkpoint/signed outbox;
 success consumes the review, rollback preserves it for a guarded retry. No
 management handler/UI or production Drive activation is added in this block.
+
+
+## Protected Drive review — 2026-11-08
+
+`vault/driveReview.js` verifies/decrypts bounded remote copy metadata, quarantines
+invalid or equivocal identities/cycles and rechecks inventory/context. It includes
+current-authorized signed local outbox packets when preparing a merge, supporting
+unpublished local heads. Only an unlocked vault with configured connected Google,
+current pinned authorization and an already-enrolled writer can enter this flow.
+The five `DRIVE_REVIEW_*` routes are management-only; mutating/inspection requests
+also bind the management client nonce and browser document/tab identity. Tokens
+live only in memory, expire after two minutes and are discarded on replacement,
+cancel, disconnect or lock; a worker restart loses them safely. Preparations are
+bounded to eight requests and two minutes, 256 packets/32 MiB; no network I/O
+holds the vault operation lock. Abort propagates through token/account/file reads.
+The atomic commit composes session and review guards, preventing cancellation or
+expiry during signing from turning into a late write.
+
+`popup/modules/driveReview.js` extends the existing Advanced Google group. It
+shows signed/decrypted counts and metadata, requires whole-version conflict
+choices, pages eight rows, retains choices across search/pages and provides an
+explicit bulk policy limited to matching unresolved conflicts. Passwords/notes
+are absent from preview responses and DOM; lock clears the view. Sending remains
+paused. No public enrollment, new permissions or production activation is added.
+[Interaction, visuals and verification](docs/DRIVE_REVIEW_DESIGN.md).

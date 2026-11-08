@@ -35,7 +35,7 @@ export async function commitRecord(record, expected, options = {}) {
   }
   await writeLocalVaultRecordRaw(record, expected, {
     ...options, pendingSync: enabled,
-    ...(prepared ? { drivePublication: prepared.packet, expectedDriveBinding: prepared.binding, validateCommit: prepared.assertSession } : {})
+    ...(prepared ? { drivePublication: prepared.packet, expectedDriveBinding: prepared.binding, validateCommit: () => { options.validateCommit?.(); prepared.assertSession?.(); } } : {})
   });
   if (enabled) await publishLocalRecord(record);
 }

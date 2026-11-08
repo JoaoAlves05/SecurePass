@@ -15,6 +15,7 @@ import { attachSyncListeners } from './modules/sync.js';
 import { attachMasterPasswordListeners } from './modules/masterPassword.js';
 import { attachSettingsNavigation } from './modules/settingsNavigation.js';
 import { attachDriveListeners } from './modules/drive.js';
+import { attachDriveReviewListeners } from './modules/driveReview.js';
 
 import { state } from './state.js';
 import { resetInactivityTimer, clearSensitiveUI, refreshState } from './modules/vaultSession.js';
@@ -32,6 +33,7 @@ async function initialise() {
   document.addEventListener('vault-entries-changed', renderEntries);
   attachCandidateListeners(); attachUIListeners(); attachVaultUnlockListeners(); attachGeneratorListeners(); attachTesterListeners(); attachSettingsListeners(); attachBiometricListeners(); attachDataListeners(); attachSyncListeners(); attachManagementListeners(); attachSettingsNavigation(); attachMasterPasswordListeners();
   attachDriveListeners();
+  attachDriveReviewListeners();
   $('addEntry').addEventListener('click', () => openEntryModal());
   $('lockVault').addEventListener('click', () => lockVault(true));
   $('vaultSearch').addEventListener('input', event => { state.filter = event.target.value; renderEntries(); resetInactivityTimer(); });

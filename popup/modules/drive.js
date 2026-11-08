@@ -23,6 +23,7 @@ export async function refreshGoogleView() {
     : connection.connecting ? 'Waiting for Google authorization…'
     : connection.connected ? `Connected${connection.email ? ` as ${connection.email}` : ''}. Your vault has not been sent to Drive.`
     : messages[connection.errorCode] || 'No Google account connected. Connecting checks access without sending your vault.';
+  document.dispatchEvent(new CustomEvent('google-connection-changed', { detail: { connected: connection.connected } }));
 }
 async function act(type) {
   if (busy && type !== 'GOOGLE_DISCONNECT') return;

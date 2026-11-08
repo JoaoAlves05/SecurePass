@@ -2929,6 +2929,28 @@ body[data-theme='dark'] .alert-box.warning {
 .operation-field input, .operation-field select { width: 100%; min-height: 44px; padding: 11px 12px; color: var(--text); caret-color: var(--primary); background: var(--surface-raised); border: 1px solid color-mix(in srgb, var(--text-muted) 35%, transparent); border-radius: var(--radius-sm); font: inherit; font-weight: 400; }
 .operation-password input { padding-right: 66px; }
 .operation-field input:focus-visible, .operation-field select:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+#driveMergeTools { padding: 0 16px 16px; color: var(--text); }
+.drive-review-panel { display: grid; gap: 14px; margin-block-start: 20px; min-width: 0; }
+.drive-review-panel h5 { margin: 0; font-size: 15px; color: var(--text); }
+.drive-review-panel .settings-info { padding: 0; font-size: 13px; }
+.drive-copy-selection, #driveReviewForm { display: grid; gap: 12px; min-width: 0; }
+.drive-review-panel[hidden], .drive-copy-selection[hidden], #driveReviewForm[hidden] { display: none; }
+.drive-review-panel select, .drive-review-panel input[type='search'] { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--text-muted) 35%, transparent); border-radius: var(--radius-sm); color: var(--text); background: var(--surface-raised); caret-color: var(--primary); font: inherit; }
+.drive-review-panel input::placeholder { color: var(--text-muted); opacity: 1; }
+.drive-review-panel select:focus-visible, .drive-review-panel input:focus-visible, #driveMergeTools button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+#driveMergeTools .primary, #driveMergeTools .secondary { min-height: 44px; border-radius: var(--radius-sm); box-shadow: none; backdrop-filter: none; transform: none; transition: background-color 160ms ease; }
+#driveMergeTools .primary { color: #fff; background: color-mix(in srgb, var(--primary) 85%, var(--text) 15%); }
+body[data-theme='dark'] #driveMergeTools .primary { color: var(--bg); background: var(--primary); }
+#driveMergeTools .secondary { color: var(--text); background: var(--surface-raised); }
+.drive-conflict-tools { display: grid; gap: 8px; min-width: 0; }
+.drive-conflict-tools[hidden] { display: none; }
+.drive-conflict-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-block: 8px; }
+.drive-conflict-navigation .settings-info { flex: 1 1 100px; }
+.drive-review-conflict { min-inline-size: 0; margin: 0 0 16px; padding: 14px; border: 1px solid color-mix(in srgb, var(--text-muted) 35%, transparent); border-radius: var(--radius-sm); overflow-wrap: anywhere; }
+.drive-review-conflict legend { padding-inline: 4px; font-weight: 600; }
+.drive-review-conflict p { margin-block: 8px; font-size: 13px; }
+.drive-review-conflict label { display: block; margin-block: 14px 6px; }
 .operation-dialog .operation-hint { font-size: 12px; font-weight: 400; line-height: 1.5; }
 .operation-password .password-reveal { position: absolute; inset: 1px 1px 1px auto; min-width: 58px; padding: 0 12px; border: 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font: inherit; font-size: 12px; font-weight: 600; background: transparent; color: var(--text-muted); cursor: pointer; }
 .operation-password .password-reveal:hover { color: var(--text); background: var(--bg-subtle); }

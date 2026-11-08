@@ -56,3 +56,16 @@ no vault/outbox/remote mutation occurs. The reader still owns pagination, stream
 limits, account checks and network errors. A final listing is a race check, not
 proof of provider freshness or a distributed transaction. This path has no public
 route and does not activate synchronization. [Scope and evidence](issues/AUTHENTICATED_DRIVE_HISTORY.md).
+
+
+## Protected management review — 2026-11-08
+
+`vault/driveReview.js` now exposes verified/decrypted copy inspection and owned
+merge reviews through management-only routes. An already-enrolled writer and
+current trusted context are required; ordinary connection does not enroll one.
+Preparation is bounded/cancellable, omits password/note values, quarantines bad
+copies and verifies the inventory again. Signed pending local packets supply
+unpublished heads. Token/account/file reads honour cancellation without holding
+the vault lock. Confirmation can commit a signed merged revision locally and
+queue it; the worker production gate is unchanged and the UI states sending is
+paused. [Scoped design and evidence](DRIVE_REVIEW_DESIGN.md).

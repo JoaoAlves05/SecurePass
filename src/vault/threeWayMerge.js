@@ -96,6 +96,22 @@ export async function resolveThreeWayPayload(plan, decisions, currentIdentity, r
 
 export function discardThreeWayMerge(plan) { plans.delete(plan); }
 
+export function assertThreeWayMergeCurrent(plan) {
+  const state = plans.get(plan);
+  if (!state) throw new Error('Merge review expired or was discarded.');
+  checkCurrent(state.assertCurrent);
+  if (Date.now() < state.createdAt || Date.now() >= plan.expiresAt) throw new Error('Merge review expired. Review again.');
+}
+
+export function describeThreeWayMerge(plan) {
+  const state = plans.get(plan);
+  if (!state) throw new Error('Merge review expired or was discarded.');
+  checkCurrent(state.assertCurrent);
+  if (Date.now() < state.createdAt || Date.now() >= plan.expiresAt) throw new Error('Merge review expired. Review again.');
+  const metadata = entry => entry ? { site: entry.site, username: entry.username, updatedAt: entry.updatedAt } : null;
+  return { automatic: plan.automatic, deleted: plan.deleted, expiresAt: plan.expiresAt, conflicts: state.conflicts.map(item => ({ id: item.id, type: item.type, local: metadata(item.local), remote: metadata(item.remote), passwordChanged: Boolean(item.local && item.remote && item.local.password !== item.remote.password), notesChanged: Boolean(item.local && item.remote && item.local.notes !== item.remote.notes) })) };
+}
+
 export async function resolveThreeWayMerge(plan, decisions, currentIdentity) {
   const state = plans.get(plan);
   if (!state) throw new Error('Merge review expired or was discarded.');

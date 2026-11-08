@@ -2,14 +2,14 @@ import { withVaultOperation } from './queue.js';
 import { readLocalVaultRecordRaw } from '../utils/storage.js';
 import * as session from './session.js';
 import { authenticatedMergeContext } from './authenticatedMerge.js';
-import { resolveThreeWayPayload, discardThreeWayMerge } from './threeWayMerge.js';
+import { resolveThreeWayPayload, discardThreeWayMerge, assertThreeWayMergeCurrent } from './threeWayMerge.js';
 import { encryptMergedPayload } from './crypto.js';
 import { commitRecord } from './repository.js';
 import { loadAuthorization } from '../sync/authorizationStore.js';
 import { publicationStore } from '../sync/publicationStore.js';
 import { sameBinding } from '../sync/publicationModel.js';
 
-// Internal application of a signed Drive review, with no message route yet.
+// Applies a signed Drive review through the protected management workflow.
 export function applyAuthenticatedMerge(plan, decisions) {
   const choices = structuredClone(decisions);
   return withVaultOperation(async epoch => {
@@ -29,7 +29,7 @@ export function applyAuthenticatedMerge(plan, decisions) {
       session.assertGeneration(epoch);
       // commitRecord prepares the normal signed mutation; its transaction
       // rechecks writer binding, authorization, session and expected revision.
-      await commitRecord(record, current.revision, { requireDriveContext: context });
+      await commitRecord(record, current.revision, { requireDriveContext: context, validateCommit: () => assertThreeWayMergeCurrent(plan) });
       discardThreeWayMerge(plan);
       await session.activate(record, payload.entries, active.bytes, epoch);
       return { revision: record.revision, count: payload.entries.length };

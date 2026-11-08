@@ -6,14 +6,14 @@ Uma caixa marcada exige implementação e evidência indicada. Caixas abertas in
 
 ## Estado consolidado
 
-Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive) e `618cde2` (tombstones persistidos). Última validação de código registada (08/11): **257 testes Node, check de 142 módulos e cenários Chromium de merge atómico, três vias e commit Drive aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
+Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos) e `7f198f4` (commit de merge autenticado). Última validação de código registada (08/11): **266 testes Node, check de 148 módulos e cenários Chromium de revisão Drive, Settings e commit de merge aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
 | Login junto ao campo | Autenticação protegida, pesquisa, duas contas por página, preenchimento direto e fallback | Matriz completa AF08/AF10–AF12, sites/SSO, acessibilidade e hardware |
 | Ligação Google | Client ID recebido, cópia estável gerada, OAuth/inspeção de leitura e disconnect | Autorizar no Chrome real e registar acesso/enumeração com a conta de teste |
 | Publicação Drive | Assinaturas internas, cofre/checkpoint/fila atómicos, runtime com condição de release e uploads retomáveis | Revisão independente, inscrição/gestão de chaves e ativação de produção |
-| Merge de três vias | Planeador interno, decisões vinculadas, eliminação versus edição e cópias estáveis | UI/rotas protegidas do serviço de merge, rebase e integração de produção; convergência distribuída completa |
+| Merge de três vias | Planeador interno, decisões vinculadas, eliminação versus edição e cópias estáveis | Inscrição pública/seleção de cofre, rebase e ativação de produção; convergência distribuída completa |
 | Dados e migração | Correções locais/legacy e regressões documentadas por incremento | Arquivos grandes, retenção/GC, todas as fronteiras de falha e migração Drive |
 | Aceitação | SC01/SC02 e AF03/AF09 fechados nos limites documentados | 56 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
 
@@ -47,7 +47,8 @@ Branch de implementação: `feature/three-way-sync-merge`, integrada em `main` p
 - [x] Recolha interna Drive de antecessores assinados (08/11): paginação pelo leitor limitado, cópias duplicadas verificadas, pacotes locais pendentes, reenumeração e cancelamento; sem efeitos persistentes. [Contrato](issues/AUTHENTICATED_DRIVE_HISTORY.md).
 - [x] Tombstones cifrados nas mutações, proveniência de restauro explícito, preservação em rotação/checkpoints, limites totais e recusa de ressurreição implícita; payload novo recusa downgrade silencioso. [Contrato](VAULT_PAYLOAD.md).
 - [x] Serviço interno de commit do merge autenticado: história/cópias persistidas, decisão explícita para tombstones sem base viva, contexto Drive fixado, CAS e cofre/checkpoint/outbox assinado atómicos. [Contrato](issues/PERSISTED_MERGE.md).
-- [ ] Expor descoberta/revisão/commit em rotas e UI protegidas, concluir resolução administrativa, rebase e integração de produção. O planeador não altera o merge legacy nem ativa escrita Drive; os SC completos continuam abertos. [Issue](issues/THREE_WAY_MERGE.md).
+- [x] Rotas e UI protegidas de inspeção/preview/decisões/commit para writer já inscrito: tokens por documento/instância, expiração/cancelamento, pesquisa, oito conflitos por página, escolhas mantidas e lote explícito; sem passwords no preview. [Contrato](issues/DRIVE_MERGE_REVIEW.md).
+- [ ] Concluir inscrição pública/seleção de cofre, resolução administrativa, rebase e integração de produção. O planeador não altera o merge legacy nem ativa escrita Drive; os SC completos continuam abertos. [Issue](issues/THREE_WAY_MERGE.md).
 
 ## Baseline histórica — execução inicial
 
@@ -290,7 +291,7 @@ Cada SD deve ser reconciliado com as correções posteriores, testes persistente
 
 1. Rever formato, serialização, nonces e bootstrap antes de habilitar escrita Drive; concluir inscrição/revogação/rotação, gestão de chaves e kit.
 2. Executar autorização/inspeção Google real em paralelo com a implementação restante; integrar descoberta/seleção de cofre e vínculos no produto.
-3. Expor recolha/planeador/commit atómico de três vias em rotas e UI protegidas; concluir rebase entre autorizações/épocas, retenção e convergência de histórias completas.
+3. Concluir rebase entre autorizações/épocas, retenção e convergência de histórias completas; ligar o fluxo de revisão entregue ao enrollment público após revisão do protocolo.
 4. Fechar fronteiras de falha, persistência/recuperação, quotas/GC, retenção e arquivos legacy grandes.
 5. Implementar e validar migração retomável, coexistência com clientes antigos e downgrade.
 6. Executar aceitação Google/hardware/sites/acessibilidade e revisão independente; reconciliar cada SD/SC/AF com evidência antes de fechar a release.

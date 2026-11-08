@@ -45,6 +45,12 @@ export const publicationStore = {
   },
   disable() { return access(state => { state.enabled = false; }, true); },
   context() { return access(state => ({ enabled: state.enabled, binding: state.binding, writer: state.writer || null })); },
+  pendingPackets(binding) {
+    return access((state, head) => {
+      if (!state.enabled || !sameBinding(state.binding, binding)) throw new Error('Drive binding changed or disabled.');
+      return state.operations.filter(operation => typeof head === 'string' && sameBinding(operation.binding, binding) && operation.authorization === head).map(operation => ({ body: operation.publication.body, publication: { vaultId: operation.publication.vaultId, revisionId: operation.publication.revisionId } }));
+    });
+  },
   installWriter(binding, writer, authorization, validateCommit) {
     const pinned = structuredClone(writer);
     return access((state, head) => {

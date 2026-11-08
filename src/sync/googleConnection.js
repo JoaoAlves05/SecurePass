@@ -66,20 +66,24 @@ export async function assertGoogleBinding(binding) {
   if (connection.state !== 'connected' || connection.accountId !== binding.accountId ||
     (await getStorage('local', 'localRestorePending')).localRestorePending) throw new DriveError('binding-changed');
 }
-export async function getBoundGoogleToken(binding) {
+export async function getBoundGoogleToken(binding, { signal } = {}) {
+  signal?.throwIfAborted();
   await assertGoogleBinding(binding);
+  signal?.throwIfAborted();
   const token = await authToken(false);
+  signal?.throwIfAborted();
   // A cached token can belong to a different signed-in Chrome account. Verify
   // its provider identity before returning it for any bound list/upload request.
   const reader = createDriveReader({ getToken: async () => token, assertBinding: () => assertGoogleBinding(binding) });
   let account;
-  try { account = await reader.account(binding); }
+  try { account = await reader.account(binding, { signal }); }
   catch (error) {
     if (error.code === 'authentication-required') await chrome.identity.removeCachedAuthToken({ token }).catch(() => {});
     throw error;
   }
   if (account.accountId !== binding.accountId) throw new DriveError('account-changed');
   await assertGoogleBinding(binding);
+  signal?.throwIfAborted();
   return token;
 }
 export async function inspectGoogleFiles() {

@@ -16,31 +16,8 @@ const { planDriveMerge } = await import('../src/vault/driveMerge.js');
 const { applyAuthenticatedMerge } = await import('../src/vault/mergeService.js');
 const { planThreeWayMerge, resolveThreeWayPayload } = await import('../src/vault/threeWayMerge.js');
 const { createPayload, combinePayloadHistory, MAX_HISTORY_ITEMS } = await import('../src/vault/payload.js');
-const PASS = 'Fictional merge commit master password 123!';
-const entry = (id, password = 'fictional') => ({ id, site: 'https://example.com', username: id, password, notes: 'x'.repeat(4096), createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' });
+const { PASS, entry, setup } = await import('./helpers/mergeFixture.js');
 beforeEach(async () => { await vault.lockVault(); resetStorage(); });
-async function setup() {
-  const { record: base, bytes } = await crypt.createRecord([entry('a'), entry('b')], PASS);
-  await writeLocalVaultRecordRaw(base, null);
-  const localEntries = [entry('a', 'alpha')];
-  const local = await crypt.encryptEntries(base, localEntries, bytes);
-  const remote = await crypt.encryptEntries(base, [entry('a', 'beta'), entry('b'), entry('c')], bytes);
-  const unselected = await crypt.encryptEntries(base, [entry('unselected')], bytes);
-  await writeLocalVaultRecordRaw(local, base.revision);
-  await session.activate(local, localEntries, bytes, session.generation(), { authenticated: true });
-  const active = await vault.requireVault();
-  const admin = await protocol.generateSigningKey(); const device = await createDeviceKey(bytes, local);
-  const genesis = await protocol.createAuthorization({ kind: 'securepass-authorization', version: 1, vaultId: base.vaultId, keyEpoch: base.keyEpoch, revision: 'auth', previous: null, adminKey: admin.publicKey, devices: [{ id: 'writer', publicKey: device.envelope.publicKey }] }, admin.privateKey);
-  const authorization = await pinAuthorization([genesis], { vaultId: base.vaultId, rootFingerprint: await protocol.signingKeyFingerprint(admin.publicKey) });
-  const binding = { accountId: 'fictional-account', vaultId: base.vaultId, generation: 'one' };
-  await store.configure(binding, true); await installLocalWriter(binding, 'writer', device.envelope);
-  const packets = await Promise.all([base, local, remote, unselected].map(async record => ({ body: await protocol.createSignedRevision(record, 'writer', device.privateKey, authorization), publication: { vaultId: base.vaultId, revisionId: record.revision } })));
-  const files = packets.map((packet, i) => ({ id: `file-${i}`, appProperties: { ...packet.publication } }));
-  const reader = { list: async () => files, download: async (binding, id) => packets[Number(id.slice(5))].body };
-  const assertCurrent = () => { session.assertGeneration(active.epoch); if (active.deadline <= Date.now()) throw new Error('Vault is locked'); };
-  const plan = await planDriveMerge({ reader, binding, local: local.revision, remote: remote.revision, authorization, bytes, assertCurrent });
-  return { base, bytes, local, remote, unselected, active, plan, binding, admin, device, genesis, authorization };
-}
 test('authenticated merge atomically persists entries, tombstones, copy provenance, checkpoint and signed outbox', async () => {
   const f = await setup();
   const result = await applyAuthenticatedMerge(f.plan, { a: 'both' });

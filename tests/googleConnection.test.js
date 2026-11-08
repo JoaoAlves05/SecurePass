@@ -83,3 +83,15 @@ test('account verification failure remains distinct from successful empty discov
   const reader = createDriveReader({ getToken: async () => 'fictional', assertBinding: async () => {}, fetchImpl: async () => Response.json({ user: { emailAddress: 'only-email@example.com' } }) });
   await assert.rejects(reader.account({}), /invalid-account/);
 });
+
+test('cancelled noninteractive token acquisition cannot continue into account or file reads', async () => {
+  await google.connectGoogle(); calls.length = 0;
+  const binding = { accountId: accountId, generation: areas.local.googleDriveConnection.generation };
+  let requested; let finish;
+  const started = new Promise(resolve => { requested = resolve; });
+  chrome.identity.getAuthToken = () => { requested(); return new Promise(resolve => { finish = resolve; }); };
+  const controller = new AbortController();
+  const pending = google.getBoundGoogleToken(binding, { signal: controller.signal });
+  await started; controller.abort(); finish({ token: 'cancelled-fictional-token' });
+  await assert.rejects(pending, { name: 'AbortError' }); assert.equal(calls.length, 0);
+});
