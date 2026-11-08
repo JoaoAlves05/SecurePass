@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **280 Node tests, 155 checked modules and Chromium guided recovery-export and Settings scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **280 Node tests, 156 checked modules and Chromium backup-preview lock, guided recovery-export and Settings scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -444,3 +444,26 @@ per-file UI. Full SD07/SD18/SD19 reconciliation remains open.
 `npm run test:settings-browser` and packaging passed. SC40 is recorded complete
 within these explicit reader/batch limits. Real Google, physical PRF, independent
 security review and the other open SC/AF cases remain unaccepted.
+
+
+## Cancel delayed backup previews on lock — 2026-11-08
+
+`npm test`: **280/280 passed**; `npm run check`: **156 modules passed**.
+`npm run test:backup-lock-browser` first reproduced the bug on the original code:
+a real authenticated preview response delivered after lock opened `Confirm import`.
+
+The regression now passes after adding explicit cancel-on-lock to the preview
+operation. It holds the actual background callback, waits for the real UI lock
+event, and verifies immediate dialog closure, empty password fields, no session
+preview and an unchanged destination revision. It unlocks and opens another
+backup-password dialog before delivering the old response. That old response must
+not open confirmation, clear the new input or disable its action. The new review
+and import then succeed with the original destination entries preserved.
+
+Cancellation removes owned form-value references and aria-busy state. The default
+handling for a deliberate post-commit mutation lock remains intact; Settings
+including master rotation, checkpoints, backup dialogs, recovery UI and guided export passed again. Packaging
+passed. The Node total is unchanged because the new persistent regression runs
+in actual Chromium. No layout/theme changes or replacement screenshots are part
+of this security correction. Full SC44 and release acceptance remain open; this
+is evidence for the reproduced preview race only.

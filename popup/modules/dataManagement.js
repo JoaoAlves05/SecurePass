@@ -48,6 +48,7 @@ async function importFile(input) {
   const encrypted = data.kind === 'securepass-encrypted-backup';
   const review = await requestOperation({
     title: encrypted ? 'Unlock your backup' : 'Review unencrypted backup',
+    cancelOnLock: true,
     description: encrypted ? 'Use the backup password chosen when this file was exported. Your current vault’s master password will stay the same.' : 'This file contains unencrypted credentials. Import it only from a source you trust.',
     fields: [...(encrypted ? [password('backupPassword', 'Backup password')] : []), { name: 'strategy', label: 'If an account differs', options: [{ value: 'keep-both', label: 'Keep both versions' }, { value: 'skip', label: 'Keep current entries' }, { value: 'replace', label: 'Replace matching entries' }] }],
     confirmLabel: 'Preview import',

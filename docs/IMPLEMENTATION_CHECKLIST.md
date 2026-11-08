@@ -6,7 +6,7 @@ Uma caixa marcada exige implementação e evidência indicada. Caixas abertas in
 
 ## Estado consolidado
 
-Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida) e `2e2ce4d` (arquivos grandes). Última validação de código registada (08/11): **280 testes Node, check de 155 módulos e cenários Chromium de exportação em lote e Settings aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
+Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes) e `1405a9d` (lote de exportação). Última validação de código registada (08/11): **280 testes Node, check de 156 módulos e cenários Chromium de preview de backup durante lock, exportação em lote e Settings aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
@@ -15,9 +15,19 @@ Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquis
 | Publicação Drive | Assinaturas internas, cofre/checkpoint/fila atómicos, runtime com condição de release e uploads retomáveis | Revisão independente, inscrição/gestão de chaves e ativação de produção |
 | Merge de três vias | Planeador interno, decisões vinculadas, eliminação versus edição e cópias estáveis | Inscrição pública/seleção de cofre, rebase e ativação de produção; convergência distribuída completa |
 | Dados e migração | Correções locais/legacy, leitor de arquivos até 256 MiB e lote guiado por digest | Retenção/GC, todas as fronteiras de falha e migração Drive |
-| Aceitação | SC01/SC02 e AF03/AF09 fechados nos limites documentados | 55 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
+| Aceitação | SC01/SC02/SC40 e AF03/AF09 fechados nos limites documentados | 55 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
 
 As caixas por secção abaixo representam aceitação integral, não ausência de implementação. Componentes internos não equivalem a funcionalidades ativadas na interface.
+
+## Preview de backup durante lock — 08/11/2026
+
+Issue/reprodução: [BACKUP_PREVIEW_LOCK.md](issues/BACKUP_PREVIEW_LOCK.md).
+
+- [x] Reproduzir em Chromium uma resposta autenticada de preview que abria confirmação depois do lock.
+- [x] Cancelar imediatamente o preview pendente no lock, limpar valores/formulário/estado busy e descartar resposta tardia sem abrir confirmação.
+- [x] Entregar a resposta antiga enquanto um novo diálogo já existe: não limpar a nova password, não alterar os controlos e permitir novo import válido.
+- [x] Verificar revisão/sessão inalteradas após cancelamento; suites Settings/rotação e exportação em lote mantêm sucesso, incluindo lock tardio.
+- [ ] SC44 completo: outros percursos de password/merge/export/biometria, auto-lock e aceitação externa continuam separados. Não fechar o cenário integral por esta correção.
 
 ## Exportação guiada de versões — 08/11/2026
 

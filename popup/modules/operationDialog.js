@@ -2,12 +2,14 @@ let active = null;
 export function cancelOperation() {
   if (!active) return;
   const pending = active; active = null;
+  if (pending.values) for (const key of Object.keys(pending.values)) delete pending.values[key];
   pending.dialog.querySelectorAll('input').forEach(input => { input.value = ''; });
   document.getElementById('operationSummary').replaceChildren();
   document.getElementById('operationFields').replaceChildren();
+  pending.dialog.removeAttribute('aria-busy');
   pending.dialog.close(); pending.resolve(null);
 }
-export function requestOperation({ title, description, fields = [], details = [], changes = [], changesLabel = 'Checkpoint differences', layout, notice, confirmLabel = 'Continue', busyLabel = 'Working…', failureMessage, danger = false, submit }) {
+export function requestOperation({ title, description, fields = [], details = [], changes = [], changesLabel = 'Checkpoint differences', layout, notice, confirmLabel = 'Continue', busyLabel = 'Working…', failureMessage, danger = false, cancelOnLock = false, submit }) {
   if (active) return Promise.reject(new Error('Finish or cancel the current operation first.'));
   const dialog = document.getElementById('operationDialog');
   dialog.classList.toggle('checkpoint-operation', layout === 'checkpoint');
@@ -70,12 +72,13 @@ export function requestOperation({ title, description, fields = [], details = []
   const confirm = document.getElementById('operationConfirm'); confirm.textContent = confirmLabel; confirm.classList.toggle('destructive', danger); confirm.disabled = false;
   const cancel = document.getElementById('operationCancel'); cancel.disabled = false;
   return new Promise(resolve => {
-    active = { dialog, resolve };
+    active = { dialog, resolve, cancelOnLock };
     cancel.onclick = cancelOperation;
     dialog.oncancel = event => { event.preventDefault(); if (!confirm.disabled) cancelOperation(); };
     form.onsubmit = async event => {
       event.preventDefault(); if (confirm.disabled || !form.reportValidity()) return;
       const pending = active; const values = Object.fromEntries(new FormData(form));
+      pending.values = values;
       const controls = [...body.querySelectorAll('input, select, button')]; controls.forEach(control => { control.disabled = true; });
       confirm.disabled = true; confirm.textContent = busyLabel; cancel.disabled = true; dialog.setAttribute('aria-busy', 'true');
       error.hidden = true;
@@ -90,6 +93,7 @@ export function requestOperation({ title, description, fields = [], details = []
         error.textContent = generic && failureMessage ? failureMessage : failure.message || 'Could not complete this operation. Please try again.';
         error.hidden = false; error.focus(); error.scrollIntoView({ block: 'nearest' });
       } finally {
+        delete pending.values;
         passwords.forEach(conceal => conceal());
         controls.forEach(control => { control.disabled = false; });
         if (!active || active === pending) {
@@ -103,7 +107,7 @@ export function requestOperation({ title, description, fields = [], details = []
 }
 document.addEventListener('vault-ui-locked', () => {
   // A background commit may deliberately lock on completion. Do not report that as rollback.
-  if (active && !document.getElementById('operationConfirm').disabled) cancelOperation();
+  if (active && (active.cancelOnLock || !document.getElementById('operationConfirm').disabled)) cancelOperation();
   else if (active) {
     active.locked = true;
     active.dialog.querySelectorAll('input').forEach(input => { input.value = ''; });
