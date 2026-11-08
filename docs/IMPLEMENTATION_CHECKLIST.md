@@ -6,7 +6,7 @@ Uma caixa marcada exige implementação e evidência indicada. Caixas abertas in
 
 ## Estado consolidado
 
-Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos) e `7f198f4` (commit de merge autenticado). Última validação de código registada (08/11): **266 testes Node, check de 148 módulos e cenários Chromium de revisão Drive, Settings e commit de merge aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
+Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos) `7f198f4` (commit de merge autenticado) e `4fb6b0b` (revisão Drive protegida). Última validação de código registada (08/11): **275 testes Node, check de 151 módulos e cenários Chromium de recuperação até 256 MiB e geral/PRF virtual aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
@@ -14,10 +14,23 @@ Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquis
 | Ligação Google | Client ID recebido, cópia estável gerada, OAuth/inspeção de leitura e disconnect | Autorizar no Chrome real e registar acesso/enumeração com a conta de teste |
 | Publicação Drive | Assinaturas internas, cofre/checkpoint/fila atómicos, runtime com condição de release e uploads retomáveis | Revisão independente, inscrição/gestão de chaves e ativação de produção |
 | Merge de três vias | Planeador interno, decisões vinculadas, eliminação versus edição e cópias estáveis | Inscrição pública/seleção de cofre, rebase e ativação de produção; convergência distribuída completa |
-| Dados e migração | Correções locais/legacy e regressões documentadas por incremento | Arquivos grandes, retenção/GC, todas as fronteiras de falha e migração Drive |
+| Dados e migração | Correções locais/legacy, leitor de arquivos até 256 MiB e seleção por digest | Exportação em lotes, retenção/GC, todas as fronteiras de falha e migração Drive |
 | Aceitação | SC01/SC02 e AF03/AF09 fechados nos limites documentados | 56 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
 
 As caixas por secção abaixo representam aceitação integral, não ausência de implementação. Componentes internos não equivalem a funcionalidades ativadas na interface.
+
+## Arquivos de recuperação grandes — 08/11/2026
+
+Issue: [STREAMED_RECOVERY_ARCHIVES.md](issues/STREAMED_RECOVERY_ARCHIVES.md).
+Contrato: [RECOVERY_ARCHIVES.md](RECOVERY_ARCHIVES.md). Evidência detalhada em
+[VALIDATION.md](VALIDATION.md).
+
+- [x] Inventário completo em janelas de 64 KiB; arquivo até 256 MiB, 100 registos e 16 MiB por registo. Backups normais mantêm o limite individual de 16 MiB.
+- [x] JSON/UTF-8 estritos, limites e cancelamento por AbortSignal; envelopes inválidos isolados com diagnóstico, sem importar parcialmente o arquivo.
+- [x] Escolha por identidade privada de origem/intervalo/SHA-256; reler apenas a escolha e recusar alterações do ficheiro antes do restauro.
+- [x] Chromium: arquivo real acima de 16 MiB e no limite exato de 256 MiB; sem leitura integral, escolha da última versão, cancelar/JSON inválido/password errada sem efeitos, restauro local preserva a password do destino.
+- [x] Identidade inválida de um backup legacy não deixa marcador de restauro nem produz checkpoint inválido.
+- [ ] Exportação em lotes para históricos maiores, orçamento total de capacidade e reconciliação integral SD07/SD18/SD19/SC37. Este incremento não fecha esses critérios completos.
 
 ## Integração de 06/11/2026
 
@@ -241,7 +254,7 @@ Evidência histórica de 04/11: **147 testes Node aprovados**. Check: **96 módu
 | SD03, SD14 | Download/merge local não publicam off; outbox cifrada por revisão e retry no arranque | `settingsData.test.js` SC32 e SC29/31/32 |
 | SD04, SD05 | Recusa preventiva de orçamento insuficiente para duas versões e quota por item | `syncSetup.test.js`, `settingsData.test.js` SC35; não fecha todo o ciclo de GC |
 | SD06, SD15, SD22 | Patches não alteram modo, transições serializadas, redução imediata de timeout e reparação de settings | `settingsData.test.js` SC48/49 e SC45 |
-| SD07, SD18, SD19, SD23 | Snapshot individual reimportável, restauro em perfil novo, preview vinculado e IDs estáveis | `settingsData.test.js` SC36–SC40; arquivos grandes/lotes continuam pendentes |
+| SD07, SD18, SD19, SD23 | Snapshot individual reimportável, restauro em perfil novo, preview vinculado e IDs estáveis | `settingsData.test.js` SC36–SC40; leitor de arquivos grandes exercitado em `recoveryArchive.test.js`/Chromium; lotes pendentes |
 | SD08, SD11 | Cópia completa restaurável apesar de outra incompleta; wipe local de dados danificados independente do remoto | `syncSetup.test.js`, `backupAdvanced.test.js` |
 | SD09, SD10 | Reparação de chunks, rollback transacional e retoma de recuperação local | `settingsData.test.js`, `backupAdvanced.test.js`; GC órfão/retoma distribuída pendentes |
 | SD12, SD13, SD20, SD21 | Percursos de navegação, import/conflitos, restauro e eliminação exercitados em Chromium | `test:settings-browser`; matriz de acessibilidade real pendente |
@@ -292,6 +305,6 @@ Cada SD deve ser reconciliado com as correções posteriores, testes persistente
 1. Rever formato, serialização, nonces e bootstrap antes de habilitar escrita Drive; concluir inscrição/revogação/rotação, gestão de chaves e kit.
 2. Executar autorização/inspeção Google real em paralelo com a implementação restante; integrar descoberta/seleção de cofre e vínculos no produto.
 3. Concluir rebase entre autorizações/épocas, retenção e convergência de histórias completas; ligar o fluxo de revisão entregue ao enrollment público após revisão do protocolo.
-4. Fechar fronteiras de falha, persistência/recuperação, quotas/GC, retenção e arquivos legacy grandes.
+4. Fechar fronteiras de falha, persistência/recuperação, quotas/GC, retenção e exportação em lotes; leitor legacy de 256 MiB entregue.
 5. Implementar e validar migração retomável, coexistência com clientes antigos e downgrade.
 6. Executar aceitação Google/hardware/sites/acessibilidade e revisão independente; reconciliar cada SD/SC/AF com evidência antes de fechar a release.

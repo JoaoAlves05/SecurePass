@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **266 Node tests, 148 checked modules and Chromium protected Drive review, Settings and authenticated-merge commit scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **275 Node tests, 151 checked modules and Chromium large-recovery-archive and general/virtual-PRF scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -382,3 +382,32 @@ cross-authorization/epoch history/rebase, distributed retention, migration and
 production delivery remain open. Real Google, physical PRF and independent
 security review still require external evidence. New UI availability does not
 create a public way to activate writing.
+
+
+## Bounded legacy recovery archives — 2026-11-08
+
+`npm test`: **275/275 passed**; `npm run check`: **151 modules passed**.
+Eight reader regressions cover stable selection independent of public metadata
+ordering, >16-MiB files, 64-KiB inventory windows, UTF-8/BOM/escape boundaries,
+changed/unreadable files, malformed JSON versus invalid encrypted envelopes,
+exact 256-MiB acceptance and excessive size/count/record/depth rejection, ordinary
+backup limits and AbortSignal cancellation. A legacy recovery regression also
+rejects malformed optional identity before any recovery marker is persisted and
+rejects invalid reprotected checkpoint identity.
+
+`npm run test:recovery-archive-browser` passed actual popup/background routes in
+disposable Chromium: a real encrypted archive above 16 MiB, an on-disk file of
+exactly 256 MiB, 32 offered versions and explicit selection of the last version.
+Instrumentation forbids whole-file reads and asserts inventory slices at most
+64 KiB. Malformed trailing JSON, cancellation and a wrong historical password
+preserve the destination revision. A successful local restore disables legacy
+Sync and keeps the destination master password; the source password cannot
+subsequently unlock it. The 256-MiB fixture pads valid encrypted history with JSON
+whitespace; it verifies the byte limit and bounded scanning, not maximum content
+count or process heap profiling. Node tests independently exercise 100 records.
+
+The Settings suite passed earlier in this increment. The general/autofill/virtual
+PRF browser suite and runtime packaging passed after the final recovery changes.
+No screenshots/layout changes are introduced by this block. Batch export,
+full capacity/retention acceptance, Drive migration, real Google/physical hardware
+and independent protocol review remain open. [Reader contract](RECOVERY_ARCHIVES.md).

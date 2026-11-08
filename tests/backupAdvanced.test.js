@@ -13,6 +13,20 @@ const PASS = 'Disposable review master 123!';
 const entry = (id, password = 'Disposable secret') => ({ id, site: 'https://example.com', username: 'account', password, notes: '' });
 beforeEach(async () => { await vault.lockVault(); resetStorage(); });
 
+test('malformed optional legacy identity cannot leave a recovery marker or invalid checkpoint', async () => {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await crypt.deriveMasterKey(PASS, salt);
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify({ entries: [entry('legacy')] })));
+  const legacy = { salt: crypt.encodeKey(salt), iv: crypt.encodeKey(iv), ciphertext: crypt.encodeKey(ciphertext), iterations: crypt.ITERATIONS, vaultId: { malformed: true } };
+  assert.equal((await crypt.decryptRecord(legacy, PASS)).entries.length, 1);
+  await assert.rejects(recovery.restoreExternalRecord(legacy, PASS), /Invalid vault identity/);
+  assert.equal(await storage.readLocalVaultRecordRaw(), null);
+  assert.equal(areas.local.localRestorePending, undefined);
+  const active = await crypt.createRecord([entry('active')], PASS);
+  await assert.rejects(crypt.protectCheckpoint({ revision: { malformed: true } }, [entry('legacy')], active.record, active.bytes), /Invalid vault identity/);
+});
+
 test('repeated keep-both imports recognize an identical conflict copy', () => {
   const original = entry('original');
   const incoming = entry('original', 'Updated secret');

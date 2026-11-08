@@ -69,6 +69,7 @@ export async function createRecord(entries, passphrase, identity = {}) {
   const master = await deriveMasterKey(passphrase, decodeBytes(record.kdf.salt, 16));
   record.wrappedKey = await seal(bytes, master, keyContext(record));
   record.data = await seal(createPayload(entries, identity.history), await aesKey(bytes), dataContext(record));
+  validateRecord(record);
   return { record, bytes };
 }
 
@@ -120,6 +121,7 @@ export async function protectCheckpoint(previous, entries, active, bytes, histor
   entries = validateVaultEntries(entries);
   const record = { ...active, revision: previous.revision || crypto.randomUUID(), parents: [], updatedAt: previous.updatedAt };
   record.data = await seal(createPayload(entries, history), await aesKey(bytes), dataContext(record));
+  validateRecord(record);
   return record;
 }
 

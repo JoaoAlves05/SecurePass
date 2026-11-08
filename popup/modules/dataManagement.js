@@ -2,7 +2,7 @@ import { handleCheckpointAction, attachCheckpointListeners } from './checkpoints
 import { state } from '../state.js';
 import { ensureVaultAccessible } from './vault.js';
 import { showToast } from './toast.js';
-import { MAX_IMPORT_BYTES } from '../../src/validation.js';
+import { readImportFile } from '../../src/recoveryArchive.js';
 import { requestOperation } from './operationDialog.js';
 import { checked, runManagement } from './management.js';
 export function downloadJSON(data, name) {
@@ -11,7 +11,7 @@ export function downloadJSON(data, name) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 const password = (name = 'password', label = 'Master password') => ({ name, label, type: 'password' });
-const snapshotLabel = item => `${item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'Legacy snapshot'} · ${(item.id || item.revision || '').slice(0, 8)}`;
+const snapshotLabel = item => `${item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'Legacy snapshot'} · ${(item.revision || item.id || '').slice(0, 8)}`;
 const versionDetails = item => [
   { label: 'Saved', value: item.updatedAt ? new Date(item.updatedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'Legacy version' },
   { label: 'Source', value: item.source === 'Local' ? 'This device' : item.source === 'Archived Sync' ? 'Archived Chrome Sync' : 'Backup file' },
@@ -32,19 +32,17 @@ async function restoreRecord(record, selected = record) {
   if (result) showToast('Snapshot restored locally. Sync is off.', 'success');
 }
 async function importFile(input) {
-  if (input.size > MAX_IMPORT_BYTES) throw new Error('This import supports files up to 16 MiB. Export individual snapshots for larger recovery archives.');
-  let data;
-  try { data = JSON.parse(await input.text()); }
-  catch { throw new Error('This file is not a valid JSON backup. Choose a SecurePass backup file.'); }
-  if (!data || typeof data !== 'object') throw new Error('Invalid backup file.');
-  if (data.kind === 'securepass-encrypted-recovery') {
-    if (data.version !== 1 || !Array.isArray(data.snapshots) || !Array.isArray(data.sync)) throw new Error('Invalid recovery archive.');
-    const records = [...data.snapshots, ...data.sync];
-    if (!records.length || records.length > 100) throw new Error('Choose an archive with 1–100 snapshots.');
-    const choice = await requestOperation({ title: 'Choose a recovery snapshot', description: 'Snapshots use their historical master passwords. Select one to restore locally.', fields: [{ name: 'snapshot', label: 'Snapshot', options: records.map((record, index) => ({ value: String(index), label: snapshotLabel(record || {}) })) }], confirmLabel: 'Review snapshot' });
-    if (choice) await restoreRecord(records[Number(choice.snapshot)]);
+  const imported = await readImportFile(input);
+  if (imported.kind === 'recovery') {
+    const choice = await requestOperation({ title: 'Choose a recovery snapshot', description: `Snapshots use their historical master passwords. Select one to restore locally.${imported.issues ? ` ${imported.issues} unreadable ${imported.issues === 1 ? 'version was' : 'versions were'} skipped.` : ''}`, fields: [{ name: 'snapshot', label: 'Snapshot', options: imported.snapshots.map(item => ({ value: item.id, label: snapshotLabel(item) })) }], confirmLabel: 'Review snapshot' });
+    if (choice) {
+      const selected = imported.snapshots.find(item => item.id === choice.snapshot);
+      const record = await imported.readSnapshot(choice.snapshot);
+      await restoreRecord(record, { ...selected, id: selected.revision || selected.id.split(':').pop() });
+    }
     return;
   }
+  const data = imported.data;
   const status = await accessibleDestination(); if (!status) return;
   const encrypted = data.kind === 'securepass-encrypted-backup';
   const review = await requestOperation({
