@@ -6,7 +6,7 @@ Uma caixa marcada exige implementação e evidência indicada. Caixas abertas in
 
 ## Estado consolidado
 
-Commits anteriores de referência em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação), `3833689` (preview durante lock), `2e1d793` (administração transacional), `79aabe5` (entrega administrativa), `2077c4a` (fundamentos v2) e `b3b69f7` (material do kit/histórico). O incremento mais recente está descrito na secção seguinte. Última validação de código registada (09/11): **343 testes Node e check de 184 módulos aprovados; Chromium de transações v2, administração v1, entrega administrativa emulada, protocolo-v2/kit, geral/PRF e Settings aprovados neste incremento**. Checkpoints e lock de backup passaram no incremento anterior. As restantes suites mantêm a data própria em VALIDATION.md.
+Commits anteriores de referência em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação), `3833689` (preview durante lock), `2e1d793` (administração transacional), `79aabe5` (entrega administrativa), `2077c4a` (fundamentos v2), `b3b69f7` (material do kit/histórico) e `abe1355` (transações v2). O incremento mais recente está descrito na secção seguinte. Última validação de código registada (09/11): **354 testes Node e check de 188 módulos aprovados; Chromium de entrega administrativa v1/v2 emulada, transações v2, protocolo-v2/kit e protocolo assinado anterior aprovados neste incremento**. Geral/PRF e Settings passaram no incremento de 343 testes; checkpoints e lock de backup no de 318 testes. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
@@ -18,6 +18,18 @@ Commits anteriores de referência em `main`: `f7fb780` (Drive/OAuth de leitura e
 | Aceitação | SC01/SC02/SC40 e AF03/AF09 fechados nos limites documentados | 55 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
 
 As caixas por secção abaixo representam aceitação integral, não ausência de implementação. Componentes internos não equivalem a funcionalidades ativadas na interface.
+
+## Entrega administrativa v2 — 09/11/2026
+
+Contrato e limites: [ADMINISTRATIVE_V2_DELIVERY.md](ADMINISTRATIVE_V2_DELIVERY.md).
+Issue: [ADMINISTRATIVE_V2_DELIVERY.md](issues/ADMINISTRATIVE_V2_DELIVERY.md).
+
+- [x] Wire v2 canónico até 4 MiB, com proteção da master, histórico/kit vinculados e confiança independente do head declarado.
+- [x] Material protegido imutável por operação e seleção de ancestrais pelo DAG, incluindo ambos os pais de resolução; sem depender da ordem do array.
+- [x] Guard transacional de vínculo, autoridade e material antes de I/O/ack; retoma exata após resposta perdida ou autoridade concorrente.
+- [x] Autoridade entregue antes de conteúdo; read-back de conteúdo verifica assinaturas v2 e preserva fila antiga para rebase.
+- [x] Onze regressões Node e Chromium com fornecedor emulado, reload, três alterações administrativas e abertura real da raiz/chave administrativa recebida.
+- [ ] Descoberta/adoção recebida, onboarding público, ativação do kit, rotação/recuperação, rebase/retenção/migração e aceitação externa. Rows antigas do protótipo sem material são preservadas e recusadas; produção continua bloqueada.
 
 ## Transações locais de protocolo v2 — 09/11/2026
 

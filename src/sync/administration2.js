@@ -4,11 +4,14 @@ import { createAuthorityState, verifyAuthorityGraph, authorityState, authorityDi
 import { protectionDigest, canonicalRecord3, createSignedRevision2, verifySignedRevision2, revisionReference, anchorReferences } from './revisionProtocol2.js';
 import { readSignedHistory } from './signedHistoryStore.js';
 import { encryptEntries } from '../vault/crypto.js';
+import { vaultProtectionFromRecord } from './vaultProtection.js';
+
+const materialFor = (record, previous) => ({ vaultProtection: vaultProtectionFromRecord(record), keyHistory: previous.administration?.keyHistory || null, recovery: previous.administration?.recoveryMaterial || null });
 
 function append(previous, envelope, operation, writer) {
   const operations = previous.administration?.operations || [];
   if (operations.length >= 256 || operations.filter(value => value.phase !== 'published').length >= 32) throw new Error('Administrative queue is full. Preserve pending operations before continuing.');
-  return { version: 2, envelope, operations: [...operations, operation], ...(writer ? { localWriter: writer } : {}) };
+  return { version: 2, envelope, operations: [...operations, operation], ...(writer ? { localWriter: writer } : {}), ...(previous.administration?.keyHistory ? { keyHistory: previous.administration.keyHistory } : {}), ...(previous.administration?.recoveryMaterial ? { recoveryMaterial: previous.administration.recoveryMaterial } : {}) };
 }
 async function packetFor(record, writer, privateKey, state, parents = []) {
   const body = await createSignedRevision2(record, { author: writer.author, privateKey, state, parents });
@@ -29,7 +32,7 @@ export async function prepareBootstrap2(passphrase, input, record, active, previ
   const rootFingerprint = await signingKeyFingerprint(payload.adminKey); const chain = [signed];
   const state = authorityState(await verifyAuthorityGraph(chain, { vaultId: record.vaultId, rootFingerprint }));
   const writer = { author: input.deviceId, envelope: device.envelope };
-  const operation = { id: input.operationId, kind: 'bootstrap', request: input, previousHead: null, head: state.hash, signed, administrativeKey: admin.envelope, phase: 'pending-publication' };
+  const operation = { id: input.operationId, kind: 'bootstrap', request: input, previousHead: null, head: state.hash, signed, administrativeKey: admin.envelope, material: materialFor(record, previous), phase: 'pending-publication' };
   return { state, operation, authority: { format: 2, rootFingerprint, head: state.hash, chain }, administration: append(previous, admin.envelope, operation, writer), writer, signedPacket: await packetFor(record, writer, device.privateKey, state) };
 }
 export async function prepareDeviceChange2(kind, passphrase, input, record, active, previous, state) {
@@ -59,7 +62,7 @@ export async function prepareDeviceChange2(kind, passphrase, input, record, acti
   const signed = await createAuthorityState({ ...state.payload, revision: crypto.randomUUID(), parents: [state.hash], reason: kind, devices, contentAnchors: anchors }, [{ parent: state.hash, role: 'admin', privateKey }]);
   const chain = [...previous.authority.chain, signed];
   const next = authorityState(await verifyAuthorityGraph(chain, { vaultId: record.vaultId, rootFingerprint: previous.authority.rootFingerprint, checkpoint: state.hash, expectedHead: await authorityDigest(signed.payload) }));
-  const operation = { id: input.operationId, kind, request: input, previousHead: state.hash, head: next.hash, signed, administrativeKey: protectedKey, phase: 'pending-publication' };
+  const operation = { id: input.operationId, kind, request: input, previousHead: state.hash, head: next.hash, signed, administrativeKey: protectedKey, material: materialFor(record, previous), phase: 'pending-publication' };
   const writer = previous.administration.localWriter;
   const retained = writer && devices.some(device => device.id === writer.author && device.publicKey === writer.envelope.publicKey) ? writer : null;
   const result = { state: next, operation, authority: { ...previous.authority, head: next.hash, chain }, administration: append(previous, protectedKey, operation, retained) };

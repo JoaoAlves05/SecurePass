@@ -17,12 +17,13 @@ function rootEnvelope(value) {
   canonicalBytes(value.ciphertext, 384);
   return { kind: value.kind, version: 1, vaultId: value.vaultId, keyEpoch: value.keyEpoch, recoveryId: value.recoveryId, ciphertext: value.ciphertext };
 }
-function canonical(value) {
+export function canonicalRecoveryMaterial(value) {
   exactFields(value, ['privateEnvelope', 'rootEnvelope']);
   const secret = privateEnvelope(value.privateEnvelope); const root = rootEnvelope(value.rootEnvelope);
   if (secret.vaultId !== root.vaultId || secret.recoveryId !== root.recoveryId) throw new Error('Recovery envelope identities differ.');
   return { privateEnvelope: secret, rootEnvelope: root };
 }
+const canonical = canonicalRecoveryMaterial;
 const privateContext = value => JSON.stringify(['SecurePass:recovery-private:1', value.vaultId, value.recoveryId, value.signingKey, value.encryptionKey, value.keySalt]);
 const rootContext = value => textBytes(['SecurePass:recovery-root:1', value.vaultId, value.keyEpoch, value.recoveryId]);
 export async function recoveryPolicy(value) {

@@ -5,6 +5,8 @@ import { readAdministration } from './administrationStore.js';
 import { canonicalAuthorizationChain, verifyAuthorizationChain } from './signedProtocol.js';
 import { createAdministrationPublication } from './administrationProtocol.js';
 import { validateUploadSession } from './publicationLimits.js';
+import { verifyAuthorityGraph, authorityState, requireAuthorityState, authorityDigest } from './authorizationGraph.js';
+import { canonicalAdministrationGraph, canonicalAdministrationMaterial, createAdministrationPublication2 } from './administrationProtocol2.js';
 const enabled = state => state?.administrationEnabled ?? state?.enabled;
 export function createAdministrationDeliveryStore(binding) {
   const pinned = structuredClone(binding);
@@ -20,8 +22,12 @@ export function createAdministrationDeliveryStore(binding) {
           if (!enabled(state) || !sameBinding(state.binding, pinned)) throw new Error('Administrative binding changed or disabled.');
           const first = journal?.operations.find(value => value.phase !== 'published');
           if (!first || first.id !== operation.id || first.head !== operation.publication.revisionId || first.binding && !sameBinding(first.binding, pinned)) throw new Error('Administrative operation changed or belongs to another binding.');
-          const prefix = canonicalAuthorizationChain(authority.result?.chain || []).slice(0, operation.prefixLength);
-          if (authority.result.rootFingerprint !== operation.rootFingerprint || JSON.stringify(prefix) !== JSON.stringify(operation.chain)) throw new Error('Administrative ancestry changed.');
+          if (operation.protocol === 2) {
+            if (authority.result?.format !== 2 || JSON.stringify(authority.result) !== operation.sourceAuthority || JSON.stringify(first.signed) !== operation.sourceSigned || JSON.stringify(first.material) !== operation.sourceMaterial) throw new Error('Administrative-v2 ancestry or material changed.');
+          } else {
+            const prefix = canonicalAuthorizationChain(authority.result?.chain || []).slice(0, operation.prefixLength);
+            if (authority.result.rootFingerprint !== operation.rootFingerprint || JSON.stringify(prefix) !== JSON.stringify(operation.chain)) throw new Error('Administrative ancestry changed.');
+          }
           const envelope = first.administrativeKey || journal.envelope;
           if (JSON.stringify(envelope) !== operation.sourceEnvelope) throw new Error('Administrative key envelope changed.');
           result = mutate(first, journal);
@@ -38,6 +44,23 @@ export function createAdministrationDeliveryStore(binding) {
       if (!enabled(snapshot.publication) || !sameBinding(snapshot.publication.binding, pinned)) return null;
       const operation = snapshot.administration?.operations.find(value => value.phase !== 'published');
       if (!operation) return null;
+      if (snapshot.authority?.format === 2) {
+        const graph = await verifyAuthorityGraph(snapshot.authority.chain, { vaultId: pinned.vaultId, rootFingerprint: snapshot.authority.rootFingerprint, expectedHead: snapshot.authority.head });
+        requireAuthorityState(authorityState(graph), { live: true });
+        const canonical = canonicalAdministrationGraph(snapshot.authority.chain);
+        const nodes = new Map(await Promise.all(canonical.map(async node => [await authorityDigest(node.payload), node])));
+        const target = nodes.get(operation.head);
+        if (!target || JSON.stringify(target) !== JSON.stringify(canonicalAdministrationGraph([operation.signed])[0])) throw new Error('Pending administrative-v2 state is absent from trusted ancestry.');
+        const retained = new Set();
+        const visit = hash => { if (retained.has(hash)) return; const node = nodes.get(hash); if (!node) throw new Error('Missing administrative-v2 ancestor.'); retained.add(hash); node.payload.parents.forEach(visit); };
+        visit(operation.head);
+        const chain = [...nodes].filter(([hash]) => retained.has(hash)).map(([, node]) => node);
+        if (!operation.material) throw new Error('Pending administrative-v2 material is missing. Preserve the prototype journal for explicit migration.');
+        const material = canonicalAdministrationMaterial(operation.material); const envelope = operation.administrativeKey;
+        const publication = await createAdministrationPublication2(chain, envelope, material, { vaultId: pinned.vaultId, rootFingerprint: snapshot.authority.rootFingerprint, expectedHead: operation.head });
+        const expectedDigest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(publication.body)))].map(value => value.toString(16).padStart(2, '0')).join('');
+        return { ...operation, protocol: 2, binding: operation.binding || pinned, publication, chain, rootFingerprint: snapshot.authority.rootFingerprint, sourceEnvelope: JSON.stringify(envelope), sourceMaterial: JSON.stringify(operation.material), sourceAuthority: JSON.stringify(snapshot.authority), sourceSigned: JSON.stringify(operation.signed), expectedDigest };
+      }
       await verifyAuthorizationChain(snapshot.authority?.chain, { vaultId: pinned.vaultId, rootFingerprint: snapshot.authority?.rootFingerprint, expectedHead: snapshot.authority?.head });
       const index = snapshot.authority.chain.findIndex(value => JSON.stringify(value) === JSON.stringify(operation.signed));
       if (index < 0) throw new Error('Pending administrative link is absent from trusted ancestry.');

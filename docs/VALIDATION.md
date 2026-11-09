@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-09): **343 Node tests and 184 checked modules passed; Chromium local-v2 transactions, v1 administration, emulated administrative delivery, protocol-v2/kit, general/virtual-PRF and Settings passed**. Checkpoints and backup-lock passed at the earlier 318-test increment. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Latest continuation: administrative-v2 wire and verified delivery. Latest executed results (2026-11-09): **354 Node tests and 188 checked modules passed; Chromium v1/v2 emulated administrative delivery, local-v2 transactions, protocol-v2/kit and prior signed protocol passed**. General/virtual-PRF and Settings passed at the 343-test increment; checkpoints and backup-lock at the 318-test increment. Packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -589,3 +589,29 @@ history is bounded to 128 packets/64 MiB and refuses exhaustion without pruning.
 Administrative-v2 wire/delivery, public lifecycle, global rotation/recovery,
 rebase, retention/migration and external acceptance remain open. See
 [transaction boundaries](PROTOCOL_V2_TRANSACTIONS.md).
+
+
+## Administrative-v2 wire and verified delivery — 2026-11-09
+
+Final `npm test`: **354/354 passed**; `npm run check`: **188 modules passed**.
+Eleven new regressions cover independent root/checkpoint verification, master-
+wrapper/schema/canonical rejection, root clearing on failed admin-key proof,
+input snapshots, lost-reply reuse, concurrent authority change during accepted
+upload, ordered v2 authority/content delivery, reversed storage/DAG ancestry,
+joint two-parent resolution, complete kit/history serialization and refusal of
+an older prototype journal lacking protected material. A Node SHA-256 reference
+confirms protection-digest compatibility.
+
+The final sequential run passed the full Node suite, v2 and v1 administrative-
+delivery Chromium suites (emulated provider), local-v2 transaction Chromium,
+protocol-v2/kit Chromium, prior signed-protocol Chromium, syntax/import/version
+check and packaging. Whitespace check passed. The new browser journey exercises
+accepted upload/lost reply, reload/read-back/reuse without another POST, three
+ordered administrative states, self-revocation with retained content and actual
+master/root/admin-private-key opening from a received packet.
+
+Root-only freshness remains unproven. Earlier prototype rows without material
+remain preserved and blocked for explicit migration. Incoming discovery/adoption,
+public onboarding, kit activation, global rotation/recovery, rebase, retention/
+migration, real Google/hardware and independent review remain open. Production
+writes stay blocked. [Wire and limits](ADMINISTRATIVE_V2_DELIVERY.md).

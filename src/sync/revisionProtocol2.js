@@ -1,6 +1,7 @@
 import { bufferToBase64 } from '../encoding.js';
 import { validateRecord, decodeBytes } from '../vault/crypto.js';
 import { authorityState, requireAuthorityState } from './authorizationGraph.js';
+import { vaultProtectionFromRecord, vaultProtectionDigest } from './vaultProtection.js';
 const encoder = new TextEncoder(); const revisions = new WeakMap(); const references = new WeakMap();
 const identity = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value);
 const hashId = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
@@ -14,8 +15,7 @@ export function canonicalRecord3(record) {
   return { kind: record.kind, version: 3, vaultId: record.vaultId, revision: record.revision, parents: [...record.parents], keyEpoch: record.keyEpoch, updatedAt: record.updatedAt, keySalt: record.keySalt, kdf: { name: record.kdf.name, iterations: record.kdf.iterations, salt: record.kdf.salt }, wrappedKey: { iv: record.wrappedKey.iv, ciphertext: record.wrappedKey.ciphertext }, data: { iv: record.data.iv, ciphertext: record.data.ciphertext } };
 }
 export async function protectionDigest(record) {
-  const value = canonicalRecord3(record);
-  return hash(['SecurePass:protection:1', value.vaultId, value.keyEpoch, [value.kdf.name, value.kdf.iterations, value.kdf.salt], [value.wrappedKey.iv, value.wrappedKey.ciphertext]]);
+  return vaultProtectionDigest(vaultProtectionFromRecord(record));
 }
 function payload(value) {
   fields(value, ['kind', 'version', 'author', 'authorization', 'record', 'parents']);

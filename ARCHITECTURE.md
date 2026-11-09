@@ -257,5 +257,14 @@ of outbox acknowledgement. Enabled v3 mutations authenticate cached parent
 bodies before signing; administrative successors anchor exact old content and
 atomically create a new signed descendant when the local writer remains valid.
 Self-revocation preserves the record/history/queue and suspends content. The
-administrative v2 transport and public lifecycle remain pending; the production
-gate stays closed. [Transaction contract](docs/PROTOCOL_V2_TRANSACTIONS.md).
+public lifecycle remains pending; the production gate stays closed.
+[Transaction contract](docs/PROTOCOL_V2_TRANSACTIONS.md).
+
+`sync/administrationProtocol2.js` adds bounded canonical DAG/material packets;
+`vaultProtection.js` carries the exact master/epoch wrapper bound by authority
+without copying content ciphertext. The delivery store snapshots per-operation
+material, walks parent hashes and compares full authority/material snapshots
+before I/O/ack. The common runtime orders v2 authority before v2 content, reuses
+verified accepted uploads after reload and preserves stale branches for rebase.
+Incoming discovery/adoption, public enrollment and global lifecycle remain
+pending. [Wire/delivery boundaries](docs/ADMINISTRATIVE_V2_DELIVERY.md).

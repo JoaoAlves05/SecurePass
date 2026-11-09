@@ -52,10 +52,11 @@ before synchronization; these helpers do not invent ancestry for them.
 
 ## Integration boundaries
 
-`loadAuthorization` and content signature preparation now support the verified
-v2 graph. The content runtime has a v2 verification branch, but the administrative
-wire/delivery adapter still supports v1 only, so v2 transport is not accepted by
-this block. Production remains blocked by the source review gate. Public
+`loadAuthorization` and content signature preparation support the verified
+v2 graph. This local-transaction increment did not accept v2 transport; the
+following [administrative-v2 delivery increment](ADMINISTRATIVE_V2_DELIVERY.md)
+adds that wire/runtime with emulated-provider evidence. Production remains
+blocked by the source review gate. Public
 onboarding, discovery of received administration, kit activation, global
 rotation/recovery, rebase, retention, migration and external acceptance remain.
 

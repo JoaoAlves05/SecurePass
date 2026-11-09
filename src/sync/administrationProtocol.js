@@ -1,6 +1,7 @@
 import { canonicalAuthorizationChain, verifyAuthorizationChain } from './signedProtocol.js';
 import { canonicalAdministrativeEnvelope, unlockAdministrativeKey } from './signingKeyProtection.js';
-export const MAX_ADMINISTRATION_BYTES = 4 * 1024 * 1024;
+import { MAX_ADMINISTRATION_BYTES, verifyAdministrationPublication2, unlockAdministrationPublication2 } from './administrationProtocol2.js';
+export { MAX_ADMINISTRATION_BYTES };
 const encoder = new TextEncoder();
 function fields(value, expected) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).sort().join(',') !== [...expected].sort().join(',')) throw new Error('Unsupported administrative publication.');
@@ -25,6 +26,7 @@ export async function createAdministrationPublication(chain, administrativeKey, 
 }
 export async function verifyAdministrationPublication(body, publication, trust) {
   if (typeof body !== 'string' || body.length > MAX_ADMINISTRATION_BYTES || encoder.encode(body).length > MAX_ADMINISTRATION_BYTES) throw new Error('Administrative publication exceeds limit.');
+  if (JSON.parse(body)?.version === 2) return verifyAdministrationPublication2(body, publication, trust);
   const identity = structuredClone(publication);
   const { payload, state } = await normalize(JSON.parse(body), structuredClone(trust));
   if (JSON.stringify(payload) !== body) throw new Error('Noncanonical administrative publication.');
@@ -34,6 +36,7 @@ export async function verifyAdministrationPublication(body, publication, trust) 
   return { state, chain: payload.chain, administrativeKey: payload.administrativeKey };
 }
 export async function unlockAdministrationPublication(body, publication, trust, passphrase) {
+  if (typeof body === 'string' && body.length <= MAX_ADMINISTRATION_BYTES && JSON.parse(body)?.version === 2) return unlockAdministrationPublication2(body, publication, trust, passphrase);
   const verified = await verifyAdministrationPublication(body, publication, trust);
   const privateKey = await unlockAdministrativeKey(verified.administrativeKey, passphrase, verified.state.payload);
   return { ...verified, privateKey };

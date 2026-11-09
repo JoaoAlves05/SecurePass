@@ -3,12 +3,13 @@ import { requireAuthorityState } from './authorizationGraph.js';
 import { identity, exactFields, canonicalBytes, copyRoot, materialDigest, materialKey, protectedBytes } from './keyMaterial.js';
 
 const MAX_KEYS = 64;
-function canonical(value) {
+export function canonicalKeyHistory(value) {
   exactFields(value, ['kind', 'version', 'vaultId', 'keyEpoch', 'keySalt', 'protectedKeys']);
   if (value.kind !== 'securepass-key-history' || value.version !== 1 || ![value.vaultId, value.keyEpoch].every(identity)) throw new Error('Invalid historical-key identity.');
   canonicalBytes(value.keySalt, 32);
   return { kind: value.kind, version: 1, vaultId: value.vaultId, keyEpoch: value.keyEpoch, keySalt: value.keySalt, protectedKeys: protectedBytes(value.protectedKeys, 18, 16384) };
 }
+const canonical = canonicalKeyHistory;
 const context = value => JSON.stringify(['SecurePass:key-history:1', value.vaultId, value.keyEpoch, value.keySalt]);
 export async function keyHistoryDigest(value) {
   return materialDigest('SecurePass:key-history-envelope:1', canonical(value));
