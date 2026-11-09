@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-08): **280 Node tests, 156 checked modules and Chromium backup-preview lock, guided recovery-export and Settings scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-09): **288 Node tests, 160 checked modules and Chromium durable-administration scenario passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -467,3 +467,24 @@ passed. The Node total is unchanged because the new persistent regression runs
 in actual Chromium. No layout/theme changes or replacement screenshots are part
 of this security correction. Full SC44 and release acceptance remain open; this
 is evidence for the reproduced preview race only.
+
+
+## Durable device administration — 2026-11-09
+
+`npm test`: **288/288 passed**; `npm run check`: **160 modules passed**.
+Eight new regressions cover root/protected-key persistence without plaintext,
+exact operation replay, master proof independently of content sessions, competing
+reviewed heads, identity replacement rejection, self/last-device revocation,
+outbox retention, runtime content suspension before administrative delivery,
+atomic abort/retry and lock during signing. Invalid requests/keys preserve state.
+
+`npm run test:administration-browser` passed actual Chromium WebCrypto/IndexedDB
+bootstrap/enrollment, transaction abort/retry, exact signed replay after page
+reload, wrong-master isolation, self-revocation and retained content outbox.
+Its harness calls internal modules in an extension page; this is not public
+management-route or authenticated Google transport acceptance. Packaging passed.
+
+No cipher-format change, public enrollment, administrative remote delivery,
+rotation/recovery/rebase or production activation is claimed. This block changes
+no visible UI, so previous UI screenshots/suite results retain their dated scope.
+[Contract](DEVICE_ADMINISTRATION.md), [checklist](IMPLEMENTATION_CHECKLIST.md).

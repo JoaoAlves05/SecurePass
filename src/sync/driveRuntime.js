@@ -6,6 +6,7 @@ import { loadAuthorization } from './authorizationStore.js';
 import { verifySignedPublication } from './signedProtocol.js';
 import { getStorage } from '../utils/storage.js';
 import { loadSettings } from '../settings.js';
+import { readAdministration } from './administrationStore.js';
 
 // This is a source-level release gate, not a preference that a website or a
 // stale saved setting can enable. Remove only after the documented review.
@@ -17,8 +18,11 @@ export function createDriveRuntime({ store = publicationStore, getToken = getBou
     if ((await loadSettings()).useSync || (await getStorage('local', 'localRestorePending')).localRestorePending) return { suspended: true };
     const operation = await store.next();
     if (!operation) return { idle: true };
+    const administrationPending = async () => (await readAdministration(operation.publication.vaultId)).administration?.operations.some(value => value.phase !== 'published');
+    if (await administrationPending()) return { administrationPending: true };
     const assertCurrent = async binding => {
       if (!writesReviewed() || (await loadSettings()).useSync || (await getStorage('local', 'localRestorePending')).localRestorePending) throw new DriveError('binding-changed');
+      if (await administrationPending()) throw new DriveError('administration-pending');
       await assertAccount(binding); await store.assertCurrent(operation);
     };
     const transport = createDriveTransport({ getToken, assertBinding: assertCurrent, assertWritable: assertCurrent, fetchImpl,

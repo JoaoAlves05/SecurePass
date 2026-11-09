@@ -1,12 +1,12 @@
 # Checklist de implementação e aceitação
 
-Atualizada em 08/11/2026. Fonte: [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md), versão 3. Release ainda não aceite.
+Atualizada em 09/11/2026. Fonte: [SYNC_DATA_PLAN.md](SYNC_DATA_PLAN.md), versão 3. Release ainda não aceite.
 
 Uma caixa marcada exige implementação e evidência indicada. Caixas abertas incluem trabalho parcial e aceitação ainda não demonstrada. Os incrementos existentes estão descritos em [SETTINGS_UX_IMPLEMENTATION.md](SETTINGS_UX_IMPLEMENTATION.md); resultados históricos em [VALIDATION.md](VALIDATION.md) não equivalem a testes desta execução.
 
 ## Estado consolidado
 
-Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes) e `1405a9d` (lote de exportação). Última validação de código registada (08/11): **280 testes Node, check de 156 módulos e cenários Chromium de preview de backup durante lock, exportação em lote e Settings aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
+Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação) e `3833689` (preview durante lock). Última validação de código registada (09/11): **288 testes Node, check de 160 módulos e cenário Chromium de administração transacional aprovado**. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
@@ -18,6 +18,18 @@ Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquis
 | Aceitação | SC01/SC02/SC40 e AF03/AF09 fechados nos limites documentados | 55 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
 
 As caixas por secção abaixo representam aceitação integral, não ausência de implementação. Componentes internos não equivalem a funcionalidades ativadas na interface.
+
+## Administração de dispositivos — 09/11/2026
+
+Contrato: [DEVICE_ADMINISTRATION.md](DEVICE_ADMINISTRATION.md). Issue:
+[DEVICE_ADMINISTRATION.md](issues/DEVICE_ADMINISTRATION.md).
+
+- [x] Serviço de bootstrap local, inscrição e revogação com prova da master password, cadeia verificada e comparação do head apresentado.
+- [x] Gravar autoridade, chaves protegidas, writer e operação assinada numa transação; rollback completo em abort/lock. Não substituir pins/IDs nem retirar o último dispositivo.
+- [x] Retoma por ID de operação preserva bytes assinados após reload; rejeitar outro pedido com o mesmo ID e ramos concorrentes.
+- [x] Autorrevogação suspende o writer e conserva a fila anterior. Runtime impede publicação de conteúdo antes da entrega administrativa, incluindo quando a política de revisão é ativada apenas em teste.
+- [x] Oito regressões Node e Chromium com WebCrypto/IndexedDB reais: abort/retry, bootstrap/inscrição, replay após reload, password errada, revogação e outbox preservada.
+- [ ] Integrar transporte administrativo, onboarding/gestão públicos, rotação, recuperação e rebase. Este incremento não fecha SC03/SC16/SC26/SC47 integrais nem ativa escrita de produção.
 
 ## Preview de backup durante lock — 08/11/2026
 

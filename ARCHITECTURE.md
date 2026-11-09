@@ -195,3 +195,17 @@ explicit bulk policy limited to matching unresolved conflicts. Passwords/notes
 are absent from preview responses and DOM; lock clears the view. Sending remains
 paused. No public enrollment, new permissions or production activation is added.
 [Interaction, visuals and verification](docs/DRIVE_REVIEW_DESIGN.md).
+
+
+## Durable administrative services — 2026-11-09
+
+`sync/administration.js` provides master-authenticated local bootstrap, device
+enrollment and revocation over the existing signed chain. `administrationStore.js`
+compares the vault/head/binding and commits authority, protected keys, writer and
+stable signed operation journal in one IndexedDB transaction. Replay reuses exact
+signed bytes; stale heads, duplicate device identities, last-device revocation,
+lock and abort fail without partial changes. Self-revocation suspends writing and
+preserves pending content. Runtime content publication waits for administrative
+delivery. These internal services precede public onboarding, administrative
+transport, rotation/recovery, rebase and release acceptance.
+See [contract and evidence](docs/DEVICE_ADMINISTRATION.md).
