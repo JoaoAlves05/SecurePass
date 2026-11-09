@@ -408,10 +408,10 @@
     "semantic_hash": "596b636dbb30b786b39621e7a2791b45"
   },
   "ARCHITECTURE.md": {
-    "mtime": 1794221809.6619062,
-    "seen": 1794222684.9809618,
-    "ast_hash": "3c5443ce50d244d57e4458b1801d63d9",
-    "semantic_hash": "3c5443ce50d244d57e4458b1801d63d9"
+    "mtime": 1794223535.8403134,
+    "seen": 1794223747.940649,
+    "ast_hash": "b19e8424701f3c385e1a3e602660462d",
+    "semantic_hash": "b19e8424701f3c385e1a3e602660462d"
   },
   "README.md": {
     "mtime": 1793937151.5850868,
@@ -444,10 +444,10 @@
     "semantic_hash": "52fa42d087caf2bf7c6e47c007eb087f"
   },
   "docs/VALIDATION.md": {
-    "mtime": 1794221809.6683416,
-    "seen": 1794222684.981001,
+    "mtime": 1794223593.427239,
+    "seen": 1794223747.9406784,
     "ast_hash": "fca3f3a0bdf06a959153d6a788638c63",
-    "semantic_hash": "fca3f3a0bdf06a959153d6a788638c63"
+    "semantic_hash": "35018a10f158eb0a9eb0eb00bf39a46c"
   },
   "offscreen.html": {
     "mtime": 1775164609.297193,
@@ -510,10 +510,10 @@
     "semantic_hash": "d0568731ff8548d919d03288ebd4131c"
   },
   "docs/SYNC_DATA_PLAN.md": {
-    "mtime": 1794221809.6646907,
-    "seen": 1794222684.980996,
+    "mtime": 1794223593.42929,
+    "seen": 1794223747.940675,
     "ast_hash": "767b7df0adf3e77bd7a7ce39457b173a",
-    "semantic_hash": "767b7df0adf3e77bd7a7ce39457b173a"
+    "semantic_hash": "af49a95e61d03a910a99389391c45e28"
   },
   "popup/modules/management.js": {
     "mtime": 1792974176.038641,
@@ -1242,10 +1242,10 @@
     "semantic_hash": "3476c1ec93a151dc8ef99445b085a165"
   },
   "docs/IMPLEMENTATION_CHECKLIST.md": {
-    "mtime": 1794222680.299067,
-    "seen": 1794222684.9809754,
-    "ast_hash": "112e6eb0121682518d88a32c35fcfe6e",
-    "semantic_hash": "6dd0e67bee88ebe068b3d84e9a91b343"
+    "mtime": 1794223650.1324103,
+    "seen": 1794223747.94066,
+    "ast_hash": "f90c7d15793b1f883a03492b1ed3dfb4",
+    "semantic_hash": "5acf0248fcd81a84ae94cf280cca799d"
   },
   "src/sync/driveTransport.js": {
     "mtime": 1794199763.0549402,
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "tests/protocolV2-browser.mjs": {
-    "mtime": 1794220994.7346935,
-    "seen": 1794221818.1867278,
-    "ast_hash": "ff6607a75d48cbe8c635980ae8b89306",
+    "mtime": 1794223435.2860243,
+    "seen": 1794223566.8591475,
+    "ast_hash": "09809da1e8fb792af833f25737e2f004",
     "semantic_hash": ""
   },
   "tests/revisionProtocol2.test.js": {
@@ -1992,10 +1992,10 @@
     "semantic_hash": ""
   },
   "docs/PROTOCOL_V2_FOUNDATIONS.md": {
-    "mtime": 1794221809.6065967,
-    "seen": 1794222684.980982,
-    "ast_hash": "d1e87be216ad1dada2c3b12bb2eb72c1",
-    "semantic_hash": "d1e87be216ad1dada2c3b12bb2eb72c1"
+    "mtime": 1794223535.8403134,
+    "seen": 1794223747.9406667,
+    "ast_hash": "051184f887429efbd17daf981da5a468",
+    "semantic_hash": "051184f887429efbd17daf981da5a468"
   },
   "docs/PROTOCOL_V2_REVIEW.md": {
     "mtime": 1794221809.6065967,
@@ -2008,5 +2008,47 @@
     "seen": 1794222684.9810035,
     "ast_hash": "0ac35896df82a58e1f321720cfecae03",
     "semantic_hash": "0ac35896df82a58e1f321720cfecae03"
+  },
+  "src/sync/keyHistory.js": {
+    "mtime": 1794223110.60171,
+    "seen": 1794223566.858925,
+    "ast_hash": "46b200f0b647f6b56f22e42fb39f7d5a",
+    "semantic_hash": ""
+  },
+  "src/sync/keyMaterial.js": {
+    "mtime": 1794223456.1569655,
+    "seen": 1794223566.8589294,
+    "ast_hash": "215402eefce4d7f47c59834d1200e498",
+    "semantic_hash": ""
+  },
+  "src/sync/recoveryKit.js": {
+    "mtime": 1794223182.985858,
+    "seen": 1794223566.8589478,
+    "ast_hash": "eb7ea63bd2d8fcc770a22764bd09f9bf",
+    "semantic_hash": ""
+  },
+  "tests/keyHistory.test.js": {
+    "mtime": 1794223484.0390794,
+    "seen": 1794223566.859131,
+    "ast_hash": "ce02952aee6b95f63e99586e545ab8ae",
+    "semantic_hash": ""
+  },
+  "tests/recoveryKit.test.js": {
+    "mtime": 1794223409.3731918,
+    "seen": 1794223566.85917,
+    "ast_hash": "94c982d3faf2d1b5ff34e6a7a166b654",
+    "semantic_hash": ""
+  },
+  "docs/RECOVERY_KEY_MATERIAL.md": {
+    "mtime": 1794223535.83598,
+    "seen": 1794223747.940671,
+    "ast_hash": "f3676df4ba40894d3e13223a342a5af0",
+    "semantic_hash": "f3676df4ba40894d3e13223a342a5af0"
+  },
+  "docs/issues/RECOVERY_KEY_MATERIAL.md": {
+    "mtime": 1794223063.5970352,
+    "seen": 1794223747.940682,
+    "ast_hash": "11e44fe4a20c07162dc4f56f5cec8e57",
+    "semantic_hash": "11e44fe4a20c07162dc4f56f5cec8e57"
   }
 }

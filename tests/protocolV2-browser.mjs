@@ -49,6 +49,27 @@ try {
     const enrolled = await successor(f, { reason: 'recovery-set', recovery }); const recoveryHead = await authority.authorityDigest(enrolled.payload);
     const recovered = await authority.createAuthorityState({ ...enrolled.payload, revision: 'recovery', parents: [recoveryHead], reason: 'recover', keyEpoch: 'recovery-epoch', adminKey: joinedKey.publicKey, protectionDigest: 'f'.repeat(64), recovery: null }, [{ parent: recoveryHead, role: 'recovery', privateKey: recoverySigner.privateKey }]);
     ensure(authority.authorityState(await authority.verifyAuthorityGraph([recovered, enrolled, f.signed], f.trust)).payload.recovery === null, 'Recovery consumes old kit authority');
+    const kits = await import('../src/sync/recoveryKit.js'); const history = await import('../src/sync/keyHistory.js');
+    const kit = await kits.createRecoveryKit(f.record, f.bytes, f.state);
+    const kitEnrollment = await successor(f, { reason: 'recovery-set', recovery: kit.policy });
+    const kitHead = await authority.authorityDigest(kitEnrollment.payload);
+    const kitState = authority.authorityState(await authority.verifyAuthorityGraph([kitEnrollment, f.signed], { ...f.trust, expectedHead: kitHead }));
+    const kitOpening = await kits.openRecoveryKit(kit.code, kit.material, f.record, kitState);
+    ensure(kitOpening.bytes.every((byte, index) => byte === f.bytes[index]) && !kitOpening.privateKey.extractable, 'Recovery code proves and opens independently protected private keys');
+    kitOpening.bytes.fill(0);
+    await rejected(() => kits.openRecoveryKit(kit.code + 'x', kit.material, f.record, kitState), /code/);
+    const rotated = await crypt.createRecord([entry('recovered')], 'Fictional rotated master password 123!', { version: 3, vaultId: f.record.vaultId });
+    const roots = await history.createKeyHistory([{ keyEpoch: f.record.keyEpoch, bytes: f.bytes }], rotated.bytes, rotated.record);
+    const rewrapped = await kits.rewrapRecoveryRoot(kit.material, rotated.record, rotated.bytes, kitState);
+    const rotatedAuthority = await authority.createAuthorityState({ ...kitEnrollment.payload, revision: 'actual-rotation', parents: [kitHead], reason: 'rotate', keyEpoch: rotated.record.keyEpoch, adminKey: joinedKey.publicKey, protectionDigest: await revisions.protectionDigest(rotated.record), keyHistoryDigest: await history.keyHistoryDigest(roots), recovery: rewrapped.policy }, [{ parent: kitHead, role: 'admin', privateKey: f.admin.privateKey }]);
+    const rotatedState = authority.authorityState(await authority.verifyAuthorityGraph([rotatedAuthority, kitEnrollment, f.signed], f.trust));
+    const openedRotated = await kits.openRecoveryKit(kit.code, rewrapped.material, rotated.record, rotatedState);
+    const openedHistory = await history.openKeyHistory(roots, openedRotated.bytes, rotatedState);
+    ensure((await crypt.decryptWithKey(f.record, openedHistory[0].bytes))[0].username === 'one', 'Recovered new root opens authenticated historical keys and original record');
+    await rejected(() => history.openKeyHistory(roots, f.bytes, rotatedState), /.*/);
+    await rejected(() => kits.openRecoveryKit(kit.code, kit.material, f.record, rotatedState), /not bound/);
+    ensure(rewrapped.policy.privateEnvelopeDigest === kit.policy.privateEnvelopeDigest && rewrapped.policy.rootEnvelopeDigest !== kit.policy.rootEnvelopeDigest, 'Public rewrap preserves printed code and replaces root protection');
+    openedHistory.forEach(value => value.bytes.fill(0)); openedRotated.bytes.fill(0); rotated.bytes.fill(0);
     const signatureIndependentPayload = JSON.parse(body).payload;
     const digestTuple = ['SecurePass:revision:2', signatureIndependentPayload.author, signatureIndependentPayload.authorization, signatureIndependentPayload.record, signatureIndependentPayload.parents.map(value => [value.revision, value.digest, value.authorization])];
     f.bytes.fill(0);
@@ -56,5 +77,5 @@ try {
   });
   assert.equal(result.saltChanged, true); assert.equal(result.forks, 2);
   assert.equal(createHash('sha256').update(JSON.stringify(result.digestTuple)).digest('hex'), result.digest);
-  console.log('Protocol-v2 Chromium passed: vault-v3 HKDF/GCM round trip, master-wrapper and parent substitution rejection, opaque authority, concurrent rotation/joint resolution, separate recovery proof and Node/Chromium payload digest match. Internal foundations only.');
+  console.log('Protocol-v2 Chromium passed: vault-v3 HKDF/GCM, master-wrapper/parent rejection, opaque authority, concurrent rotation/joint resolution, printed recovery code/key-pair proofs, public root rewrap, authenticated old-key history, separate recovery proof and Node/Chromium digest match. Internal foundations only.');
 } finally { if (context) await context.close(); await rm(profile, { recursive: true, force: true }); }

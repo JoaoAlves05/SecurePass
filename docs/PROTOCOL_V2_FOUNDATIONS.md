@@ -4,6 +4,11 @@ Implemented 2026-11-09 following the [internal technical contract](PROTOCOL_V2_R
 Independent protocol review, public integration and production activation remain
 open. No stored vault is migrated merely by loading these modules.
 
+The following increment implements bounded encrypted recovery-key and historical-
+root candidates, public root rewrapping and verified opening. See
+[RECOVERY_KEY_MATERIAL.md](RECOVERY_KEY_MATERIAL.md). Activation and global
+rotation/recovery controllers remain unintegrated.
+
 ## Encrypted records and writer keys
 
 `vault/crypto.js` keeps vault-v2 as its default and reads legacy/v2 records with

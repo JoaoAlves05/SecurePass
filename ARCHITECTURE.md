@@ -240,3 +240,12 @@ live authority without current rights. Concurrent administration remains blocked
 until jointly authorized resolution. Root-only freshness remains unproven.
 These modules are opt-in internal foundations; public controllers/migration and
 production activation are not wired by loading them. [Contract](docs/PROTOCOL_V2_FOUNDATIONS.md).
+
+`sync/recoveryKit.js` produces secret-protected recovery-key candidates, verifies
+their digests against opaque live authority, proves both private/public pairs and
+validates the recovered vault-v3 root. Public RSA encryption can rewrap a rotated
+root without the printed code. `sync/keyHistory.js` protects bounded historical
+roots under the new epoch root with a separate HKDF/GCM domain. These helpers
+perform no storage/message/UI activation; controllers must enforce current-head,
+session/document ownership, save acknowledgement and transactional activation.
+[Material contract and limitations](docs/RECOVERY_KEY_MATERIAL.md).

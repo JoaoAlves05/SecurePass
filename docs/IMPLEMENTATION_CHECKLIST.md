@@ -6,7 +6,7 @@ Uma caixa marcada exige implementação e evidência indicada. Caixas abertas in
 
 ## Estado consolidado
 
-Commits anteriores de referência em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação), `3833689` (preview durante lock), `2e1d793` (administração transacional) e `79aabe5` (entrega administrativa). O incremento mais recente está descrito na secção seguinte. Última validação de código registada (09/11): **318 testes Node, check de 174 módulos e cenários Chromium de fundamentos v2, geral/PRF, Settings, checkpoints, lock de backup e entrega administrativa aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
+Commits anteriores de referência em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação), `3833689` (preview durante lock), `2e1d793` (administração transacional), `79aabe5` (entrega administrativa) e `2077c4a` (fundamentos v2). O incremento mais recente está descrito na secção seguinte. Última validação de código registada (09/11): **331 testes Node e check de 179 módulos aprovados; Chromium de protocolo-v2 com kit/histórico aprovado neste incremento**. As suites geral/PRF, Settings, checkpoints, lock de backup e entrega administrativa passaram no incremento anterior. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
@@ -18,6 +18,18 @@ Commits anteriores de referência em `main`: `f7fb780` (Drive/OAuth de leitura e
 | Aceitação | SC01/SC02/SC40 e AF03/AF09 fechados nos limites documentados | 55 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
 
 As caixas por secção abaixo representam aceitação integral, não ausência de implementação. Componentes internos não equivalem a funcionalidades ativadas na interface.
+
+## Material do kit e chaves históricas — 09/11/2026
+
+Contrato e limites: [RECOVERY_KEY_MATERIAL.md](RECOVERY_KEY_MATERIAL.md).
+Issue: [RECOVERY_KEY_MATERIAL.md](issues/RECOVERY_KEY_MATERIAL.md).
+
+- [x] Candidato de kit com segredo aleatório de 256 bits, signer separado, RSA-OAEP-3072 e chaves privadas protegidas por HKDF/GCM.
+- [x] Vincular ambos os envelopes à autoridade verificada; provar pares de chaves e validar o cofre recuperado antes de devolver a chave.
+- [x] Reproteger a nova raiz com a chave pública do kit, conservando o código impresso e substituindo o digest da raiz protegida.
+- [x] Histórico de até 64 raízes antigas cifrado sob a raiz nova, com domínio separado, digest administrativo e rejeição da raiz antiga.
+- [x] Treze regressões Node, referência HKDF/GCM independente e percurso criptográfico Chromium aprovados.
+- [ ] Draft vinculado ao documento/lock, confirmação de gravação e teste temporário, ativação transacional, rotação/recuperação globais e integração pública. As primitivas não fecham o cenário integral do kit.
 
 ## Fundamentos de formato e autoridade v2 — 09/11/2026
 
