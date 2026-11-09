@@ -1,6 +1,6 @@
 # Signed authorization prototype — specification and review gate
 
-Status: internal prototype for review and regression tests. Mutation signing and worker coordination are integrated behind a production review gate; no public enrollment/adoption/write-activation route exists. This is not a release protocol or an independently reviewed security claim. Existing vault-v2 encryption remains authoritative; no stored vault is migrated by these modules.
+Status: internal prototype for review and regression tests. Mutation signing and worker coordination are integrated behind a production review gate; no public enrollment/adoption/write-activation route exists. This is not a release protocol or an independently reviewed security claim. Existing vault-v2 remains the default; opt-in vault-v3/protocol-v2 foundations are documented separately and do not automatically migrate stored records.
 
 Authorization uses an independent ECDSA P-256/SHA-256 administrative key, separate from WebAuthn and ordinary writer keys. A state contains kind/version, vaultId, keyEpoch, revision, previous state digest, administrative SPKI and a sorted unique list of active device IDs/SPKIs. Limits: 128 devices and 256 states per supplied chain. Private keys never appear in a state. Signatures use Web Crypto's 64-byte IEEE-P1363 representation.
 
@@ -25,3 +25,14 @@ These checkpoints protect against a remote provider serving an old branch after 
 The `prepareSignedPublication` helper connects a signed packet to the atomic repository/outbox API and emulated Drive read-back acknowledgement. Prepared packets carry their authorization digest into the atomic commit. That transaction compares the persisted authorization head, and queued operations recheck the head before sending/failure updates/acknowledgement. Administrative changes invalidate old queued authority without deleting the local revision. The 2026-11-06 integration adds automatic normal-mutation signing for an internally enrolled writer, session/deadline checks, atomic local-restore suspension, account/token guards and worker scheduling behind a false production review predicate. Enrollment and administrative/rebase UI remain unavailable; these changes do not establish a reviewed release protocol. Persist the packet once per revision and reuse its exact bytes: ECDSA signatures are randomized, so recreating a packet is not an idempotent retry.
 
 Primitive API reference: [W3C Web Cryptography](https://www.w3.org/TR/webcrypto/). This reference describes the primitives, not an endorsement or security proof of the SecurePass protocol.
+
+
+## Next-format foundations — 2026-11-09
+
+[Vault-v3 and protocol-v2](PROTOCOL_V2_FOUNDATIONS.md) add per-object HKDF data and
+writer-key protection, administrative protection digests, separate recovery roles,
+joint administrative parents and recursively digest-bound content ancestry.
+[Internal design review](PROTOCOL_V2_REVIEW.md) records implementation choices and
+remaining application requirements. The v1 sections above describe the existing
+prototype and remain distinct from the new isolated verifier/crypto modules.
+Neither path satisfies independent review or activates production writing.

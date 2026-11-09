@@ -6,7 +6,7 @@ Uma caixa marcada exige implementação e evidência indicada. Caixas abertas in
 
 ## Estado consolidado
 
-Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação), `3833689` (preview durante lock) e `2e1d793` (administração transacional). Última validação de código registada (09/11): **295 testes Node, check de 165 módulos e cenários Chromium de administração/entrega, revisão Drive e commit assinado aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
+Commits anteriores de referência em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação), `3833689` (preview durante lock), `2e1d793` (administração transacional) e `79aabe5` (entrega administrativa). O incremento mais recente está descrito na secção seguinte. Última validação de código registada (09/11): **318 testes Node, check de 174 módulos e cenários Chromium de fundamentos v2, geral/PRF, Settings, checkpoints, lock de backup e entrega administrativa aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
@@ -18,6 +18,20 @@ Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquis
 | Aceitação | SC01/SC02/SC40 e AF03/AF09 fechados nos limites documentados | 55 SC e 10 AF ainda abertos; reconciliação individual SD01–SD23 e release |
 
 As caixas por secção abaixo representam aceitação integral, não ausência de implementação. Componentes internos não equivalem a funcionalidades ativadas na interface.
+
+## Fundamentos de formato e autoridade v2 — 09/11/2026
+
+Contrato: [PROTOCOL_V2_FOUNDATIONS.md](PROTOCOL_V2_FOUNDATIONS.md). Revisão técnica
+interna: [PROTOCOL_V2_REVIEW.md](PROTOCOL_V2_REVIEW.md). Issue:
+[PROTOCOL_V2_FOUNDATIONS.md](issues/PROTOCOL_V2_FOUNDATIONS.md).
+
+- [x] Vault-v3 explícito com sal HKDF por cifragem, AAD contextual, schema/base64 estritos e sem migração automática. Default local continua v2; rotação local preserva formato.
+- [x] Chaves privadas de writer com HKDF por envelope, separadas da master/recuperação, prova de par e CryptoKey não extraível; leitura de envelopes antigos preservada.
+- [x] Grafo administrativo com proteção da master vinculada, papéis separados, forks preservados e resolução assinada por ambos os administradores. Recuperação exige o signer previamente inscrito.
+- [x] Assinaturas de conteúdo vinculam digests recursivos de ancestrais; writer válido não pode trocar wrapper da master e writer revogado não ganha aceitação live por uma assinatura antiga.
+- [x] Referências opacas de histórico/checkpoint, raiz/checkpoint independentes e frescura não demonstrada sem fonte independente.
+- [x] Vinte e três regressões novas; Node/OpenSSL e Chromium coincidem no digest; referência HKDF/GCM independente e suites de compatibilidade aprovadas.
+- [ ] Integrar serviços/transações v2, onboarding, rotação global, kit, rebase/retention/migração e aceitação externa. Módulos isolados não fecham os cenários integrais nem a release.
 
 ## Entrega administrativa verificada — 09/11/2026
 

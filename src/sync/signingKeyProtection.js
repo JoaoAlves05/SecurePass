@@ -1,6 +1,7 @@
 import { bufferToBase64 } from '../encoding.js';
 import { deriveMasterKey, decodeBytes, seal, open, ITERATIONS } from '../vault/crypto.js';
 import { validateMaster } from '../validation.js';
+import { createDeviceKey2, unlockDeviceKey2 } from './deviceKeyProtection2.js';
 const validId = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value);
 function validate(value, expected, role) {
   if (!value || Object.keys(value).sort().join(',') !== ['kind','version','role','vaultId','keyEpoch','keyId','publicKey','kdf','protectedKey'].sort().join(',') || value.kind !== 'securepass-signing-key' || value.version !== 1 || value.role !== role || ![value.vaultId,value.keyEpoch,value.keyId].every(validId) || value.vaultId !== expected?.vaultId || value.keyEpoch !== expected?.keyEpoch) throw new Error('Signing key context mismatch.');
@@ -54,9 +55,11 @@ export async function unlockAdministrativeKey(value, passphrase, expected) {
   return unwrap(envelope,await deriveMasterKey(passphrase,decodeBytes(envelope.kdf.salt,16),envelope.kdf.iterations));
 }
 export function createDeviceKey(bytes, expected) {
+  if (expected?.version === 3 || expected?.contentVersion === 3) return createDeviceKey2(bytes, expected);
   const pinned = structuredClone(expected);
   return contentKey(bytes).then(key=>create('device',pinned,key,null));
 }
 export async function unlockDeviceKey(value, bytes, expected) {
+  if (value?.version === 2) return unlockDeviceKey2(value, bytes, expected);
   return unwrap(validate(value,expected,'device'),await contentKey(bytes));
 }

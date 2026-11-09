@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-09): **295 Node tests, 165 checked modules and Chromium administration/delivery, protected Drive review and signed atomic-commit scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-09): **318 Node tests, 174 checked modules and Chromium protocol-v2 foundations, general/virtual-PRF, Settings, checkpoints, backup-lock and administrative-delivery scenarios passed**. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -516,3 +516,36 @@ No new management routes, incoming administration application, global rotation,
 recovery kit, cross-authority/epoch rebase, retention or migration are claimed.
 The independent-review predicate remains false; SC/AF and release remain open.
 [Delivery contract](ADMINISTRATIVE_DELIVERY.md).
+
+
+## Opt-in vault-v3 / protocol-v2 foundations — 2026-11-09
+
+Final `npm test`: **318/318 passed**; `npm run check`: **174 modules passed**.
+Twenty-three new tests cover v3 read/write/HKDF domains, exact Unicode, nonce-salt
+and AAD tampering, schema/ancestry/base64, checkpoint/merge reprotection, strict
+constructor inputs and an independent Node crypto HKDF/GCM reference vector;
+writer v2 key protection/backward compatibility and role isolation; graph roots,
+checkpoints/forks/joint resolution, master-protection constraints and registered
+recovery signer policy; opaque capabilities, valid-writer master-wrapper
+substitution and revoked-writer historical substitution under an anchored ID.
+
+`test:protocol-v2-browser` passed native Chromium data/role/signature operations,
+protected nonextractable writer keys, parent/master substitution rejection,
+concurrent/joint administration, separate recovery signer and Node/Chromium digest
+comparison. This harness imports internal modules in a disposable extension page;
+it does not migrate a stored vault or establish a public recovery-kit journey.
+
+An initial Settings run, concurrent with the Node suite, timed out awaiting full
+checkpoint restoration. No product cause was established. Two subsequent serial
+Settings runs passed, including the full restore. The fixture now records bounded
+message-type/timing-only failure diagnostics, with no request payloads/passwords;
+the wait timeout was not increased. This does not close broad SC51 acceptance.
+
+The final sequential run passed Node, protocol-v2, general/autofill/virtual PRF,
+Settings, checkpoint review, backup-lock and administrative-delivery Chromium
+suites, syntax/import/version checks and runtime packaging. Generated existing
+screenshots were restored. No layout/shipped image change belongs to this block.
+Global rotation/recovery transactions, public onboarding, incoming administration,
+protocol-v2 application/rebase, retention/migration, real Google/hardware and
+independent review remain open; the production predicate stays false.
+[Foundation contract](PROTOCOL_V2_FOUNDATIONS.md).

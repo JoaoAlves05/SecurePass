@@ -69,6 +69,21 @@ async function layouts(page) {
 }
 try {
   context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: true, args: [`--disable-extensions-except=${root}`, `--load-extension=${root}`, '--no-sandbox'] });
+  // Bounded, payload-free diagnostics for an intermittent restore wait. Keep
+  // native callback semantics (including runtime.lastError) unchanged.
+  await context.addInitScript(() => {
+    if (location.protocol !== 'chrome-extension:' || !globalThis.chrome?.runtime?.sendMessage) return;
+    const original = chrome.runtime.sendMessage.bind(chrome.runtime);
+    globalThis.settingsMessageTrace = [];
+    chrome.runtime.sendMessage = (message, ...args) => {
+      const row = { type: typeof message?.type === 'string' ? message.type : 'unknown', started: performance.now(), done: false };
+      settingsMessageTrace.push(row); if (settingsMessageTrace.length > 100) settingsMessageTrace.shift();
+      const finish = response => { row.done = true; row.elapsed = Math.round(performance.now() - row.started); row.ok = response?.ok; return response; };
+      const callback = args.at(-1);
+      if (typeof callback === 'function') { args[args.length - 1] = response => callback(finish(response)); return original(message, ...args); }
+      return original(message, ...args).then(finish);
+    };
+  });
   context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
   const page = await context.newPage();
   let [worker] = context.serviceWorkers(); if (!worker) worker = await context.waitForEvent('serviceworker');
@@ -438,7 +453,7 @@ try {
   console.log('Hierarchical Settings passed: list/detail/sidebar navigation, keyboard/back/history/scroll/focus, legacy deep links and tab transfer, light/dark layouts at 320–1600px, readable cache state, preferences/reset/cache, encrypted backup and version downloads, import/conflicts, local/archive restores and deduplication, legacy remote merge, archive/entry cleanup, device erasure and inline password/virtual-PRF master rotation with biometric revocation.');
 } catch (failure) {
   for (const page of context?.pages() || []) {
-    console.error(await page.evaluate(() => ({ error: document.querySelector('#operationError')?.textContent, activity: document.querySelector('#managementActivity')?.textContent, toast: document.querySelector('#toast')?.textContent, empty: document.querySelector('#backupEmptyState')?.hidden })));
+    console.error(await page.evaluate(() => ({ error: document.querySelector('#operationError')?.textContent, activity: document.querySelector('#managementActivity')?.textContent, toast: document.querySelector('#toast')?.textContent, empty: document.querySelector('#backupEmptyState')?.hidden, messages: globalThis.settingsMessageTrace?.slice(-20) })).catch(() => ({ pageUnavailable: true })));
   }
   throw failure;
 } finally { await context?.close(); await rm(profile, { recursive: true, force: true }); }

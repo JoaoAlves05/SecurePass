@@ -225,3 +225,18 @@ Old-authority content is retained with an explicit rebase-required result.
 Transport live guards propagate through noninteractive token/account verification
 so pause/cancellation cannot start a late automatic GET. Production review remains
 false. [Contract and limits](docs/ADMINISTRATIVE_DELIVERY.md).
+
+
+## Opt-in vault-v3 / protocol-v2 foundations — 2026-11-09
+
+The shared cryptographic reader now supports explicit vault-v3 with per-object
+HKDF salts and domain-separated data encryption; vault-v2 remains the default.
+`sync/deviceKeyProtection2.js` independently derives protected writer-envelope
+keys and preserves old envelope reading. `authorizationGraph.js` issues opaque
+verified states for bounded administrative DAGs, roles, protection digests and
+signed content anchors. `revisionProtocol2.js` binds recursive parent-payload
+digests and administrative master protection; retired signatures cannot become
+live authority without current rights. Concurrent administration remains blocked
+until jointly authorized resolution. Root-only freshness remains unproven.
+These modules are opt-in internal foundations; public controllers/migration and
+production activation are not wired by loading them. [Contract](docs/PROTOCOL_V2_FOUNDATIONS.md).

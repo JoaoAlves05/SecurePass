@@ -197,7 +197,7 @@ async function rotateMasterPassword(state, newPassphrase, epoch) {
     catch { throw new Error('An older checkpoint needs its previous password or is damaged. Review it in Backups & recovery before changing your master password. No password was changed.'); }
   }
   const historyState = await decryptPayloadWithKey(state.record, state.bytes);
-  const rotated = await createRecord(state.entries, newPassphrase, { vaultId: state.record.vaultId, parents: [state.record.revision, ...state.record.parents], history: historyState });
+  const rotated = await createRecord(state.entries, newPassphrase, { version: state.record.version, vaultId: state.record.vaultId, parents: state.record.version === 3 ? [state.record.revision] : [state.record.revision, ...state.record.parents], history: historyState });
   const protectedHistory = [];
   for (let i = 0; i < history.length; i++) protectedHistory.push(await protectCheckpoint(history[i], contents[i].entries, rotated.record, rotated.bytes, contents[i]));
   session.assertGeneration(epoch);
