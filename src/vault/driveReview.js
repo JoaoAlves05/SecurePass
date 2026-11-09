@@ -26,7 +26,7 @@ function inventory(files, vaultId) {
   for (const file of files) {
     if (typeof file?.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(file.id) || ids.has(file.id)) throw new Error('Inconsistent Drive inventory. Retry inspection.');
     ids.add(file.id);
-    if (file.appProperties?.vaultId !== vaultId) continue;
+    if (file.appProperties?.vaultId !== vaultId || file.appProperties.kind === 'authorization') continue;
     if (!validId(file.appProperties.revisionId) || selected.length >= MAX_HISTORY_RECORDS) throw new Error('Drive history exceeds supported inspection limits.');
     selected.push({ id: file.id, revision: file.appProperties.revisionId });
   }

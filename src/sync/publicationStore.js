@@ -40,10 +40,10 @@ export const publicationStore = {
     const pinned = { accountId: binding.accountId, vaultId: binding.vaultId, generation: binding.generation };
     return access(state => {
       if (!sameBinding(state.binding, pinned)) delete state.writer;
-      state.binding = pinned; state.enabled = enabled;
+      state.binding = pinned; state.enabled = enabled; state.administrationEnabled = enabled;
     }, true);
   },
-  disable() { return access(state => { state.enabled = false; }, true); },
+  disable() { return access(state => { state.enabled = false; state.administrationEnabled = false; }, true); },
   context() { return access(state => ({ enabled: state.enabled, binding: state.binding, writer: state.writer || null })); },
   pendingPackets(binding) {
     return access((state, head) => {

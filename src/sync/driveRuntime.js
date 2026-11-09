@@ -7,19 +7,25 @@ import { verifySignedPublication } from './signedProtocol.js';
 import { getStorage } from '../utils/storage.js';
 import { loadSettings } from '../settings.js';
 import { readAdministration } from './administrationStore.js';
+import { createAdministrationRuntime } from './administrationRuntime.js';
 
 // This is a source-level release gate, not a preference that a website or a
 // stale saved setting can enable. Remove only after the documented review.
 const reviewedForProduction = () => false;
 export function createDriveRuntime({ store = publicationStore, getToken = getBoundGoogleToken, assertAccount = assertGoogleBinding, writesReviewed = reviewedForProduction, fetchImpl } = {}) {
   let running;
+  const administrative = createAdministrationRuntime({ getContext: () => store.context?.(), getToken, assertAccount, writesReviewed, fetchImpl });
   async function run() {
     if (!writesReviewed()) return { blockedByReview: true };
     if ((await loadSettings()).useSync || (await getStorage('local', 'localRestorePending')).localRestorePending) return { suspended: true };
+    const delivered = await administrative.run();
+    if (!delivered.idle) return { ...delivered, administrative: true };
     const operation = await store.next();
     if (!operation) return { idle: true };
     const administrationPending = async () => (await readAdministration(operation.publication.vaultId)).administration?.operations.some(value => value.phase !== 'published');
     if (await administrationPending()) return { administrationPending: true };
+    const currentAuthority = await loadAuthorization(operation.publication.vaultId);
+    if (operation.authorization !== undefined && currentAuthority?.hash !== operation.authorization) return { rebaseRequired: true, revisionId: operation.publication.revisionId };
     const assertCurrent = async binding => {
       if (!writesReviewed() || (await loadSettings()).useSync || (await getStorage('local', 'localRestorePending')).localRestorePending) throw new DriveError('binding-changed');
       if (await administrationPending()) throw new DriveError('administration-pending');

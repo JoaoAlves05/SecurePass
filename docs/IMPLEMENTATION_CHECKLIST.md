@@ -6,7 +6,7 @@ Uma caixa marcada exige implementação e evidência indicada. Caixas abertas in
 
 ## Estado consolidado
 
-Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação) e `3833689` (preview durante lock). Última validação de código registada (09/11): **288 testes Node, check de 160 módulos e cenário Chromium de administração transacional aprovado**. As restantes suites mantêm a data própria em VALIDATION.md.
+Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquisável), `82933d8` (planeador de três vias), `7d47420` (ancestral autenticado interno), `c911ff1` (recolha de história Drive), `618cde2` (tombstones persistidos), `7f198f4` (commit de merge autenticado), `4fb6b0b` (revisão Drive protegida), `2e2ce4d` (arquivos grandes), `1405a9d` (lote de exportação), `3833689` (preview durante lock) e `2e1d793` (administração transacional). Última validação de código registada (09/11): **295 testes Node, check de 165 módulos e cenários Chromium de administração/entrega, revisão Drive e commit assinado aprovados**. As restantes suites mantêm a data própria em VALIDATION.md.
 
 | Área | Entregue | Ainda necessário para fechar |
 |---|---|---|
@@ -19,6 +19,19 @@ Código integrado em `main`: `f7fb780` (Drive/OAuth de leitura e seletor pesquis
 
 As caixas por secção abaixo representam aceitação integral, não ausência de implementação. Componentes internos não equivalem a funcionalidades ativadas na interface.
 
+## Entrega administrativa verificada — 09/11/2026
+
+Contrato: [ADMINISTRATIVE_DELIVERY.md](ADMINISTRATIVE_DELIVERY.md). Issue:
+[ADMINISTRATIVE_DELIVERY.md](issues/ADMINISTRATIVE_DELIVERY.md).
+
+- [x] Publicação canónica de cadeia assinada/envelope protegido, limite de 4 MiB, raiz/checkpoint independentes e prova de chave privada separada da verificação pública. Head declarado no pacote não prova frescura.
+- [x] Namespace remoto próprio, read-back de todas as cópias, inventário final e acknowledgement por digest/IDs verificados; retoma exata após resposta perdida e reload.
+- [x] Persistir vínculo/tentativa/resultado incerto antes de I/O; retry/backoff e URI retomável protegida. Não transferir para outra conta; retoma numa nova geração exige master password e head revistos.
+- [x] Entregar autoridade antes de conteúdo. Autorrevogação suspende conteúdo mas permite entregar a revogação; desligar/desconectar/restaurar suspende ambos. Conteúdo antigo continua preservado e sinaliza rebase.
+- [x] Impedir GET tardio de verificação de conta quando o owner foi pausado durante aquisição de token.
+- [x] Seis regressões de protocolo/entrega, uma de token pausado e Chromium com fornecedor emulado: upload aceite/resposta perdida, reload/reutilização exata e ordem de três alterações administrativas.
+- [ ] Onboarding/gestão públicos, descoberta administrativa recebida, rotação/recuperação, rebase, retenção/migração e Google real/revisão independente. A política de produção continua bloqueada.
+
 ## Administração de dispositivos — 09/11/2026
 
 Contrato: [DEVICE_ADMINISTRATION.md](DEVICE_ADMINISTRATION.md). Issue:
@@ -29,7 +42,7 @@ Contrato: [DEVICE_ADMINISTRATION.md](DEVICE_ADMINISTRATION.md). Issue:
 - [x] Retoma por ID de operação preserva bytes assinados após reload; rejeitar outro pedido com o mesmo ID e ramos concorrentes.
 - [x] Autorrevogação suspende o writer e conserva a fila anterior. Runtime impede publicação de conteúdo antes da entrega administrativa, incluindo quando a política de revisão é ativada apenas em teste.
 - [x] Oito regressões Node e Chromium com WebCrypto/IndexedDB reais: abort/retry, bootstrap/inscrição, replay após reload, password errada, revogação e outbox preservada.
-- [ ] Integrar transporte administrativo, onboarding/gestão públicos, rotação, recuperação e rebase. Este incremento não fecha SC03/SC16/SC26/SC47 integrais nem ativa escrita de produção.
+- [ ] Integrar onboarding/gestão públicos, descoberta administrativa recebida, rotação, recuperação e rebase; transporte administrativo entregue no incremento seguinte. Este incremento não fecha SC03/SC16/SC26/SC47 integrais nem ativa escrita de produção.
 
 ## Preview de backup durante lock — 08/11/2026
 

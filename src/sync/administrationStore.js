@@ -31,9 +31,10 @@ export async function commitAdministration({ record, previous, authority, admini
         if (recordRevision(live.result) !== record.revision || live.result?.keyEpoch !== record.keyEpoch || live.result?.vaultId !== record.vaultId) throw new Error('Vault changed during administration.');
         if (JSON.stringify(auth.result || null) !== JSON.stringify(previous.authority) || JSON.stringify(admin.result || null) !== JSON.stringify(previous.administration)) throw new Error('Administration changed concurrently. Review again.');
         const state = publication.result || null;
-        if (Boolean(state) !== Boolean(previous.publication) || state && (state.enabled !== previous.publication.enabled || !sameBinding(state.binding, previous.publication.binding) && (state.binding || previous.publication.binding) || JSON.stringify(state.writer) !== JSON.stringify(previous.publication.writer))) throw new Error('Drive binding or writer changed during administration.');
+        if (Boolean(state) !== Boolean(previous.publication) || state && (state.enabled !== previous.publication.enabled || state.administrationEnabled !== previous.publication.administrationEnabled || !sameBinding(state.binding, previous.publication.binding) && (state.binding || previous.publication.binding) || JSON.stringify(state.writer) !== JSON.stringify(previous.publication.writer))) throw new Error('Drive binding or writer changed during administration.');
         store.put(authority, authorityKey(record.vaultId)); store.put(administration, adminKey(record.vaultId));
         if (state?.binding?.vaultId === record.vaultId) {
+          if (state.administrationEnabled === undefined) state.administrationEnabled = state.enabled;
           if (writer) state.writer = writer;
           if (state.writer && !authority.chain.at(-1).payload.devices.some(device => device.id === state.writer.author && device.publicKey === state.writer.envelope.publicKey)) { delete state.writer; state.enabled = false; }
           // Retain all operations, including old-authority work. The publisher's

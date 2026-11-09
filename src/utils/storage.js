@@ -149,7 +149,7 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendi
             driveRequest.onsuccess = () => {
               try {
                 const state = driveRequest.result || { enabled: false, binding: null, operations: [] };
-                if (suspendDrive) { state.enabled = false; store.put(state, PUBLICATION_STATE_KEY); return; }
+                if (suspendDrive) { state.enabled = false; state.administrationEnabled = false; store.put(state, PUBLICATION_STATE_KEY); return; }
                 if (!preparedDrive) {
                   if (state.enabled) throw new Error('Drive binding changed before commit. Retry the operation.');
                   return;

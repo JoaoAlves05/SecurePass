@@ -55,7 +55,7 @@ test('self revocation suspends its writer and preserves earlier queued content f
   await vault.storeCredential({ id: 'kept', site: 'https://example.com', password: 'Fictional secret' });
   const operation = await publicationStore.next(); assert.ok(operation);
   const { createDriveRuntime } = await import('../src/sync/driveRuntime.js'); let tokens = 0;
-  assert.deepEqual(await createDriveRuntime({ writesReviewed: () => true, getToken: async () => { tokens++; return 'fictional-token'; } }).run(), { administrationPending: true });
+  assert.deepEqual(await createDriveRuntime({ getToken: async () => { tokens++; return 'fictional-token'; } }).run(), { blockedByReview: true });
   assert.equal(tokens, 0);
   const enrolled = await admin.enrollDevice(PASS, await device({ expectedHead: first.head }));
   await assert.rejects(publicationStore.assertCurrent(operation), /authorization/);

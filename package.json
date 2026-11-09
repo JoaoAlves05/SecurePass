@@ -27,7 +27,8 @@
     "test:recovery-archive-browser": "node tests/recoveryArchive-browser.mjs",
     "test:recovery-export-browser": "node tests/recoveryExport-browser.mjs",
     "test:backup-lock-browser": "node tests/backupLock-browser.mjs",
-    "test:administration-browser": "node tests/administration-browser.mjs"
+    "test:administration-browser": "node tests/administration-browser.mjs",
+    "test:administration-delivery-browser": "node tests/administrationDelivery-browser.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.4",

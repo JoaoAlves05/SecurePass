@@ -14,6 +14,10 @@ function validate(value, expected, role) {
   return structuredClone(value);
 }
 const context = value => JSON.stringify(['SecurePass:signing-key:1',value.role,value.vaultId,value.keyEpoch,value.keyId,value.publicKey]);
+export function canonicalAdministrativeEnvelope(value, expected) {
+  const key = validate(value, expected, 'admin');
+  return { kind: key.kind, version: key.version, role: key.role, vaultId: key.vaultId, keyEpoch: key.keyEpoch, keyId: key.keyId, publicKey: key.publicKey, kdf: { name: key.kdf.name, iterations: key.kdf.iterations, salt: key.kdf.salt }, protectedKey: { iv: key.protectedKey.iv, ciphertext: key.protectedKey.ciphertext } };
+}
 async function contentKey(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length !== 32) throw new Error('A valid content key is required.');
   return crypto.subtle.importKey('raw',bytes,'AES-GCM',false,['encrypt','decrypt']);

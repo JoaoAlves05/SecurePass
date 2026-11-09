@@ -39,7 +39,7 @@ export async function planDriveMerge({ reader, binding, localPackets = [], local
     for (const file of files) {
       if (typeof file?.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(file.id) || ids.has(file.id)) throw new Error('Inconsistent Drive discovery.');
       ids.add(file.id);
-      if (file.appProperties?.vaultId !== pinned.vaultId) continue;
+      if (file.appProperties?.vaultId !== pinned.vaultId || file.appProperties.kind === 'authorization') continue;
       const revision = file.appProperties.revisionId;
       if (!validId(revision)) throw new Error('Invalid Drive revision identity.');
       if (!groups.has(revision)) groups.set(revision, []);

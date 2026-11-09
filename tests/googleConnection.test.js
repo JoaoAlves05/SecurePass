@@ -95,3 +95,14 @@ test('cancelled noninteractive token acquisition cannot continue into account or
   await started; controller.abort(); finish({ token: 'cancelled-fictional-token' });
   await assert.rejects(pending, { name: 'AbortError' }); assert.equal(calls.length, 0);
 });
+
+test('an owner paused during token acquisition cannot start a late account verification read', async () => {
+  await google.connectGoogle(); calls.length = 0;
+  const binding = { accountId, generation: areas.local.googleDriveConnection.generation };
+  let enabled = true; let requested; let finish;
+  const started = new Promise(resolve => { requested = resolve; });
+  chrome.identity.getAuthToken = () => { requested(); return new Promise(resolve => { finish = resolve; }); };
+  const pending = google.getBoundGoogleToken(binding, { assertCurrent: async () => { if (!enabled) throw new Error('Owner paused'); } });
+  await started; enabled = false; finish({ token: 'paused-fictional-token' });
+  await assert.rejects(pending, /Owner paused/); assert.equal(calls.length, 0);
+});

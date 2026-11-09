@@ -44,7 +44,7 @@ when a test explicitly enables the separate production-review predicate.
 Services: `bootstrapAdministration`, `enrollDevice`, `revokeDevice` and
 `administrationStatus`. They expose metadata, never raw private keys. There are
 no new management routes in this increment: public onboarding, proof/confirmation
-of peer identity, administrative transport, key rotation/recovery, queue rebase
+of peer identity, incoming administrative discovery, key rotation/recovery, queue rebase
 and production acceptance are subsequent integration work. Status may report
 opaque registry metadata while locked; mutations require an unlocked supported
 vault and fresh master proof.
@@ -60,3 +60,11 @@ before administrative delivery. No real Google or hardware acceptance is claimed
 
 Primitive reference: [W3C Web Cryptography](https://www.w3.org/TR/webcrypto/).
 It defines the used API operations; it does not certify the application protocol.
+
+
+Administrative transport was subsequently implemented on 2026-11-09; see
+[verified administrative delivery](ADMINISTRATIVE_DELIVERY.md). The journal now
+separates up to 32 unpublished operations from retained published receipts within
+the existing 256-state/4-MiB bounds. No receipt is invented or silently discarded.
+Explicit retry under a new generation requires master proof and the reviewed head;
+it cannot change account/vault. Public onboarding and key lifecycle remain open.

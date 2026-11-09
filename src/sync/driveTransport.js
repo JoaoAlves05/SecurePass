@@ -40,8 +40,9 @@ function classify(response, body) {
   const retryAfter = Number.isFinite(seconds) ? Math.max(0, seconds * 1000) : Math.max(0, Date.parse(header) - Date.now()) || 0;
   return new DriveError(code, { retryable, retryAfter: Math.min(retryAfter, 24 * 60 * 60 * 1000) });
 }
-function createDriveClient({ getToken, assertBinding, assertWritable, validatePublication, fetchImpl = fetch, maxPages = 100, maxFiles = 10000, timeoutMs = 30000 }, writable = false) {
+function createDriveClient({ getToken, assertBinding, assertWritable, validatePublication, fetchImpl = fetch, maxPages = 100, maxFiles = 10000, timeoutMs = 30000, namespace = 'revision' }, writable = false) {
   if (typeof getToken !== 'function' || typeof assertBinding !== 'function') throw new Error('A token provider and binding guard are required.');
+  if (!['revision', 'authorization'].includes(namespace)) throw new Error('Invalid Drive namespace.');
   if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 100 || !Number.isInteger(maxFiles) || maxFiles < 1 || maxFiles > 10000 || !Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60000) throw new Error('Invalid Drive limits.');
   async function guard(binding) {
     try { await assertBinding(binding); } catch { throw new DriveError('binding-changed'); }
@@ -51,7 +52,7 @@ function createDriveClient({ getToken, assertBinding, assertWritable, validatePu
     const writeGuard = async () => { if (writing) await assertWritable(binding); };
     await writeGuard();
     signal?.throwIfAborted(); await guard(binding);
-    const token = await getToken(binding); signal?.throwIfAborted(); await guard(binding); await writeGuard();
+    const token = await getToken(binding, { signal, assertCurrent: async () => { await guard(binding); await writeGuard(); } }); signal?.throwIfAborted(); await guard(binding); await writeGuard();
     if (typeof token !== 'string' || !token || /[\r\n]/.test(token)) throw new DriveError('authentication-required');
     const controller = new AbortController();
     const cancel = () => controller.abort(); signal?.addEventListener('abort', cancel, { once: true });
@@ -168,7 +169,7 @@ function createDriveClient({ getToken, assertBinding, assertWritable, validatePu
     signal?.throwIfAborted(); await guard(binding); await assertWritable(binding);
     const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', data))].map(value => value.toString(16).padStart(2, '0')).join('');
     const verify = async files => {
-      const matches = files.filter(file => file.appProperties?.vaultId === vaultId && file.appProperties?.revisionId === revisionId);
+      const matches = files.filter(file => file.appProperties?.vaultId === vaultId && file.appProperties?.revisionId === revisionId && (file.appProperties.kind || 'revision') === namespace);
       for (const file of matches) {
         if (await reader.download(binding, file.id, { signal }) !== body) throw new DriveError('revision-content-conflict');
       }
@@ -180,7 +181,7 @@ function createDriveClient({ getToken, assertBinding, assertWritable, validatePu
       return { revisionId, digest, fileIds: existing, verified: true, reused: true };
     }
     const boundary = `securepass_${crypto.randomUUID()}`;
-    const metadata = JSON.stringify({ name: revisionId, parents: ['appDataFolder'], mimeType: 'application/json', appProperties: { vaultId, revisionId, digest } });
+    const metadata = JSON.stringify({ name: revisionId, parents: ['appDataFolder'], mimeType: 'application/json', appProperties: { vaultId, revisionId, digest, ...(namespace === 'revision' ? {} : { kind: namespace }) } });
     const multipart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
     const created = data.length > MULTIPART_BYTES || options.uploadSession
       ? await uploadResumable(binding, metadata, data, digest, options)

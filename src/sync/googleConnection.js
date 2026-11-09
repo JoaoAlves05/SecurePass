@@ -66,15 +66,14 @@ export async function assertGoogleBinding(binding) {
   if (connection.state !== 'connected' || connection.accountId !== binding.accountId ||
     (await getStorage('local', 'localRestorePending')).localRestorePending) throw new DriveError('binding-changed');
 }
-export async function getBoundGoogleToken(binding, { signal } = {}) {
-  signal?.throwIfAborted();
-  await assertGoogleBinding(binding);
-  signal?.throwIfAborted();
+export async function getBoundGoogleToken(binding, { signal, assertCurrent = async () => {} } = {}) {
+  const guard = async () => { signal?.throwIfAborted(); await assertGoogleBinding(binding); await assertCurrent(binding); signal?.throwIfAborted(); };
+  await guard();
   const token = await authToken(false);
-  signal?.throwIfAborted();
+  await guard();
   // A cached token can belong to a different signed-in Chrome account. Verify
   // its provider identity before returning it for any bound list/upload request.
-  const reader = createDriveReader({ getToken: async () => token, assertBinding: () => assertGoogleBinding(binding) });
+  const reader = createDriveReader({ getToken: async () => token, assertBinding: guard });
   let account;
   try { account = await reader.account(binding, { signal }); }
   catch (error) {
@@ -82,8 +81,7 @@ export async function getBoundGoogleToken(binding, { signal } = {}) {
     throw error;
   }
   if (account.accountId !== binding.accountId) throw new DriveError('account-changed');
-  await assertGoogleBinding(binding);
-  signal?.throwIfAborted();
+  await guard();
   return token;
 }
 export async function inspectGoogleFiles() {

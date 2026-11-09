@@ -44,10 +44,14 @@ export async function createAuthorization(payload, privateKey) {
   // Signing is not authority verification; consumers must verify the whole chain.
   return { payload: snapshot, signature: await sign(authTuple(snapshot), privateKey) };
 }
+export function canonicalAuthorizationChain(chain) {
+  if (!Array.isArray(chain) || !chain.length || chain.length > 256) throw new Error('A bounded authorization chain is required.');
+  return chain.map(value => { fields(value, ['payload', 'signature']); return { payload: authorizationPayload(value.payload), signature: value.signature }; });
+}
 export async function verifyAuthorizationChain(chain, { vaultId, rootFingerprint, expectedHead, checkpoint } = {}) {
   if (!identity(vaultId) || !digestId(rootFingerprint) || expectedHead !== undefined && !digestId(expectedHead) || checkpoint !== undefined && !digestId(checkpoint) || !Array.isArray(chain) || !chain.length || chain.length > 256) throw new Error('A bounded chain and independent trust anchor are required.');
   // Snapshot caller-controlled inputs before any asynchronous verification.
-  const snapshots = chain.map(value => { fields(value, ['payload', 'signature']); return { payload: authorizationPayload(value.payload), signature: value.signature }; });
+  const snapshots = canonicalAuthorizationChain(chain);
   let previous = null; let checkpointSeen = false; const revisions = new Set();
   for (const signed of snapshots) {
     const p = signed.payload;

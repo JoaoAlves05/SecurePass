@@ -206,6 +206,22 @@ stable signed operation journal in one IndexedDB transaction. Replay reuses exac
 signed bytes; stale heads, duplicate device identities, last-device revocation,
 lock and abort fail without partial changes. Self-revocation suspends writing and
 preserves pending content. Runtime content publication waits for administrative
-delivery. These internal services precede public onboarding, administrative
-transport, rotation/recovery, rebase and release acceptance.
+delivery. These internal services precede public onboarding, incoming administrative
+discovery, rotation/recovery, rebase and release acceptance.
 See [contract and evidence](docs/DEVICE_ADMINISTRATION.md).
+
+
+## Administrative delivery — 2026-11-09
+
+`sync/administrationProtocol.js` serializes/verifies bounded canonical signed-chain
+packets and master-protected key envelopes; private-key use requires separate
+master decryption/key-pair proof. Root-only verification never claims independently
+proven freshness. `administrationDeliveryStore.js` persists bound uncertain delivery,
+exact immutable ancestry/envelope and verified receipts. `administrationRuntime.js`
+uses the existing uploader/coordinator in a separate authorization namespace before
+content publication. Self-revocation suspends content while its authorized change
+can still be delivered; disable/disconnect/local restore suspend both flags.
+Old-authority content is retained with an explicit rebase-required result.
+Transport live guards propagate through noninteractive token/account verification
+so pause/cancellation cannot start a late automatic GET. Production review remains
+false. [Contract and limits](docs/ADMINISTRATIVE_DELIVERY.md).
