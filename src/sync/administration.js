@@ -6,6 +6,8 @@ import * as session from '../vault/session.js';
 import { createAdministrativeKey, createDeviceKey, unlockAdministrativeKey } from './signingKeyProtection.js';
 import { createAuthorization, verifyAuthorizationChain, signingKeyFingerprint } from './signedProtocol.js';
 import { readAdministration, commitAdministration } from './administrationStore.js';
+import { verifyAdministration2, prepareBootstrap2, prepareDeviceChange2 } from './administration2.js';
+import { loadSettings } from '../settings.js';
 const id = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value);
 const head = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 function request(value, kind) {
@@ -17,6 +19,7 @@ const summary = (state, operation, replayed = false) => ({ head: state.hash, vau
 async function verified(snapshot, record) {
   const authority = snapshot.authority;
   if (!authority) throw new Error('Initialize or adopt independently verified vault authority first.');
+  if (record.version === 3) return verifyAdministration2(snapshot, record);
   if (snapshot.administration && (snapshot.administration.version !== 1 || !Array.isArray(snapshot.administration.operations) || snapshot.administration.operations.length > 256 || snapshot.administration.operations.filter(value => value.phase !== 'published').length > 32)) throw new Error('Administrative state is damaged. Preserve it for recovery.');
   const state = await verifyAuthorizationChain(authority.chain, { vaultId: record.vaultId, rootFingerprint: authority.rootFingerprint, expectedHead: authority.head });
   if (state.payload.keyEpoch !== record.keyEpoch) throw new Error('Administrative epoch does not match the current vault.');
@@ -25,7 +28,8 @@ async function verified(snapshot, record) {
 async function authenticate(passphrase) {
   validateMaster(passphrase);
   const record = await readLocalVaultRecordRaw();
-  if (record?.version !== 2) throw new Error('Unlock a supported local vault before administration.');
+  if (![2, 3].includes(record?.version)) throw new Error('Unlock a supported local vault before administration.');
+  if (record.version === 3 && (await loadSettings()).useSync) throw new Error('Pause legacy Chrome Sync before protocol-v2 administration.');
   const active = await session.current(record);
   try {
     const proof = await decryptRecord(record, passphrase);
@@ -57,6 +61,11 @@ export function bootstrapAdministration(passphrase, values) {
         throw new Error('This vault already has authority. Review its current registry.');
       }
       if (previous.administration) throw new Error('Administrative state is incomplete. Preserve it for recovery.');
+      if (record.version === 3) {
+        const prepared = await prepareBootstrap2(passphrase, input, record, active, previous);
+        await commitAdministration({ record, previous, ...prepared, validateCommit: assertCurrent });
+        return summary(prepared.state, prepared.operation);
+      }
       const admin = await createAdministrativeKey(passphrase, record);
       const device = await createDeviceKey(active.bytes, record);
       const signed = await createAuthorization({ kind: 'securepass-authorization', version: 1, vaultId: record.vaultId, keyEpoch: record.keyEpoch, revision: crypto.randomUUID(), previous: null, adminKey: admin.envelope.publicKey, devices: [{ id: input.deviceId, publicKey: device.envelope.publicKey }] }, admin.privateKey);
@@ -79,6 +88,12 @@ async function change(kind, passphrase, values) {
       const previous = await readAdministration(record.vaultId); const state = await verified(previous, record);
       const repeated = replay(previous, state, kind, input); if (repeated) return repeated;
       if (state.hash !== input.expectedHead) throw new Error('Administrative head changed. Review again.');
+      if (record.version === 3) {
+        const prepared = await prepareDeviceChange2(kind, passphrase, input, record, active, previous, state);
+        await commitAdministration({ record, previous, ...prepared, validateCommit: assertCurrent });
+        if (prepared.nextRecord) await session.activate(prepared.nextRecord, active.entries, active.bytes, active.epoch);
+        return summary(prepared.state, prepared.operation);
+      }
       const protectedKey = previous.administration?.envelope;
       if (!protectedKey || protectedKey.publicKey !== state.payload.adminKey) throw new Error('The current administrative private key is unavailable. Use the recovery procedure.');
       const privateKey = await unlockAdministrativeKey(protectedKey, passphrase, record);
@@ -122,7 +137,7 @@ export function retryAdministrativeDelivery(passphrase, values) {
       if (!previous.authority.chain.some(value => JSON.stringify(value) === JSON.stringify(operation.signed))) throw new Error('Administrative operation is absent from trusted ancestry.');
       const administration = structuredClone(previous.administration); const retry = administration.operations.find(value => value.id === input.operationId);
       Object.assign(retry, { binding: context.binding, phase: 'pending-publication', attempts: 0, nextAttempt: 0, blocked: false, outcome: 'unknown' }); delete retry.code;
-      await commitAdministration({ record, previous, authority: previous.authority, administration, validateCommit: assertCurrent });
+      await commitAdministration({ record, previous, authority: previous.authority, administration, state, validateCommit: assertCurrent });
       return summary(state, retry);
     } finally { active.bytes.fill(0); }
   });

@@ -8,6 +8,8 @@ import { getStorage } from '../utils/storage.js';
 import { loadSettings } from '../settings.js';
 import { readAdministration } from './administrationStore.js';
 import { createAdministrationRuntime } from './administrationRuntime.js';
+import { requireAuthorityState } from './authorizationGraph.js';
+import { verifySignedRevision2 } from './revisionProtocol2.js';
 
 // This is a source-level release gate, not a preference that a website or a
 // stale saved setting can enable. Remove only after the documented review.
@@ -35,6 +37,7 @@ export function createDriveRuntime({ store = publicationStore, getToken = getBou
       validatePublication: async (body, identity) => {
         const state = await loadAuthorization(identity.vaultId);
         if (!state || operation.authorization !== state.hash) throw new DriveError('authorization-changed');
+        if (state.payload.version === 2) return verifySignedRevision2(body, identity, { graph: requireAuthorityState(state, { live: true }).graph });
         return verifySignedPublication(body, identity, state);
       }
     });

@@ -1,6 +1,7 @@
 import { getDB } from '../utils/storage.js';
 import { DB_STORE_NAME } from '../constants.js';
 import { verifyAuthorizationChain } from './signedProtocol.js';
+import { verifyAuthorityGraph, authorityState } from './authorizationGraph.js';
 function key(vaultId) {
   if (typeof vaultId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(vaultId)) throw new Error('Invalid authorization vault.');
   return `driveAuthorization:${vaultId}`;
@@ -39,6 +40,7 @@ export async function pinAuthorization(chain, trust) {
 }
 export async function loadAuthorization(vaultId) {
   const stored=await read(vaultId);if(!stored)return null;
+  if (stored.format === 2) return authorityState(await verifyAuthorityGraph(stored.chain, { vaultId, rootFingerprint: stored.rootFingerprint, expectedHead: stored.head }));
   return verifyAuthorizationChain(stored.chain,{vaultId,rootFingerprint:stored.rootFingerprint,expectedHead:stored.head});
 }
 export async function advanceAuthorization(vaultId, chain) {

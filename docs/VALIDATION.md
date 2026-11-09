@@ -2,7 +2,7 @@
 
 All automated scenarios use fictional data and disposable browser profiles. No real vault, master password or export is required.
 
-Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-09): **331 Node tests and 179 checked modules passed; Chromium protocol-v2 including printed recovery code, public root rewrap and authenticated key history passed**. General/virtual-PRF, Settings, checkpoints, backup-lock and administrative-delivery scenarios passed at the preceding 318-test increment. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
+Current continuation: authenticated history adapter on top of `82933d8`. Latest executed results (2026-11-09): **343 Node tests and 184 checked modules passed; Chromium local-v2 transactions, v1 administration, emulated administrative delivery, protocol-v2/kit, general/virtual-PRF and Settings passed**. Checkpoints and backup-lock passed at the earlier 318-test increment. General/virtual-PRF, settings, signed-protocol, Drive atomic-commit and two-profile emulated Sync scenarios were also rerun successfully; packaging passed. Each older result below belongs to its dated increment; it does not mean every browser suite was rerun at the latest baseline. The 2026-11-07 documentation reconciliation changes descriptions/checklists only and adds no runtime acceptance. Real Google authorization, physical hardware and independent review remain open.
 
 ## Common-base three-way merge planner — 2026-11-06
 
@@ -567,3 +567,25 @@ restart-safe transaction, global rotation/recovery controller, Google transport,
 hardware or independent review is accepted by these tests. Old copies remain
 decryptable by parties holding the corresponding old code/material. See
 [the material contract](RECOVERY_KEY_MATERIAL.md).
+
+
+## Local protocol-v2 transactions — 2026-11-09
+
+Final `npm test`: **343/343 passed**; `npm run check`: **184 modules passed**.
+Twelve new regressions exercise explicit v3 bootstrap/master proof, exact replay,
+original signed-history preservation after a modeled queue acknowledgement,
+cross-authority anchors, administrative/ordinary mutation rollback, competing
+heads, self-revocation, damaged parents and capacity/substitution refusal.
+`test:administration-v2-browser` passed real WebCrypto/IndexedDB bootstrap
+abort/retry, original signatures, normal mutations, verified recursive ancestry
+across authorities, page reload, exact replay and mutation rollback. Its queue
+acknowledgement is a modeled local store event, not provider evidence.
+
+`test:administration-browser`, `test:administration-delivery-browser` (emulated
+provider) and `test:protocol-v2-browser` passed. The final sequential validation
+also passed the full Node suite, general/virtual-PRF browser, Settings, syntax/
+import/version check and packaging; whitespace check passed. Original signed
+history is bounded to 128 packets/64 MiB and refuses exhaustion without pruning.
+Administrative-v2 wire/delivery, public lifecycle, global rotation/recovery,
+rebase, retention/migration and external acceptance remain open. See
+[transaction boundaries](PROTOCOL_V2_TRANSACTIONS.md).

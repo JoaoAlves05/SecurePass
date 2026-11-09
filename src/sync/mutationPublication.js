@@ -4,6 +4,9 @@ import { unlockDeviceKey } from './signingKeyProtection.js';
 import { prepareSignedPublication } from './signedPublication.js';
 import { readLocalVaultRecordRaw, recordRevision } from '../utils/storage.js';
 import * as session from '../vault/session.js';
+import { readSignedHistory } from './signedHistoryStore.js';
+import { requireAuthorityState } from './authorizationGraph.js';
+import { verifySignedRevision2, revisionReference } from './revisionProtocol2.js';
 
 function guardSession({ epoch, deadline, authenticatedAt }, recent = false) {
   return () => {
@@ -43,7 +46,17 @@ export async function prepareMutationPublication(record, expectedRevision) {
     const authorization = await loadAuthorization(record.vaultId);
     if (previous.keyEpoch !== record.keyEpoch || authorization?.payload.keyEpoch !== record.keyEpoch) throw new Error('Drive key rotation requires a reviewed administrative transition. No password was changed.');
     const privateKey = await unlockDeviceKey(context.writer.envelope, active.bytes, record);
-    const packet = await prepareSignedPublication(record, { binding: context.binding, author: context.writer.author, privateKey, authorization });
+    const parents = [];
+    if (record.version === 3) {
+      const graph = requireAuthorityState(authorization, { live: true }).graph;
+      const history = await readSignedHistory(record.vaultId);
+      for (const revision of record.parents) {
+        const found = history.packets.find(packet => packet.publication.revisionId === revision);
+        if (!found) throw new Error('Authenticated signed parent is unavailable. Preserve this branch and review rebase.');
+        parents.push(revisionReference(await verifySignedRevision2(found.publication.body, found.publication, { graph })));
+      }
+    }
+    const packet = await prepareSignedPublication(record, { binding: context.binding, author: context.writer.author, privateKey, authorization, parents });
     session.assertGeneration(active.epoch);
     return { binding: context.binding, packet, assertSession: guardSession(active) };
   } finally { active.bytes.fill(0); }

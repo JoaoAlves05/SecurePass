@@ -1,4 +1,5 @@
 import { PUBLICATION_STATE_KEY, preparePublication, enqueuePublication } from '../sync/publicationModel.js';
+import { signedHistoryKey, appendSignedHistory } from '../sync/signedHistoryModel.js';
 import { VAULT_KEY, CHUNK_SIZE, SECUREPASS_DB_NAME, DB_VERSION, DB_STORE_NAME } from '../constants.js';
 
 function handleRuntimeError(reject) {
@@ -155,8 +156,16 @@ export async function writeLocalVaultRecordRaw(record, expectedRevision, { pendi
                   return;
                 }
                 const enqueue = () => {
-                  try { validateCommit?.(); enqueuePublication(state, preparedDrive); store.put(state, PUBLICATION_STATE_KEY); }
-                  catch (error) { failure = error; tx.abort(); }
+                  const finish = previousHistory => {
+                    try {
+                      validateCommit?.();
+                      if (record.version === 3) store.put(appendSignedHistory(previousHistory, preparedDrive), signedHistoryKey(record.vaultId));
+                      enqueuePublication(state, preparedDrive); store.put(state, PUBLICATION_STATE_KEY);
+                    } catch (error) { failure = error; tx.abort(); }
+                  };
+                  if (record.version === 3) {
+                    const history = store.get(signedHistoryKey(record.vaultId)); history.onsuccess = () => finish(history.result);
+                  } else finish();
                 };
                 if (expectedDriveAuthorization !== undefined) {
                   const authorization = store.get(`driveAuthorization:${record.vaultId}`);

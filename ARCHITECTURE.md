@@ -249,3 +249,13 @@ roots under the new epoch root with a separate HKDF/GCM domain. These helpers
 perform no storage/message/UI activation; controllers must enforce current-head,
 session/document ownership, save acknowledgement and transactional activation.
 [Material contract and limitations](docs/RECOVERY_KEY_MATERIAL.md).
+
+`sync/administration2.js` integrates explicit vault-v3 bootstrap and device
+enrollment/revocation with the shared atomic store. `signedHistoryModel.js` and
+`signedHistoryStore.js` preserve bounded original signed packets independently
+of outbox acknowledgement. Enabled v3 mutations authenticate cached parent
+bodies before signing; administrative successors anchor exact old content and
+atomically create a new signed descendant when the local writer remains valid.
+Self-revocation preserves the record/history/queue and suspends content. The
+administrative v2 transport and public lifecycle remain pending; the production
+gate stays closed. [Transaction contract](docs/PROTOCOL_V2_TRANSACTIONS.md).
